@@ -49,13 +49,14 @@ public class MainActivity extends Activity {
     private static final String LOG_TAG = "MainActivity";
     private static final String ACTION_USB_PERMISSION = "ACTION_ROYALE_USB_PERMISSION";
 
-    int scaleFactor;
     int[] resolution;
     Point displaySize, camRes;
 
     public native int[] OpenCameraNative(int fd, int vid, int pid);
     public native void CloseCameraNative();
     public native void RegisterCallback();
+
+    public native void RegisterDisplay(int width, int height);
     public native void DetectBackgroundNative();
     public native void ChangeModeNative(int mode);
 
@@ -114,7 +115,9 @@ public class MainActivity extends Activity {
 
             @Override
             public void onClick(View view) {
-                openCamera();
+                if (!m_opened) {
+                    openCamera();
+                }
                 ChangeModeNative(1);
                 currentMode = Mode.CAMERA;
             }
@@ -135,6 +138,9 @@ public class MainActivity extends Activity {
         findViewById(R.id.buttonTest).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (!m_opened) {
+                    openCamera();
+                }
                 ChangeModeNative(2);
                 currentMode = Mode.TEST;
             }
@@ -157,6 +163,11 @@ public class MainActivity extends Activity {
         super.onResume();
         Log.d(LOG_TAG, "onResume()");
         registerReceiver(mUsbReceiver, new IntentFilter(ACTION_USB_PERMISSION));
+
+        displaySize = new Point();
+        getWindowManager().getDefaultDisplay().getRealSize(displaySize);
+        Log.i(LOG_TAG, "Window display size: x=" + displaySize.x + ", y=" + displaySize.y);
+        RegisterDisplay(displaySize.x, displaySize.y);
     }
 
     @Override
@@ -229,13 +240,6 @@ public class MainActivity extends Activity {
 
     private void createBitmap() {
 
-        // calculate scale factor, which scales the bitmap relative to the display resolution
-        Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        double displayWidth = size.x * 0.9;
-        scaleFactor = (int) displayWidth / resolution[0];
-
         if (bmpCam == null) {
             bmpCam = Bitmap.createBitmap(resolution[0], resolution[1], Bitmap.Config.ARGB_8888);
         }
@@ -259,9 +263,6 @@ public class MainActivity extends Activity {
     // TEST MODE FUNCTIONS ---------------------------------------------------------------------------------
     private void initializeTestMode(){
         if (bmpTest == null) {
-            displaySize = new Point();
-            getWindowManager().getDefaultDisplay().getRealSize(displaySize);
-            Log.i(LOG_TAG, "Window display size: x=" + displaySize.x + ", y=" + displaySize.y);
             bmpTest = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
         }
     }

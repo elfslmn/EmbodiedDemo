@@ -32,22 +32,32 @@ JavaVM *m_vm;
 jmethodID m_amplitudeCallbackID, m_shapeDetectedCallbackID;
 jobject m_obj;
 
-uint16_t width, height;
+uint16_t cam_width, cam_height;
+uint16_t disp_width, disp_height;
 
 enum Mode {UNKNOWN, CAMERA, TEST};
 Mode curmode;
-Mode getType(int i){
+
+void setMode(int i){
     switch(i)
     {
-        case 1: return CAMERA;
-        case 2: return TEST;
+        case 1:
+            curmode = CAMERA;
+            LOGD("Mode: CAMERA");
+            break;
+        case 2:
+            curmode = TEST;
+            LOGD("Mode: TEST");
+            break;
         default:
-            LOGE("Unknown mode %d", i);
-            return UNKNOWN;
+            curmode = UNKNOWN;
+            LOGD("Mode: UNKNOWN (%d)", i);
+            break;
     }
 }
 
 const float MAX_DISTANCE = 1.0f;
+const int BACKGROUND_FRAME_COUNT = 20;
 
 // this represents the main camera device object
 static std::unique_ptr<ICameraDevice> cameraDevice;
@@ -55,63 +65,83 @@ static std::unique_ptr<ICameraDevice> cameraDevice;
 class MyListener : public IDepthDataListener
 {
     Mat cameraMatrix, distortionCoefficients;
-    Mat zImage, zImage8;
+    Mat zImage;
 
     mutex flagMutex;
-    bool detecting = false;
+    bool back_detecting = false;
     bool detected = false;
     int count = 0;
     Mat backgrMat;
     Mat diff, diffBin;
     Mat drawing;
+    float noise;
 
     void onNewData (const DepthData *data)
     {
-        if(detecting)
+        if(back_detecting)
         {
-            zImage = Scalar::all (0);
-        }
-        else
-        {
-            zImage = backgrMat.clone();
-        }
-
-        int k = zImage.rows * zImage.cols -1 ; // to flip screen
-        for (int y = 0; y < zImage.rows; y++)
-        {
-            float *zRowPtr = zImage.ptr<float> (y);
-            for (int x = 0; x < zImage.cols; x++, k--)
+            int noisecount = 0;
+            float sumNoise = 0;
+            // save data as image matrix
+            int k = zImage.rows * zImage.cols -1 ; // to flip screen
+            for (int y = 0; y < zImage.rows; y++)
             {
-                auto curPoint = data->points.at (k);
-                if (curPoint.depthConfidence > 0)
+                float *zRowPtr = zImage.ptr<float> (y);
+                for (int x = 0; x < zImage.cols; x++, k--)
                 {
-                    zRowPtr[x] = curPoint.z < MAX_DISTANCE ? curPoint.z : MAX_DISTANCE;
+                    auto curPoint = data->points.at (k);
+                    if (curPoint.depthConfidence > 0)
+                    {
+                        zRowPtr[x] = curPoint.z < MAX_DISTANCE ? curPoint.z : MAX_DISTANCE;
+                        sumNoise += curPoint.noise;
+                        noisecount++;
+                    }
+                    else
+                    {
+                        zRowPtr[x] = 0;
+                    }
                 }
             }
-        }
 
-        //Background profile
-        if(detecting)
-        {
+            // get avarage around 20 frame
             backgrMat += zImage;
+            noise += (sumNoise / noisecount);
             count++;
-            if(count == 20)
+            if(count == BACKGROUND_FRAME_COUNT)
             {
-                backgrMat /= 20;
-                detecting = false;
+                backgrMat /= BACKGROUND_FRAME_COUNT;
+                noise /= BACKGROUND_FRAME_COUNT;
+                back_detecting = false;
                 detected = true;
-                LOGI("Background detecting has ended.");
+                LOGI("Background detecting has ended. Avarage noise value is %.3f m", noise);
             }
         }
-
         else if (detected)
         {
+            zImage = backgrMat.clone();
+
+            // save data as image matrix
+            int k = zImage.rows * zImage.cols -1 ; // to flip screen
+            for (int y = 0; y < zImage.rows; y++)
+            {
+                float *zRowPtr = zImage.ptr<float> (y);
+                for (int x = 0; x < zImage.cols; x++, k--)
+                {
+                    auto curPoint = data->points.at (k);
+                    if (curPoint.depthConfidence > 0)
+                    {
+                        zRowPtr[x] = curPoint.z < MAX_DISTANCE ? curPoint.z : MAX_DISTANCE;
+                    }
+                }
+            }
+
+            // calculate differences between new image and background then find contours of diff blobs
             diff = backgrMat - zImage;
-            Mat temp = diff.clone();
-            undistort (temp, diff, cameraMatrix, distortionCoefficients);
+            //Mat temp = diff.clone();
+            //undistort (temp, diff, cameraMatrix, distortionCoefficients);
 
             boxFilter(diff, diff, -1, Size(5,5));
-            threshold(diff, diffBin, 0.005, 255, CV_THRESH_BINARY);
+            threshold(diff, diffBin, noise, 255, CV_THRESH_BINARY);
             // Find contours
             diffBin.convertTo(diffBin, CV_8UC1);
             vector<vector<Point> > contours;
@@ -121,54 +151,50 @@ class MyListener : public IDepthDataListener
                 LOGD("No contour found");
             }
 
-            if(curmode == CAMERA){
-                zImage.at<float>(0,0) = MAX_DISTANCE;
-                normalize(zImage, zImage, 0, 255, NORM_MINMAX, CV_8UC1);
-                zImage = 255 - zImage;
-                cvtColor(zImage, drawing, COLOR_GRAY2BGR);
+            if(curmode == CAMERA) {
+                zImage.at<float>(0, 0) = MAX_DISTANCE;
+                normalize(zImage, drawing, 0, 255, NORM_MINMAX, CV_8UC1);
+                drawing = 255 - drawing;
+                cvtColor(drawing, drawing, COLOR_GRAY2BGR);
 
-            }
-            for( unsigned int i = 0; i< contours.size(); i++ )
-            {
-                if(contourArea(contours[i])< 50)
-                {
-                    drawContours(drawing, contours,i,Scalar(0,0,255));
-                    continue;
-                }
+                for (unsigned int i = 0; i < contours.size(); i++) {
+                    if (contourArea(contours[i]) < 50) {
+                        drawContours(drawing, contours, i, Scalar(0, 0, 255));
+                        continue;
+                    }
 
-                Moments mu = moments( contours[i], false);
-                auto center = Point2f( mu.m10/mu.m00 , mu.m01/mu.m00 );
+                    Moments mu = moments(contours[i], false);
+                    auto center = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
 
-                if(curmode == CAMERA)
-                {
-                    drawContours(drawing, contours,i,Scalar(255,0,0));
-                    circle(drawing, center, 2, Scalar(255,0,0));
+                    if (curmode == CAMERA) {
+                        drawContours(drawing, contours, i, Scalar(255, 0, 0));
+                        circle(drawing, center, 2, Scalar(255, 0, 0));
+                    }
                 }
             }
         }
 
-        // if it is in camera mode, send debug drawing to java part to show
+        // --------------- Fire appropriate callbacks according to current mode ----------------------
         if(curmode == CAMERA)
         {
             //  int color = (A & 0xff) << 24 | (R & 0xff) << 16 | (G & 0xff) << 8 | (B & 0xff);
-            jint fill[width * height];
-            k = 0;
+            jint fill[cam_width * cam_height];
+            int k = 0;
             for (int i = 0; i < drawing.rows; i++)
             {
                 Vec3b *ptr = drawing.ptr<Vec3b>(i);
-                for (int j = 0; j < drawing.cols; j++)
+                for (int j = 0; j < drawing.cols; j++, k++)
                 {
                     Vec3b p = ptr[j];
                     int color = (255 & 0xff) << 24 | (p[2] & 0xff) << 16 | (p[1] & 0xff) << 8 | (p[0] & 0xff);
                     fill[k] = color;
-                    k++;
                 }
             }
             // attach to the JavaVM thread and get a JNI interface pointer
             JNIEnv *env;
             m_vm->AttachCurrentThread((JNIEnv **) &env, NULL);
-            jintArray intArray = env->NewIntArray(width * height);
-            env->SetIntArrayRegion(intArray, 0, width * height, fill);
+            jintArray intArray = env->NewIntArray(cam_width * cam_height);
+            env->SetIntArrayRegion(intArray, 0, cam_width * cam_height, fill);
             env->CallVoidMethod(m_obj, m_amplitudeCallbackID, intArray);
             m_vm->DetachCurrentThread();
         }
@@ -181,18 +207,19 @@ class MyListener : public IDepthDataListener
 
 public:
     void initialize(){
-        zImage.create (Size (width,height), CV_32FC1);
-        backgrMat.create (Size (width,height), CV_32FC1);
+        zImage.create (Size (cam_width,cam_height), CV_32FC1);
+        backgrMat.create (Size (cam_width,cam_height), CV_32FC1);
         backgrMat = Scalar::all (0);
-        drawing = Mat::zeros(height, width, CV_8UC3);
+        drawing = Mat::zeros(cam_height, cam_width, CV_8UC3);
         putText(drawing, "Click Backgr button",Point(30,30),FONT_HERSHEY_PLAIN ,1,Scalar(0,0,255),1);
     }
 
     void detectBackground(){
         LOGI("Background detecting has started.");
-        detecting = true;
+        back_detecting = true;
         detected = false;
         count = 0;
+        noise = 0;
         backgrMat = Scalar::all (0);
         drawing = Scalar::all (0);
         putText(drawing, "Detecting background...",Point(30,30),FONT_HERSHEY_PLAIN ,1,Scalar(0,0,255),1);
@@ -268,13 +295,13 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
         LOGI ("Failed to get use cases, CODE %d", (int) ret);
     }
 
-    ret = cameraDevice->getMaxSensorWidth (width);
+    ret = cameraDevice->getMaxSensorWidth (cam_width);
     if (ret != CameraStatus::SUCCESS)
     {
         LOGI ("Failed to get max sensor width, CODE %d", (int) ret);
     }
 
-    ret = cameraDevice->getMaxSensorHeight (height);
+    ret = cameraDevice->getMaxSensorHeight (cam_height);
     if (ret != CameraStatus::SUCCESS)
     {
         LOGI ("Failed to get max sensor height, CODE %d", (int) ret);
@@ -298,8 +325,8 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
     LOGI ("====================================");
     LOGI ("Id:              %s", cameraId.c_str());
     LOGI ("Type:            %s", cameraName.c_str());
-    LOGI ("Width:           %d", width);
-    LOGI ("Height:          %d", height);
+    LOGI ("Width:           %d", cam_width);
+    LOGI ("Height:          %d", cam_height);
     LOGI ("Operation modes: %zu", opModes.size());
 
     for (int i = 0; i < opModes.size(); i++)
@@ -352,8 +379,8 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
     }
 
     jint fill[2];
-    fill[0] = width;
-    fill[1] = height;
+    fill[0] = cam_width;
+    fill[1] = cam_height;
 
     jintArray intArray = env->NewIntArray (2);
 
@@ -393,7 +420,13 @@ void Java_com_esalman17_embodieddemo_MainActivity_CloseCameraNative (JNIEnv *env
 
 void Java_com_esalman17_embodieddemo_MainActivity_ChangeModeNative (JNIEnv *env, jobject thiz, jint m)
 {
-    curmode = getType(m);
+    setMode(m);
+}
+
+void Java_com_esalman17_embodieddemo_MainActivity_RegisterDisplay (JNIEnv *env, jobject thiz, jint w, jint h)
+{
+    disp_width = w;
+    disp_height = h;
 }
 
 #ifdef __cplusplus
