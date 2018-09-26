@@ -52,12 +52,24 @@
         android:text="Test" />
 
     <TextView
-        android:id="@+id/textViewInfo"
+        android:id="@+id/textViewDebug"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:textColor="@color/colorAccent"
         android:text="Debug info:" />
+
+    <TextView
+        android:id="@+id/textViewInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:text="TextViewInfo"
+        android:textSize="30dp"
+        android:textColor="@color/lightgray"
+        android:visibility="gone"/>
 
 </RelativeLayout>

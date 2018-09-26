@@ -75,7 +75,7 @@ class MyListener : public IDepthDataListener
     Mat diff, diffBin;
     Mat drawing;
     float noise;
-    vector<pair<int, int>> blobCenters;
+    vector<int> blobCenters;
 
      pair<int, int> convertCamPixel2ProPixel(float x, float y, float z){
         if( x<0 || y<0 || z<=0){
@@ -89,27 +89,27 @@ class MyListener : public IDepthDataListener
          float scale_x = 1.3074;
          float scale_y = 1.8256;
          float shifty = 486.69004 * exp(-0.048035356*z);
-         float px = x * disp_width* scale_x / cam_width - disp_width*(scale_x -1) /2 ;  // shiftx nearly 0
-         float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty +600;
+         float px = x * disp_width* scale_x / cam_width - disp_width*(scale_x -1) /2 +10;  // shiftx nearly 0
+         float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty + 550;
 
         if(px > disp_width || px < 0 || py>disp_height|| py < 0){
-            LOGD("Point is outside of the projector view");
+            //LOGD("Point is outside of the projector view");
             return {-1,-1};
         }
 
         return  {(int)px,(int)py};
     }
 
-    bool checkIfContourIntersectWithEdge(const vector<Point>& pts, int img_width, int img_height)
+    int checkIfContourIntersectWithEdge(const vector<Point>& pts, int img_width, int img_height)
     {
         auto rect = boundingRect(pts);
         if(rect.tl().x == 0 || rect.tl().y == 0 || rect.br().y ==img_height || rect.br().x == img_width)
         {
-            return true;
+            return 1;
         }
         else
         {
-            return false;
+            return 0;
         }
     }
 
@@ -249,14 +249,25 @@ class MyListener : public IDepthDataListener
                         drawContours(drawing, contours, i, Scalar(0, 0, 255));
                         continue;
                     }
-                    bool conEdge = checkIfContourIntersectWithEdge(contours[i], cam_width, cam_height);
-                    LOGD("contour %d : connected %d", i, conEdge);
 
-                    Moments mu = moments(contours[i], false);
-                    auto center = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
-
-                    drawContours(drawing, contours, i, Scalar(255, 0, 0));
-                    circle(drawing, center, 2, Scalar(255, 0, 0));
+                    int conEdge = checkIfContourIntersectWithEdge(contours[i], cam_width, cam_height);
+                    if(conEdge)
+                    {
+                        auto ext = std::minmax_element(contours[i].begin(), contours[i].end(), [](Point const& a, Point const& b)
+                        {
+                            return a.y < b.y;
+                        });
+                        auto tip = Point2f(ext.first->x, ext.first->y );
+                        drawContours(drawing, contours, i, Scalar(0, 255, 0));
+                        circle(drawing, tip, 2, Scalar(0, 255, 0));
+                    }
+                    else
+                    {
+                        Moments mu = moments(contours[i], false);
+                        auto center = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
+                        drawContours(drawing, contours, i, Scalar(255, 0, 0));
+                        circle(drawing, center, 2, Scalar(255, 0, 0));
+                    }
                 }
             }
             else if(curmode == TEST)
@@ -264,24 +275,36 @@ class MyListener : public IDepthDataListener
                 blobCenters.clear();
                 for (unsigned int i = 0; i < contours.size(); i++)
                 {
-                    if (contourArea(contours[i]) < 50)
+                    if (contourArea(contours[i]) < 50) continue;
+
+                    int conEdge = checkIfContourIntersectWithEdge(contours[i], cam_width, cam_height);
+                    float x, y;
+                    if(conEdge)
                     {
-                        continue;
+                        auto ext = std::minmax_element(contours[i].begin(), contours[i].end(), [](Point const& a, Point const& b)
+                        {
+                            return a.y < b.y;
+                        });
+                        x = ext.first->x ;
+                        y = ext.first->y ;
+                    }
+                    else
+                    {
+                        Moments mu = moments(contours[i], false);
+                        x = mu.m10 / mu.m00;
+                        y = mu.m01 / mu.m00;
                     }
 
-                    Moments mu = moments(contours[i], false);
-                    float x = mu.m10 / mu.m00;
-                    float y = mu.m01 / mu.m00;
-                    if(x >= cam_width || x < 0 || y >= cam_height || y < 0)
-                    {
-                        continue;
-                    }
+                    if(x >= cam_width || x < 0 || y >= cam_height || y < 0)  continue;
+
                     float z = zImage.at<float>((int)y,(int)x);
                     auto center = convertCamPixel2ProPixel(x,y,z);
-                    if(center.first < 0){
-                        continue;
-                    }
-                    blobCenters.push_back(center);
+                    if(center.first < 0) continue;
+
+                    blobCenters.push_back(center.first);
+                    blobCenters.push_back(center.second);
+                    blobCenters.push_back(conEdge);
+
                 }
             }
 
@@ -294,17 +317,10 @@ class MyListener : public IDepthDataListener
         }
         else if(curmode == TEST )
         {
-            jint fill[blobCenters.size()*2];
-            for (int i = 0; i < blobCenters.size(); i++)
-            {
-                fill[i*2] = blobCenters[i].first;
-                fill[i*2+1] = blobCenters[i].second;
-            }
-
             JNIEnv *env;
             m_vm->AttachCurrentThread((JNIEnv **) &env, NULL);
-            jintArray intArray = env->NewIntArray(blobCenters.size()*2);
-            env->SetIntArrayRegion(intArray, 0, blobCenters.size()*2, fill);
+            jintArray intArray = env->NewIntArray(blobCenters.size());
+            env->SetIntArrayRegion(intArray, 0, blobCenters.size(), &blobCenters[0]);
             env->CallVoidMethod(m_obj, m_shapeDetectedCallbackID, intArray);
             m_vm->DetachCurrentThread();
         }
