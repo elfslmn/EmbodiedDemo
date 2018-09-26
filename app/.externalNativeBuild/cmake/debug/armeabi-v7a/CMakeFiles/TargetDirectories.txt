@@ -1,3 +1,0 @@
-C:/Users/esalman17/AndroidStudioProjects/EmbodiedDemo/app/.externalNativeBuild/cmake/debug/armeabi-v7a/CMakeFiles/nativelib.dir
-C:/Users/esalman17/AndroidStudioProjects/EmbodiedDemo/app/.externalNativeBuild/cmake/debug/armeabi-v7a/CMakeFiles/edit_cache.dir
-C:/Users/esalman17/AndroidStudioProjects/EmbodiedDemo/app/.externalNativeBuild/cmake/debug/armeabi-v7a/CMakeFiles/rebuild_cache.dir
