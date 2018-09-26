@@ -75,9 +75,95 @@ class MyListener : public IDepthDataListener
     Mat diff, diffBin;
     Mat drawing;
     float noise;
+    vector<pair<int, int>> blobCenters;
+
+     pair<int, int> convertCamPixel2ProPixel(float x, float y, float z){
+        if( x<0 || y<0 || z<=0){
+            return {-1,-1};
+        }
+        if(disp_width == 0 || cam_width == 0){
+            return {-1,-1};
+        }
+
+        //scale = sin(camFov/2) / sin(proFov/2)
+         float scale_x = 1.3074;
+         float scale_y = 1.8256;
+         float shifty = 486.69004 * exp(-0.048035356*z);
+         float px = x * disp_width* scale_x / cam_width - disp_width*(scale_x -1) /2 ;  // shiftx nearly 0
+         float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty +600;
+
+        if(px > disp_width || px < 0 || py>disp_height|| py < 0){
+            LOGD("Point is outside of the projector view");
+            return {-1,-1};
+        }
+
+        return  {(int)px,(int)py};
+    }
+
+    bool checkIfContourIntersectWithEdge(const vector<Point>& pts, int img_width, int img_height)
+    {
+        auto rect = boundingRect(pts);
+        if(rect.tl().x == 0 || rect.tl().y == 0 || rect.br().y ==img_height || rect.br().x == img_width)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    void transferImageToJavaSide(Mat& image)
+    {
+        jint fill[image.rows * image.cols];
+        if(image.type() == 16) // CV_8UC3
+        {
+            //  int color = (A & 0xff) << 24 | (R & 0xff) << 16 | (G & 0xff) << 8 | (B & 0xff);
+            int k = 0;
+            for (int i = 0; i < image.rows; i++)
+            {
+                Vec3b *ptr = image.ptr<Vec3b>(i);
+                for (int j = 0; j < image.cols; j++, k++)
+                {
+                    Vec3b p = ptr[j];
+                    int color = (255 & 0xff) << 24 | (p[2] & 0xff) << 16 | (p[1] & 0xff) << 8 | (p[0] & 0xff);
+                    fill[k] = color;
+                }
+            }
+        }
+        else if(image.type() <= 6) // 1 channel images
+        {
+            Mat norm;
+            normalize(image, norm, 0, 255, NORM_MINMAX, CV_8UC1);
+            int k = 0;
+            for (int i = 0; i < norm.rows; i++)
+            {
+                auto *ptr = norm.ptr<uint8_t>(i);
+                for (int j = 0; j < norm.cols; j++, k++)
+                {
+                    uint8_t p = ptr[j];
+                    int color = (255 & 0xff) << 24 | (p & 0xff) << 16 | (p & 0xff) << 8 | (p & 0xff);
+                    fill[k] = color;
+                }
+            }
+        }
+        else{
+            LOGE("Image should have 1 channel or CV_8UC3");
+            return;
+        }
+
+        // attach to the JavaVM thread and get a JNI interface pointer
+        JNIEnv *env;
+        m_vm->AttachCurrentThread((JNIEnv **) &env, NULL);
+        jintArray intArray = env->NewIntArray(image.rows * image.cols);
+        env->SetIntArrayRegion(intArray, 0, image.rows * image.cols, fill);
+        env->CallVoidMethod(m_obj, m_amplitudeCallbackID, intArray);
+        m_vm->DetachCurrentThread();
+    }
 
     void onNewData (const DepthData *data)
     {
+        lock_guard<mutex> lock (flagMutex);
         if(back_detecting)
         {
             int noisecount = 0;
@@ -128,7 +214,7 @@ class MyListener : public IDepthDataListener
                 for (int x = 0; x < zImage.cols; x++, k--)
                 {
                     auto curPoint = data->points.at (k);
-                    if (curPoint.depthConfidence > 0)
+                    if (curPoint.depthConfidence > 70)
                     {
                         zRowPtr[x] = curPoint.z < MAX_DISTANCE ? curPoint.z : MAX_DISTANCE;
                     }
@@ -137,10 +223,8 @@ class MyListener : public IDepthDataListener
 
             // calculate differences between new image and background then find contours of diff blobs
             diff = backgrMat - zImage;
-            //Mat temp = diff.clone();
-            //undistort (temp, diff, cameraMatrix, distortionCoefficients);
-
-            boxFilter(diff, diff, -1, Size(5,5));
+            //boxFilter(diff, diff, -1, Size(5,5));
+            medianBlur(diff, diff, 5);
             threshold(diff, diffBin, noise, 255, CV_THRESH_BINARY);
             // Find contours
             diffBin.convertTo(diffBin, CV_8UC1);
@@ -151,56 +235,78 @@ class MyListener : public IDepthDataListener
                 LOGD("No contour found");
             }
 
-            if(curmode == CAMERA) {
+            if(curmode == CAMERA)
+            {
                 zImage.at<float>(0, 0) = MAX_DISTANCE;
                 normalize(zImage, drawing, 0, 255, NORM_MINMAX, CV_8UC1);
                 drawing = 255 - drawing;
                 cvtColor(drawing, drawing, COLOR_GRAY2BGR);
 
-                for (unsigned int i = 0; i < contours.size(); i++) {
-                    if (contourArea(contours[i]) < 50) {
+                for (unsigned int i = 0; i < contours.size(); i++)
+                {
+                    if (contourArea(contours[i]) < 50)
+                    {
                         drawContours(drawing, contours, i, Scalar(0, 0, 255));
                         continue;
                     }
+                    bool conEdge = checkIfContourIntersectWithEdge(contours[i], cam_width, cam_height);
+                    LOGD("contour %d : connected %d", i, conEdge);
 
                     Moments mu = moments(contours[i], false);
                     auto center = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
 
-                    if (curmode == CAMERA) {
-                        drawContours(drawing, contours, i, Scalar(255, 0, 0));
-                        circle(drawing, center, 2, Scalar(255, 0, 0));
-                    }
+                    drawContours(drawing, contours, i, Scalar(255, 0, 0));
+                    circle(drawing, center, 2, Scalar(255, 0, 0));
                 }
             }
+            else if(curmode == TEST)
+            {
+                blobCenters.clear();
+                for (unsigned int i = 0; i < contours.size(); i++)
+                {
+                    if (contourArea(contours[i]) < 50)
+                    {
+                        continue;
+                    }
+
+                    Moments mu = moments(contours[i], false);
+                    float x = mu.m10 / mu.m00;
+                    float y = mu.m01 / mu.m00;
+                    if(x >= cam_width || x < 0 || y >= cam_height || y < 0)
+                    {
+                        continue;
+                    }
+                    float z = zImage.at<float>((int)y,(int)x);
+                    auto center = convertCamPixel2ProPixel(x,y,z);
+                    if(center.first < 0){
+                        continue;
+                    }
+                    blobCenters.push_back(center);
+                }
+            }
+
         }
 
         // --------------- Fire appropriate callbacks according to current mode ----------------------
         if(curmode == CAMERA)
         {
-            //  int color = (A & 0xff) << 24 | (R & 0xff) << 16 | (G & 0xff) << 8 | (B & 0xff);
-            jint fill[cam_width * cam_height];
-            int k = 0;
-            for (int i = 0; i < drawing.rows; i++)
+            transferImageToJavaSide(drawing);
+        }
+        else if(curmode == TEST )
+        {
+            jint fill[blobCenters.size()*2];
+            for (int i = 0; i < blobCenters.size(); i++)
             {
-                Vec3b *ptr = drawing.ptr<Vec3b>(i);
-                for (int j = 0; j < drawing.cols; j++, k++)
-                {
-                    Vec3b p = ptr[j];
-                    int color = (255 & 0xff) << 24 | (p[2] & 0xff) << 16 | (p[1] & 0xff) << 8 | (p[0] & 0xff);
-                    fill[k] = color;
-                }
+                fill[i*2] = blobCenters[i].first;
+                fill[i*2+1] = blobCenters[i].second;
             }
-            // attach to the JavaVM thread and get a JNI interface pointer
+
             JNIEnv *env;
             m_vm->AttachCurrentThread((JNIEnv **) &env, NULL);
-            jintArray intArray = env->NewIntArray(cam_width * cam_height);
-            env->SetIntArrayRegion(intArray, 0, cam_width * cam_height, fill);
-            env->CallVoidMethod(m_obj, m_amplitudeCallbackID, intArray);
+            jintArray intArray = env->NewIntArray(blobCenters.size()*2);
+            env->SetIntArrayRegion(intArray, 0, blobCenters.size()*2, fill);
+            env->CallVoidMethod(m_obj, m_shapeDetectedCallbackID, intArray);
             m_vm->DetachCurrentThread();
-        }
-        else if(curmode == TEST) //TEST
-        {
-
         }
 
     }
@@ -275,7 +381,6 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
     if (cameraDevice == nullptr)
     {
         LOGI ("Cannot create the camera device");
-        jintArray intArray();
     }
 
     // IMPORTANT: call the initialize method before working with the camera device

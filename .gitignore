@@ -7,4 +7,14 @@
 /build
 /captures
 .externalNativeBuild
+app/.externalNativeBuild/
 !build.gradle
+
+app/
+
+# IntelliJ
+.idea/
+
+# Gradle files
+.gradle/4.1/
+build/

@@ -7,6 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -17,7 +21,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.graphics.Bitmap;
 import android.graphics.Point;
-import android.view.Display;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,8 +43,10 @@ public class MainActivity extends Activity {
     private UsbDeviceConnection usbConnection;
 
     private Bitmap bmpCam = null;
-    private Bitmap bmpTest = null;
-    private ImageView mainImView;
+    private Bitmap bmpOverlay = null;
+    private ImageView mainImView, overlayImView;
+
+    Paint green = new Paint();
 
     boolean m_opened;
     Mode currentMode;
@@ -85,6 +90,7 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        getWindow().setBackgroundDrawableResource(R.color.black);
         setContentView(R.layout.activity_main);
         Log.d(LOG_TAG, "onCreate()");
 
@@ -109,9 +115,10 @@ public class MainActivity extends Activity {
             }
         });
 
-        Button btnCamera= findViewById(R.id.buttonCamera);
         mainImView =  findViewById(R.id.imageViewMain);
-        btnCamera.setOnClickListener(new View.OnClickListener() {
+        overlayImView = findViewById(R.id.imageViewOverlay);
+
+        findViewById(R.id.buttonCamera).setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
@@ -120,6 +127,7 @@ public class MainActivity extends Activity {
                 }
                 ChangeModeNative(1);
                 currentMode = Mode.CAMERA;
+                overlayImView.setVisibility(View.GONE);
             }
         });
         findViewById(R.id.buttonBackGr).setOnClickListener(new View.OnClickListener() {
@@ -128,10 +136,10 @@ public class MainActivity extends Activity {
                 if (!m_opened) {
                     openCamera();
                 }
-                if(currentMode == null){
-                    ChangeModeNative(1);
-                    currentMode = Mode.CAMERA;
-                }
+                ChangeModeNative(1);
+                currentMode = Mode.CAMERA;
+                overlayImView.setVisibility(View.GONE);
+
                 DetectBackgroundNative();
             }
         });
@@ -139,12 +147,16 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 if (!m_opened) {
-                    openCamera();
+                    //openCamera();
                 }
                 ChangeModeNative(2);
                 currentMode = Mode.TEST;
+                initializeTestMode();
             }
         });
+
+        green.setStyle(Paint.Style.FILL);
+        green.setColor(Color.GREEN);
     }
 
     @Override
@@ -256,48 +268,49 @@ public class MainActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mainImView.setImageBitmap(bmpCam);
+                if(currentMode == Mode.CAMERA )
+                {
+                    mainImView.setImageBitmap(bmpCam);
+                }
             }
         });
     }
-    // TEST MODE FUNCTIONS ---------------------------------------------------------------------------------
+
+// TEST MODE FUNCTIONS ---------------------------------------------------------------------------------
+
+
     private void initializeTestMode(){
-        if (bmpTest == null) {
-            bmpTest = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
+        if (bmpOverlay == null) {
+            bmpOverlay = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
         }
+        mainImView.setImageResource(R.drawable.demo1);
+        overlayImView.setVisibility(View.VISIBLE);
+
     }
 
     public void shapeDetectedCallback(int[] descriptors){
         if (!m_opened)
         {
-            Log.d(LOG_TAG, "Device in Java not initialized");
+            Log.i(LOG_TAG, "Device in Java not initialized");
             return;
         }
+        //Log.d(LOG_TAG, "Blob size: " + descriptors.length/2 );
+
+        Canvas canvas = new Canvas(bmpOverlay);
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+        for(int i=0; i< descriptors.length; i+=2){
+            canvas.drawCircle(descriptors[i] ,descriptors[i+1], 50, green);
+        }
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                overlayImView.setImageBitmap(bmpOverlay);
+            }
+        });
 
     }
 
-    // depends on camera position, not a generic function TODO make generic
-    private Point convertCamPixel2ProPixel(float x, float y, float z){
-        if( x<0 || y<0 || z<=0){
-            return null;
-        }
-        if(displaySize == null || camRes == null){
-            return null;
-        }
-
-        //scale = sin(camFov/2) / sin(proFov/2)
-        double scale_x = 1.3074;
-        double scale_y = 1.8256;
-        double shifty = 486.69004 * Math.exp(-0.048035356*z);
-        double px = x * displaySize.x * scale_x / camRes.x  - displaySize.x*(scale_x -1) /2 ;  // shiftx nearly 0
-        double py = y * displaySize.y * scale_y / camRes.y  - displaySize.y*(scale_y -1)/2 - shifty;
-
-        if(px > displaySize.x || px < 0 || py>displaySize.y || py < 0){
-            Log.d(LOG_TAG, "Point is outside of the projector view");
-            return null;
-        }
-        return  new Point((int)px, (int)py );
-    }
 
 
 }
