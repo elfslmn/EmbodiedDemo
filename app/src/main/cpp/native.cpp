@@ -90,7 +90,7 @@ class MyListener : public IDepthDataListener
          float scale_y = 1.8256;
          float shifty = 486.69004 * exp(-0.048035356*z);
          float px = x * disp_width* scale_x / cam_width - disp_width*(scale_x -1) /2 +10;  // shiftx nearly 0
-         float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty + 550;
+         float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty + 580;
 
         if(px > disp_width || px < 0 || py>disp_height|| py < 0){
             //LOGD("Point is outside of the projector view");
@@ -103,14 +103,8 @@ class MyListener : public IDepthDataListener
     int checkIfContourIntersectWithEdge(const vector<Point>& pts, int img_width, int img_height)
     {
         auto rect = boundingRect(pts);
-        if(rect.tl().x == 0 || rect.tl().y == 0 || rect.br().y ==img_height || rect.br().x == img_width)
-        {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
+        return (rect.tl().x == 0 || rect.tl().y == 0 ||
+                rect.br().y ==img_height || rect.br().x == img_width) ? 1:0;
     }
 
     void transferImageToJavaSide(Mat& image)

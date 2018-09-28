@@ -54,6 +54,7 @@ public class MainActivity extends Activity {
 
     Paint green = new Paint();
     Paint red = new Paint();
+    Paint blue = new Paint();
     Paint eraser = new Paint();
 
     int assessment = -1;
@@ -176,6 +177,8 @@ public class MainActivity extends Activity {
 
         green.setColor(Color.GREEN);
         green.setStyle(Paint.Style.FILL);
+        blue.setColor(Color.BLUE);
+        blue.setStyle(Paint.Style.FILL);
         red.setColor(Color.RED);
         red.setStyle(Paint.Style.STROKE);
         red.setStrokeWidth(3);
@@ -354,13 +357,21 @@ public class MainActivity extends Activity {
                 if (descriptors[i + 2] == 1) continue;
 
                 Point p1 = new Point(descriptors[i], descriptors[i + 1]);
+                boolean match = false;
                 for (Point p2 : wantedPoints)
                 {
                     if (areClose(p1, p2, 50))
                     {
-                        count++;
-                        canvas.drawCircle(p2.x, p2.y, 50, green);
+                        //canvas.drawCircle(p2.x, p2.y, 50, green);
+                        canvas.drawCircle(p2.x, p2.y, 55, eraser);
+                        canvas.drawCircle(p1.x, p1.y, 50, green);
+                        match = true;
+                        break;
                     }
+                }
+                if(match) count++;
+                else{
+                    canvas.drawCircle(p1.x, p1.y, 50, blue);
                 }
             }
             if(count == wantedPoints.size())
