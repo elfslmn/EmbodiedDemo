@@ -10,8 +10,6 @@
 app/.externalNativeBuild/
 !build.gradle
 
-app/
-
 # IntelliJ
 .idea/
 
