@@ -18,4 +18,5 @@ app/
 # Gradle files
 .gradle/4.1/
 build/
+build/android-profile
 drawing
