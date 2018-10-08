@@ -10,6 +10,8 @@ import android.content.pm.ActivityInfo;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -47,6 +49,10 @@ public class MainActivity extends Activity {
 
     int[] resolution;
     Point displaySize, camRes;
+
+    SoundPool soundPool;
+    boolean soundsLoaded = false, isPlaying = false;
+    int sOkay, sWrong, sApplause, sBack, sBackPlayId;
 
     public native int[] OpenCameraNative(int fd, int vid, int pid);
     public native void CloseCameraNative();
@@ -155,6 +161,18 @@ public class MainActivity extends Activity {
             }
         });
 
+        soundPool = new SoundPool(2, AudioManager.STREAM_MUSIC, 0);
+        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int i, int i1) {
+                soundsLoaded = true;
+            }
+        });
+        sBack = soundPool.load(this, R.raw.back_music, 1);
+        sOkay = soundPool.load(this, R.raw.correct, 1);
+        sApplause = soundPool.load(this, R.raw.applause, 1);
+        sWrong = soundPool.load(this, R.raw.wrong2, 1);
+
     }
 
     @Override
@@ -188,6 +206,9 @@ public class MainActivity extends Activity {
         if(usbConnection != null) {
             usbConnection.close();
         }
+
+        soundPool.release();
+        soundPool = null;
 
         super.onDestroy();
     }
@@ -289,11 +310,16 @@ public class MainActivity extends Activity {
         game1 = new Game(1);
         game1.setBackground(mainImView,R.drawable.demo1);
         overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
+
+        if(soundsLoaded){
+            sBackPlayId = soundPool.play(sBack, 0.3f, 0.3f,1,-1,1f);
+        }
     }
     private void endTestMode(){
         mainImView.setImageBitmap(bmpCam);
         overlayImView.setVisibility(View.GONE);
         tvInfo.setVisibility(View.GONE);
+        soundPool.stop(sBackPlayId);
     }
 
     public void shapeDetectedCallback(int[] descriptors){
@@ -324,17 +350,37 @@ public class MainActivity extends Activity {
                 public void run() {
                     if(correctAnswer == 1){
                         tvInfo.setText("That is correct" );
+                        playSound(sApplause);
                         float secs = (float)game1.assestmentTime /1000;
                         String time = String.format("Answered in %.3f seconds", secs);
                         tvDebug.setText(time);
                     }
                     else if(correctAnswer == -1){
                         tvInfo.setText("That is wrong. Try again");
+                        playSound(sWrong);
                     }
                 }
             });
         }
 
+    }
+
+    private void playSound(int id){
+        if(!isPlaying && soundsLoaded){
+            isPlaying = true;
+            soundPool.play(id, 1f, 1f, 1, 0, 1f);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    isPlaying = false;
+                }
+            }).start();
+        }
     }
 
 
