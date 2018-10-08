@@ -30,11 +30,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
-enum Mode{
-    CAMERA,
-    TEST,
-}
-
 public class MainActivity extends Activity {
 
     static {
@@ -47,17 +42,10 @@ public class MainActivity extends Activity {
     private UsbManager manager;
     private UsbDeviceConnection usbConnection;
 
-    private Bitmap bmpCam = null;
-    private Bitmap bmpOverlay = null;
+    public Bitmap bmpCam = null;
+    public static Bitmap bmpOverlay = null;
     private ImageView mainImView, overlayImView;
     TextView tvInfo, tvDebug;
-
-    Paint green = new Paint();
-    Paint red = new Paint();
-    Paint blue = new Paint();
-    Paint eraser = new Paint();
-
-    int assessment = -1;
 
     boolean m_opened;
     Mode currentMode;
@@ -174,17 +162,6 @@ public class MainActivity extends Activity {
                 ChangeModeNative(2);
             }
         });
-
-        green.setColor(Color.GREEN);
-        green.setStyle(Paint.Style.FILL);
-        blue.setColor(Color.BLUE);
-        blue.setStyle(Paint.Style.FILL);
-        red.setColor(Color.RED);
-        red.setStyle(Paint.Style.STROKE);
-        red.setStrokeWidth(3);
-        eraser.setColor(Color.TRANSPARENT);
-        eraser.setStyle(Paint.Style.FILL);
-        eraser.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
 
     }
 
@@ -307,32 +284,26 @@ public class MainActivity extends Activity {
 
 // TEST MODE FUNCTIONS ---------------------------------------------------------------------------------
 
-    ArrayList<Point> wantedPoints;
-    Rect left, right;
-    long start;
+    Game game1;
     private void initializeTestMode(){
         if (bmpOverlay == null) {
             bmpOverlay = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
         }
-        mainImView.setImageResource(R.drawable.demo1);
-        overlayImView.setVisibility(View.VISIBLE);
 
+        overlayImView.setVisibility(View.VISIBLE);
         tvInfo.setVisibility(View.VISIBLE);
         tvInfo.setText("Feed the cats");
-        assessment = -1;
 
-        wantedPoints = new ArrayList<>(5);
+        ArrayList<Point> wantedPoints = new ArrayList<>(5);
         wantedPoints.add(new Point(280, 450));
         wantedPoints.add(new Point(400, 400));
         wantedPoints.add(new Point(500, 500));
         wantedPoints.add(new Point(800, 450));
         wantedPoints.add(new Point(950, 450));
-        left = new Rect(200, 250, 580, 600);
-        right = new Rect(700, 250, 1080, 600);
 
-        Canvas canvas = new Canvas(bmpOverlay);
-        initializeCanvas(canvas);
-        overlayImView.setImageBitmap(bmpOverlay);
+        game1 = new Game(wantedPoints, Side.LEFT);
+        game1.setBackground(mainImView,R.drawable.demo1);
+        overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
     }
     private void endTestMode(){
         mainImView.setImageBitmap(bmpCam);
@@ -347,120 +318,39 @@ public class MainActivity extends Activity {
             return;
         }
 
-        if(assessment == -1) {
-            Canvas canvas = new Canvas(bmpOverlay);
-            initializeCanvas(canvas);
-
-            int count = 0;
-            for (int i = 0; i <= descriptors.length - 3; i += 3)
-            {
-                if (descriptors[i + 2] == 1) continue;
-
-                Point p1 = new Point(descriptors[i], descriptors[i + 1]);
-                boolean match = false;
-                for (Point p2 : wantedPoints)
-                {
-                    if (areClose(p1, p2, 50))
-                    {
-                        //canvas.drawCircle(p2.x, p2.y, 50, green);
-                        canvas.drawCircle(p2.x, p2.y, 55, eraser);
-                        canvas.drawCircle(p1.x, p1.y, 50, green);
-                        match = true;
-                        break;
-                    }
-                }
-                if(match) count++;
-                else{
-                    canvas.drawCircle(p1.x, p1.y, 50, blue);
-                }
-            }
-            if(count == wantedPoints.size())
-            {
-                assessment = 0;
-                Log.d(LOG_TAG,"assesment: "+ assessment);
-                canvas.drawRect(left, red);
-                canvas.drawRect(right, red);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        tvInfo.setText("Which cat has more food?" );
-                        tvDebug.setText("Assesment has started");
-                    }
-                });
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        assessment = 1;
-                        start = System.currentTimeMillis();
-                        Log.d(LOG_TAG,"assesment: "+ assessment);
-                    }
-                }).start();
-            }
+        if(game1.state == GameState.OBJECT_PLACEMENT) {
+            final boolean allObjectsPlaced =game1.processBlobDescriptors(descriptors);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     overlayImView.setImageBitmap(bmpOverlay);
+                    if(allObjectsPlaced){
+                        tvInfo.setText("Which cat has more food?" );
+                        tvDebug.setText("Assesment has started");
+                    }
                 }
             });
         }
-        else if(assessment == 1)
+        else if(game1.state == GameState.ASSESMENT_RUNNING)
         {
-            for (int i = 0; i <= descriptors.length - 3; i += 3)
-            {
-                if (descriptors[i + 2] == 1){
-                    if(left.contains(descriptors[i],descriptors[i + 1])){
-                        if (m_opened) {
-                            CloseCameraNative();
-                            m_opened = false;
-                        }
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                tvInfo.setText("That is correct" );
-                                long secs = (System.currentTimeMillis() -start) / 1000;
-                                String time = "";
-                                if(secs >= 60){
-                                    time = String.format("%d min, %d sec", (secs/60), (secs%60));
-                                }
-                                else
-                                {
-                                    time = String.format("%d sec", (secs%60));
-                                }
-                                tvDebug.setText("Answered in "+time);
-                            }
-                        });
+            final int correctAnswer = game1.processGestureDescriptors(descriptors);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if(correctAnswer == 1){
+                        tvInfo.setText("That is correct" );
+                        float secs = (float)game1.assestmentTime /1000;
+                        String time = String.format("Answered in %.3f seconds", secs);
+                        tvDebug.setText(time);
                     }
-                    else if(right.contains(descriptors[i],descriptors[i + 1])){
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                tvInfo.setText("That is wrong. Try again");
-                            }
-                        });
+                    else if(correctAnswer == -1){
+                        tvInfo.setText("That is wrong. Try again");
                     }
                 }
-            }
+            });
         }
 
     }
-
-    private void initializeCanvas(Canvas canvas){
-        canvas.drawPaint(eraser);
-
-        for(Point p : wantedPoints){
-            canvas.drawCircle(p.x, p.y, 50, red);
-        }
-    }
-
-    boolean areClose(Point p1, Point p2, int maxDist){
-        return Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2) <= maxDist*maxDist ;
-    }
-
 
 
 }
