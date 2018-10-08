@@ -50,9 +50,10 @@ public class MainActivity extends Activity {
     int[] resolution;
     Point displaySize, camRes;
 
-    SoundPool soundPool;
-    boolean soundsLoaded = false, isPlaying = false;
-    int sOkay, sWrong, sApplause, sBack, sBackPlayId;
+    public static SoundPool soundPool;
+    public static boolean soundsLoaded = false, isPlaying = false;
+    public static int sOkay;
+    int sWrong, sApplause, sBack, sBackPlayId;
 
     public native int[] OpenCameraNative(int fd, int vid, int pid);
     public native void CloseCameraNative();
@@ -312,7 +313,7 @@ public class MainActivity extends Activity {
         overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
 
         if(soundsLoaded){
-            sBackPlayId = soundPool.play(sBack, 0.3f, 0.3f,1,-1,1f);
+            sBackPlayId = soundPool.play(sBack, 0.1f, 0.1f,1,-1,1f);
         }
     }
     private void endTestMode(){

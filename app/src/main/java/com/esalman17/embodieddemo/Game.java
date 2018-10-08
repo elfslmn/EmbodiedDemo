@@ -20,6 +20,7 @@ public class Game {
     public GameState state;
     public int level;
     private Side correctSide;
+    private boolean[] soundPlayedPoints;
 
     public Game(int level) {
         this.level = level;
@@ -48,6 +49,7 @@ public class Game {
                 left = new Rect(200, 250, 580, 600);
                 right = new Rect(700, 250, 1080, 600);
                 correctSide = Side.LEFT;
+                soundPlayedPoints = new boolean[wantedPoints.size()];
                 break;
 
         }
@@ -77,6 +79,10 @@ public class Game {
                     canvas.drawCircle(p2.x, p2.y, 55, GamePaint.eraser);
                     canvas.drawCircle(p1.x, p1.y, 50, GamePaint.green);
                     match = true;
+                    if( !soundPlayedPoints[j]){
+                        soundPlayedPoints[j] = true;
+                        MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
+                    }
                     break;
                 }
             }
