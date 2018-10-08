@@ -7,28 +7,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
+
 
 public class MainActivity extends Activity {
 
@@ -294,14 +286,7 @@ public class MainActivity extends Activity {
         tvInfo.setVisibility(View.VISIBLE);
         tvInfo.setText("Feed the cats");
 
-        ArrayList<Point> wantedPoints = new ArrayList<>(5);
-        wantedPoints.add(new Point(280, 450));
-        wantedPoints.add(new Point(400, 400));
-        wantedPoints.add(new Point(500, 500));
-        wantedPoints.add(new Point(800, 450));
-        wantedPoints.add(new Point(950, 450));
-
-        game1 = new Game(wantedPoints, Side.LEFT);
+        game1 = new Game(1);
         game1.setBackground(mainImView,R.drawable.demo1);
         overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
     }

@@ -21,12 +21,10 @@ public class Game {
     public int level;
     private Side correctSide;
 
-    public Game(ArrayList<Point> wantedPoints, Side side) {
-        left = new Rect(200, 250, 580, 600);
-        right = new Rect(700, 250, 1080, 600);
+    public Game(int level) {
+        this.level = level;
         state =  GameState.OBJECT_PLACEMENT;
-        this.wantedPoints = wantedPoints;
-        correctSide = side;
+        initialize(level);
 
         // initialize canvas
         Canvas canvas = new Canvas(MainActivity.bmpOverlay);
@@ -34,7 +32,25 @@ public class Game {
         for(Point p : wantedPoints){
             canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
         }
-        Log.i(LOG_TAG, "New game object created with "+wantedPoints.size()+" objects");
+
+        Log.i(LOG_TAG, "New game object (level=" + level + ") is created");
+    }
+
+    private void initialize(int level){
+        wantedPoints = new ArrayList<>(10);
+        switch (level){
+            case 1:
+                wantedPoints.add(new Point(280, 450));
+                wantedPoints.add(new Point(400, 400));
+                wantedPoints.add(new Point(500, 500));
+                wantedPoints.add(new Point(800, 450));
+                wantedPoints.add(new Point(950, 450));
+                left = new Rect(200, 250, 580, 600);
+                right = new Rect(700, 250, 1080, 600);
+                correctSide = Side.LEFT;
+                break;
+
+        }
     }
 
     public boolean processBlobDescriptors(int[] descriptors){
