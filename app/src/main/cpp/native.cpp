@@ -36,6 +36,7 @@ CamListener listener;
 
 jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv *env, jobject thiz, jint fd, jint vid, jint pid)
 {
+    LOGD("OpenCameraNative()");
     // the camera manager will query for a connected camera
     {
         CameraManager manager;
@@ -150,12 +151,6 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
         LOGE ("Failed to set exposure time, CODE %d", (int) ret);
     }
 
-    ret = cameraDevice->startCapture();
-    if (ret != CameraStatus::SUCCESS)
-    {
-        LOGI ("Failed to start capture, CODE %d", (int) ret);
-    }
-
     jint fill[2];
     fill[0] = cam_width;
     fill[1] = cam_height;
@@ -169,6 +164,7 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
 
 void Java_com_esalman17_embodieddemo_MainActivity_RegisterCallback (JNIEnv *env, jobject thiz)
 {
+    LOGD("RegisterCallback()");
     // save JavaVM globally; needed later to call Java method in the listener
     JavaVM* m_vm;
     env->GetJavaVM (&m_vm);
@@ -189,23 +185,47 @@ void Java_com_esalman17_embodieddemo_MainActivity_RegisterCallback (JNIEnv *env,
     listener.callbackManager = CallbackManager(m_vm, m_obj, m_amplitudeCallbackID, m_shapeDetectedCallbackID);
 }
 
-void Java_com_esalman17_embodieddemo_MainActivity_DetectBackgroundNative (JNIEnv *env, jobject thiz)
+jboolean Java_com_esalman17_embodieddemo_MainActivity_StartCaptureNative (JNIEnv *env, jobject thiz)
 {
-    listener.detectBackground();
+    LOGD("StartCaptureNative()");
+    auto ret = cameraDevice->startCapture();
+    if (ret != CameraStatus::SUCCESS)
+    {
+        LOGE("Failed to start capture, CODE %d", (int) ret);
+        return (jboolean)false;
+    }
+    LOGI("Capture started.");
+    return (jboolean)true;
 }
 
-void Java_com_esalman17_embodieddemo_MainActivity_CloseCameraNative (JNIEnv *env, jobject thiz)
+jboolean Java_com_esalman17_embodieddemo_MainActivity_StopCaptureNative (JNIEnv *env, jobject thiz)
 {
-    cameraDevice->stopCapture();
+    LOGD("StopCaptureNative()");
+    auto ret = cameraDevice->stopCapture();
+    if (ret != CameraStatus::SUCCESS)
+    {
+        LOGE("Failed to stop capture, CODE %d", (int) ret);
+        return (jboolean)false;
+    }
+    LOGI("Capture stopped.");
+    return (jboolean)true;
+}
+
+void Java_com_esalman17_embodieddemo_MainActivity_DetectBackgroundNative (JNIEnv *env, jobject thiz)
+{
+    LOGD("DetectBackgroundNative()");
+    listener.detectBackground();
 }
 
 void Java_com_esalman17_embodieddemo_MainActivity_ChangeModeNative (JNIEnv *env, jobject thiz, jint mode)
 {
+    LOGD("ChangeModeNative()");
     listener.setMode(mode);
 }
 
 void Java_com_esalman17_embodieddemo_MainActivity_RegisterDisplay (JNIEnv *env, jobject thiz, jint w, jint h)
 {
+    LOGD("RegisterDisplay()");
     listener.setDisplaySize(w,h);
 }
 

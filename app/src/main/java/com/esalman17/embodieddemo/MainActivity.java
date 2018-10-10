@@ -56,7 +56,8 @@ public class MainActivity extends Activity {
     int sWrong, sApplause, sBack, sBackPlayId;
 
     public native int[] OpenCameraNative(int fd, int vid, int pid);
-    public native void CloseCameraNative();
+    public native boolean StartCaptureNative();
+    public native boolean StopCaptureNative();
     public native void RegisterCallback();
 
     public native void RegisterDisplay(int width, int height);
@@ -67,6 +68,7 @@ public class MainActivity extends Activity {
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.i(LOG_TAG,"BroadcastReceiver: onReceive()");
             String action = intent.getAction();
             if (ACTION_USB_PERMISSION.equals(action)) {
                 UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
@@ -74,11 +76,12 @@ public class MainActivity extends Activity {
                 if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                     if (device != null) {
                         RegisterCallback();
-                        performUsbPermissionCallback(device);
+                        m_opened = performUsbPermissionCallback(device);
+                        Log.d(LOG_TAG, "m_opened = " + m_opened);
                         createBitmap();
                     }
                 } else {
-                    System.out.println("permission denied for device" + device);
+                    Log.i(LOG_TAG,"permission denied for device" + device);
                 }
             }
         }
@@ -122,9 +125,9 @@ public class MainActivity extends Activity {
 
             @Override
             public void onClick(View view) {
-                if (!m_opened) {
-                    openCamera();
-                }
+                if(m_opened) StartCaptureNative();
+                else openCamera();
+
                 if(currentMode ==  Mode.TEST)
                 {
                     endTestMode();
@@ -137,9 +140,9 @@ public class MainActivity extends Activity {
         findViewById(R.id.buttonBackGr).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!m_opened) {
-                    openCamera();
-                }
+                if(m_opened) StartCaptureNative();
+                else openCamera();
+
                 if(currentMode ==  Mode.TEST)
                 {
                     endTestMode();
@@ -152,9 +155,8 @@ public class MainActivity extends Activity {
         findViewById(R.id.buttonTest).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!m_opened) {
-                    openCamera();
-                }
+                if(m_opened) StartCaptureNative();
+                else openCamera();
 
                 initializeTestMode();
                 currentMode = Mode.TEST;
@@ -179,8 +181,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         if (m_opened) {
-            CloseCameraNative();
-            m_opened = false;
+            StopCaptureNative();
         }
         super.onPause();
         Log.d(LOG_TAG, "onPause()");
@@ -197,6 +198,10 @@ public class MainActivity extends Activity {
         getWindowManager().getDefaultDisplay().getRealSize(displaySize);
         Log.i(LOG_TAG, "Window display size: x=" + displaySize.x + ", y=" + displaySize.y);
         RegisterDisplay(displaySize.x, displaySize.y);
+
+        if (m_opened) {
+            StartCaptureNative();
+        }
     }
 
     @Override
@@ -221,7 +226,7 @@ public class MainActivity extends Activity {
         manager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
         if (manager != null) {
-            Log.d(LOG_TAG, "Manager valid");
+            Log.d(LOG_TAG, "Usb manager valid");
         }
 
         HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
@@ -239,13 +244,16 @@ public class MainActivity extends Activity {
                 Log.d(LOG_TAG, "royale device found");
                 found = true;
                 if (!manager.hasPermission(device)) {
+                    Log.d(LOG_TAG, "Manager has not permission, Ask...");
                     Intent intent = new Intent(ACTION_USB_PERMISSION);
                     intent.setAction(ACTION_USB_PERMISSION);
                     mUsbPi = PendingIntent.getBroadcast(this, 0, intent, 0);
                     manager.requestPermission(device, mUsbPi);
                 } else {
+                    Log.d(LOG_TAG, "Manager has permission.");
                     RegisterCallback();
-                    performUsbPermissionCallback(device);
+                    m_opened = performUsbPermissionCallback(device);
+                    Log.d(LOG_TAG, "m_opened = " + m_opened);
                     createBitmap();
                 }
                 break;
@@ -256,7 +264,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void performUsbPermissionCallback(UsbDevice device) {
+    private boolean performUsbPermissionCallback(UsbDevice device) {
         usbConnection = manager.openDevice(device);
         Log.i(LOG_TAG, "permission granted for: " + device.getDeviceName() + ", fileDesc: " + usbConnection.getFileDescriptor());
 
@@ -266,7 +274,11 @@ public class MainActivity extends Activity {
         camRes = new Point(resolution[0], resolution[1]);
 
         if (resolution[0] > 0) {
-            m_opened = true;
+            StartCaptureNative();
+            return true;
+        }
+        else{
+            return false;
         }
     }
 
@@ -278,7 +290,7 @@ public class MainActivity extends Activity {
     }
 
     public void amplitudeCallback(int[] amplitudes) {
-        if (!m_opened)
+        if (!m_opened || bmpCam == null)
         {
             Log.d(LOG_TAG, "Device in Java not initialized");
             return;
