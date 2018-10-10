@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -22,6 +23,10 @@ import android.widget.TextView;
 
 import java.util.HashMap;
 import java.util.Iterator;
+
+import nl.dionsegijn.konfetti.KonfettiView;
+import nl.dionsegijn.konfetti.models.Shape;
+import nl.dionsegijn.konfetti.models.Size;
 
 
 public class MainActivity extends Activity {
@@ -40,6 +45,7 @@ public class MainActivity extends Activity {
     public static Bitmap bmpOverlay = null;
     private ImageView mainImView, overlayImView;
     TextView tvInfo, tvDebug;
+    KonfettiView konfettiView;
 
     boolean m_opened;
     Mode currentMode;
@@ -118,6 +124,7 @@ public class MainActivity extends Activity {
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
+        konfettiView = findViewById(R.id.viewKonfetti);
         tvInfo = findViewById(R.id.textViewInfo);
         tvDebug = findViewById(R.id.textViewDebug);
 
@@ -362,8 +369,11 @@ public class MainActivity extends Activity {
                 @Override
                 public void run() {
                     if(correctAnswer == 1){
+                        StopCaptureNative();
                         tvInfo.setText("That is correct" );
                         playSound(sApplause);
+                        overlayImView.setImageDrawable(null);
+                        addKonfetti("burst");
                         float secs = (float)game1.assestmentTime /1000;
                         String time = String.format("Answered in %.3f seconds", secs);
                         tvDebug.setText(time);
@@ -394,6 +404,57 @@ public class MainActivity extends Activity {
                 }
             }).start();
         }
+    }
+
+    private void addKonfetti(String type){
+        switch (type){
+            case "top":
+                konfettiView.build()
+                        .addColors(Color.YELLOW, Color.GREEN, Color.BLUE, Color.RED)
+                        .setDirection(0.0, 359.0)
+                        .setSpeed(1f, 5f)
+                        .setFadeOutEnabled(true)
+                        .setTimeToLive(1500L)
+                        .addShapes(Shape.RECT, Shape.CIRCLE)
+                        .addSizes(new Size(12, 5f))
+                        .setPosition(-50f, konfettiView.getWidth() + 50f, -50f, -50f)
+                        .streamFor(500, 3000L);
+                break;
+            case "burst":
+                konfettiView.build()
+                        .addColors(Color.YELLOW, Color.GREEN, Color.BLUE, Color.RED)
+                        .setDirection(0.0, 359.0)
+                        .setSpeed(1f, 5f)
+                        .setFadeOutEnabled(true)
+                        .setTimeToLive(3000L)
+                        .addShapes(Shape.RECT, Shape.CIRCLE)
+                        .addSizes(new Size(15, 5f))
+                        .setPosition(konfettiView.getX() + konfettiView.getWidth() / 2, konfettiView.getY() + konfettiView.getHeight() / 3)
+                        .burst(200);
+                konfettiView.build()
+                        .addColors(Color.YELLOW, Color.GREEN, Color.BLUE, Color.RED)
+                        .setDirection(0.0, 359.0)
+                        .setSpeed(1f, 5f)
+                        .setFadeOutEnabled(true)
+                        .setTimeToLive(3000L)
+                        .addShapes(Shape.RECT, Shape.CIRCLE)
+                        .addSizes(new Size(15, 5f))
+                        .setPosition(konfettiView.getX() + konfettiView.getWidth() / 4, konfettiView.getY() + konfettiView.getHeight() / 3)
+                        .burst(200);
+                konfettiView.build()
+                        .addColors(Color.YELLOW, Color.GREEN, Color.BLUE, Color.RED)
+                        .setDirection(0.0, 359.0)
+                        .setSpeed(1f, 5f)
+                        .setFadeOutEnabled(true)
+                        .setTimeToLive(3000L)
+                        .addShapes(Shape.RECT, Shape.CIRCLE)
+                        .addSizes(new Size(15, 5f))
+                        .setPosition(konfettiView.getX() + 3*konfettiView.getWidth() / 4, konfettiView.getY() + konfettiView.getHeight() / 3)
+                        .burst(200);
+                break;
+
+        }
+
     }
 
 
