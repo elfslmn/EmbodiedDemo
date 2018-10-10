@@ -53,27 +53,27 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
 
     if (cameraDevice == nullptr)
     {
-        LOGI ("Cannot create the camera device");
+        LOGE ("Cannot create the camera device");
     }
 
     // IMPORTANT: call the initialize method before working with the camera device
     CameraStatus ret = cameraDevice->initialize();
     if (ret != CameraStatus::SUCCESS)
     {
-        LOGI ("Cannot initialize the camera device, CODE %d", (int) ret);
+        LOGE ("Cannot initialize the camera device, CODE %d", (int) ret);
     }
 
     uint16_t cam_width, cam_height;
     ret = cameraDevice->getMaxSensorWidth (cam_width);
     if (ret != CameraStatus::SUCCESS)
     {
-        LOGI ("Failed to get max sensor width, CODE %d", (int) ret);
+        LOGE ("Failed to get max sensor width, CODE %d", (int) ret);
     }
 
     ret = cameraDevice->getMaxSensorHeight (cam_height);
     if (ret != CameraStatus::SUCCESS)
     {
-        LOGI ("Failed to get max sensor height, CODE %d", (int) ret);
+        LOGE ("Failed to get max sensor height, CODE %d", (int) ret);
     }
     listener.initialize(cam_width, cam_height);
 
@@ -84,19 +84,19 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
     ret = cameraDevice->getUseCases (opModes);
     if (ret != CameraStatus::SUCCESS)
     {
-        LOGI ("Failed to get use cases, CODE %d", (int) ret);
+        LOGE ("Failed to get use cases, CODE %d", (int) ret);
     }
 
     ret = cameraDevice->getId (cameraId);
     if (ret != CameraStatus::SUCCESS)
     {
-        LOGI ("Failed to get camera ID, CODE %d", (int) ret);
+        LOGE ("Failed to get camera ID, CODE %d", (int) ret);
     }
 
     ret = cameraDevice->getCameraName (cameraName);
     if (ret != CameraStatus::SUCCESS)
     {
-        LOGI ("Failed to get camera name, CODE %d", (int) ret);
+        LOGE ("Failed to get camera name, CODE %d", (int) ret);
     }
 
     // display some information about the connected camera
@@ -127,14 +127,14 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
     ret = cameraDevice->registerDataListener (&listener);
     if (ret != CameraStatus::SUCCESS)
     {
-        LOGI ("Failed to register data listener, CODE %d", (int) ret);
+        LOGE ("Failed to register data listener, CODE %d", (int) ret);
     }
 
     // set an operation mode
     ret = cameraDevice->setUseCase (opModes[0]);
     if (ret != CameraStatus::SUCCESS)
     {
-        LOGI ("Failed to set use case, CODE %d", (int) ret);
+        LOGE ("Failed to set use case, CODE %d", (int) ret);
     }
 
     //set exposure mode to manual
@@ -188,6 +188,11 @@ void Java_com_esalman17_embodieddemo_MainActivity_RegisterCallback (JNIEnv *env,
 jboolean Java_com_esalman17_embodieddemo_MainActivity_StartCaptureNative (JNIEnv *env, jobject thiz)
 {
     LOGD("StartCaptureNative()");
+    if (cameraDevice == nullptr)
+    {
+        LOGE ("There is no camera device");
+        return (jboolean)false;
+    }
     auto ret = cameraDevice->startCapture();
     if (ret != CameraStatus::SUCCESS)
     {
