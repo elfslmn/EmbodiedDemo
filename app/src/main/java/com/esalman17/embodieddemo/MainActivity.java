@@ -347,6 +347,7 @@ public class MainActivity extends Activity {
             overlayImView.setImageBitmap(bmpOverlay);
             game1 =null;
         }
+        wrong = 0;
 
         if(soundsLoaded){
             sBackPlayId = soundPool.play(sBack, 0.1f, 0.1f,1,-1,1f);
@@ -393,7 +394,7 @@ public class MainActivity extends Activity {
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
                             float secs = (float)game1.assestmentTime /1000;
-                            String time = String.format("Answered in %.3f seconds", secs);
+                            String time = String.format("Answered in %.3f seconds with %d wrong", secs, wrong);
                             tvDebug.setText(time);
                         }
                         else if(correctAnswer == -1){
@@ -432,7 +433,7 @@ public class MainActivity extends Activity {
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
                             float secs = (float)game2.assestmentTime /1000;
-                            String time = String.format("Answered in %.3f seconds", secs);
+                            String time = String.format("Answered in %.3f seconds with %d wrong", secs, wrong);
                             tvDebug.setText(time);
                         }
                         else if(correctAnswer == -1){
@@ -449,6 +450,7 @@ public class MainActivity extends Activity {
                         e.printStackTrace();
                     }
                     game2 = new GameHalfVirtual(getApplicationContext(), 2);
+                    wrong = 0;
                     StartCaptureNative();
                 }
             }
@@ -461,11 +463,15 @@ public class MainActivity extends Activity {
     private void playSound(int id){
         playSound(id,0);
     }
+    int wrong = 0;
     private void playSound(int id, int id2){
         if(!isPlaying && soundsLoaded){
             isPlaying = true;
             soundPool.play(id, 1f, 1f, 1, 0, 1f);
             if(id2 != 0) soundPool.play(id2, 1f, 1f, 1, 0, 1f);
+
+            if(id == sWrong) wrong++;
+
             new Thread(new Runnable() {
                 @Override
                 public void run() {
