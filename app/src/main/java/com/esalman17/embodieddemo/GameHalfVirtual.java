@@ -26,7 +26,7 @@ public class GameHalfVirtual {
     private Side correctSide;
     private boolean[] soundPlayedPoints;
     Context context;
-    Drawable apple;
+    Drawable orange;
 
     public GameHalfVirtual(Context context, int level) {
         this.context = context;
@@ -41,7 +41,7 @@ public class GameHalfVirtual {
             canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
         }
 
-        apple = context.getResources().getDrawable(R.drawable.apple);
+        orange = context.getResources().getDrawable(R.drawable.orange);
         Log.i(LOG_TAG, "New game object (level=" + level + ") is created");
     }
 
@@ -52,8 +52,8 @@ public class GameHalfVirtual {
                 wantedPoints.add(new Point(400, 400));
                 wantedPoints.add(new Point(500, 500));
 
-                virtualPoints.add(new Point(770, 320));
-                virtualPoints.add(new Point(1000, 320));
+                virtualPoints.add(new Point(770, 400));
+                virtualPoints.add(new Point(1000, 400));
                 virtualPoints.add(new Point(1000, 530));
                 virtualPoints.add(new Point(770, 530));
 
@@ -106,8 +106,8 @@ public class GameHalfVirtual {
                     canvas.drawCircle(p2.x, p2.y, 55, GamePaint.eraser);
                     //canvas.drawCircle(p1.x, p1.y, 50, GamePaint.green);
 
-                    apple.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-                    apple.draw(canvas);
+                    orange.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                    orange.draw(canvas);
 
                     match = true;
                     if( !soundPlayedPoints[j]){
@@ -128,8 +128,8 @@ public class GameHalfVirtual {
             state = GameState.ALL_PLACED;
             Log.i(LOG_TAG, "Blobs: All objects are placed.");
             for(Point p1: virtualPoints){
-                apple.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-                apple.draw(canvas);
+                orange.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                orange.draw(canvas);
             }
             MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
 

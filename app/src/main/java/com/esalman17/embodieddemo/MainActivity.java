@@ -343,7 +343,7 @@ public class MainActivity extends Activity {
         }
         else if(test == 2){
             game2 = new GameHalfVirtual(this, 1);
-            game2.setBackground(mainImView, R.drawable.demo1); // bmpOverlay is initalized in game constructor
+            game2.setBackground(mainImView, R.drawable.demo2); // bmpOverlay is initalized in game constructor
             overlayImView.setImageBitmap(bmpOverlay);
             game1 =null;
         }
@@ -375,7 +375,7 @@ public class MainActivity extends Activity {
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if(allObjectsPlaced){
-                            tvInfo.setText("Which cat has more food?" );
+                            tvInfo.setText("Which cat has more apple?" );
                             tvDebug.setText("Assesment has started");
                         }
                     }
@@ -414,7 +414,7 @@ public class MainActivity extends Activity {
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if(allObjectsPlaced){
-                            tvInfo.setText("Which cat has more food?" );
+                            tvInfo.setText("Which cat has more oranges?" );
                             tvDebug.setText("Assesment has started");
                         }
                     }
