@@ -60,7 +60,7 @@ public class MainActivity extends Activity {
     public static SoundPool soundPool;
     public static boolean soundsLoaded = false, isPlaying = false;
     public static int sOkay;
-    int sWrong, sApplause, sBack, sBackPlayId;
+    int sWrong, sApplause, sBack, sBackPlayId, sCong;
 
     public native int[] OpenCameraNative(int fd, int vid, int pid);
     public native boolean StartCaptureNative();
@@ -172,17 +172,18 @@ public class MainActivity extends Activity {
             }
         });
 
-        soundPool = new SoundPool(2, AudioManager.STREAM_MUSIC, 0);
+        soundPool = new SoundPool(3, AudioManager.STREAM_MUSIC, 0);
         soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             @Override
             public void onLoadComplete(SoundPool soundPool, int i, int i1) {
                 soundsLoaded = true;
             }
         });
-        sBack = soundPool.load(this, R.raw.back_music, 1);
+        sBack = soundPool.load(this, R.raw.back_music, 10);
         sOkay = soundPool.load(this, R.raw.correct, 1);
         sApplause = soundPool.load(this, R.raw.applause, 1);
         sWrong = soundPool.load(this, R.raw.wrong2, 1);
+        sCong = soundPool.load(this, R.raw.congratulations, 1);
 
     }
 
@@ -372,7 +373,7 @@ public class MainActivity extends Activity {
                     if(correctAnswer == 1){
                         StopCaptureNative();
                         tvInfo.setText("That is correct" );
-                        playSound(sApplause);
+                        playSound(sApplause, sCong);
                         overlayImView.setImageDrawable(null);
                         addKonfetti("burst");
                         float secs = (float)game1.assestmentTime /1000;
@@ -390,9 +391,13 @@ public class MainActivity extends Activity {
     }
 
     private void playSound(int id){
+        playSound(id,0);
+    }
+    private void playSound(int id, int id2){
         if(!isPlaying && soundsLoaded){
             isPlaying = true;
             soundPool.play(id, 1f, 1f, 1, 0, 1f);
+            if(id2 != 0) soundPool.play(id2, 1f, 1f, 1, 0, 1f);
             new Thread(new Runnable() {
                 @Override
                 public void run() {
