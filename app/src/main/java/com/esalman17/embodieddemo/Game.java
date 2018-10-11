@@ -1,8 +1,11 @@
 package com.esalman17.embodieddemo;
 
+import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -21,8 +24,11 @@ public class Game {
     public int level;
     private Side correctSide;
     private boolean[] soundPlayedPoints;
+    Context context;
+    Drawable lemon;
 
-    public Game(int level) {
+    public Game(Context context, int level) {
+        this.context = context;
         this.level = level;
         state =  GameState.OBJECT_PLACEMENT;
         initialize(level);
@@ -34,6 +40,7 @@ public class Game {
             canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
         }
 
+        lemon = context.getResources().getDrawable(R.drawable.apple);
         Log.i(LOG_TAG, "New game object (level=" + level + ") is created");
     }
 
@@ -77,7 +84,11 @@ public class Game {
                 if (areClose(p1, p2, 50))
                 {
                     canvas.drawCircle(p2.x, p2.y, 55, GamePaint.eraser);
-                    canvas.drawCircle(p1.x, p1.y, 50, GamePaint.green);
+                    //canvas.drawCircle(p1.x, p1.y, 50, GamePaint.green);
+
+                    lemon.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                    lemon.draw(canvas);
+
                     match = true;
                     if( !soundPlayedPoints[j]){
                         soundPlayedPoints[j] = true;

@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -327,7 +328,7 @@ public class MainActivity extends Activity {
         tvInfo.setVisibility(View.VISIBLE);
         tvInfo.setText("Feed the cats");
 
-        game1 = new Game(1);
+        game1 = new Game(this, 1);
         game1.setBackground(mainImView,R.drawable.demo1);
         overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
 
