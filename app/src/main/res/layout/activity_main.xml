@@ -56,6 +56,16 @@
         android:alpha="0.5"
         android:text="Test" />
 
+    <Button
+        android:id="@+id/buttonTest2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonTest"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:alpha="0.5"
+        android:text="Test2" />
+
     <TextView
         android:id="@+id/textViewDebug"
         android:layout_width="wrap_content"

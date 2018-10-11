@@ -133,13 +133,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onClick(View view) {
-                if(m_opened) StartCaptureNative();
-                else openCamera();
-
-                if(currentMode ==  Mode.TEST)
-                {
-                    endTestMode();
-                }
+                clearPreviousMode();
                 ChangeModeNative(1);
                 currentMode = Mode.CAMERA;
 
@@ -148,13 +142,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.buttonBackGr).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(m_opened) StartCaptureNative();
-                else openCamera();
-
-                if(currentMode ==  Mode.TEST)
-                {
-                    endTestMode();
-                }
+                clearPreviousMode();
                 ChangeModeNative(1);
                 currentMode = Mode.CAMERA;
                 DetectBackgroundNative();
@@ -163,10 +151,18 @@ public class MainActivity extends Activity {
         findViewById(R.id.buttonTest).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(m_opened) StartCaptureNative();
-                else openCamera();
+                clearPreviousMode();
+                initializeTestMode(1);
+                currentMode = Mode.TEST;
+                ChangeModeNative(2);
+            }
+        });
 
-                initializeTestMode();
+        findViewById(R.id.buttonTest2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                clearPreviousMode();
+                initializeTestMode(2);
                 currentMode = Mode.TEST;
                 ChangeModeNative(2);
             }
@@ -185,6 +181,15 @@ public class MainActivity extends Activity {
         sWrong = soundPool.load(this, R.raw.wrong2, 1);
         sCong = soundPool.load(this, R.raw.congratulations, 1);
 
+    }
+
+    private void clearPreviousMode(){
+        if(m_opened) StartCaptureNative();
+        else openCamera();
+        if(currentMode ==  Mode.TEST)
+        {
+            endTestMode();
+        }
     }
 
     @Override
@@ -320,7 +325,8 @@ public class MainActivity extends Activity {
 // TEST MODE FUNCTIONS ---------------------------------------------------------------------------------
 
     Game game1;
-    private void initializeTestMode(){
+    GameHalfVirtual game2;
+    private void initializeTestMode(int test){
         if (bmpOverlay == null) {
             bmpOverlay = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
         }
@@ -329,9 +335,18 @@ public class MainActivity extends Activity {
         tvInfo.setVisibility(View.VISIBLE);
         tvInfo.setText("Feed the cats");
 
-        game1 = new Game(this, 1);
-        game1.setBackground(mainImView,R.drawable.demo1);
-        overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
+        if(test == 1) {
+            game1 = new Game(this, 1);
+            game1.setBackground(mainImView, R.drawable.demo1);
+            overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
+            game2 = null;
+        }
+        else if(test == 2){
+            game2 = new GameHalfVirtual(this, 1);
+            game2.setBackground(mainImView, R.drawable.demo1); // bmpOverlay is initalized in game constructor
+            overlayImView.setImageBitmap(bmpOverlay);
+            game1 =null;
+        }
 
         if(soundsLoaded){
             sBackPlayId = soundPool.play(sBack, 0.1f, 0.1f,1,-1,1f);
@@ -351,42 +366,95 @@ public class MainActivity extends Activity {
             return;
         }
 
-        if(game1.state == GameState.OBJECT_PLACEMENT) {
-            final boolean allObjectsPlaced =game1.processBlobDescriptors(descriptors);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    overlayImView.setImageBitmap(bmpOverlay);
-                    if(allObjectsPlaced){
-                        tvInfo.setText("Which cat has more food?" );
-                        tvDebug.setText("Assesment has started");
+        if(game1 != null){
+            if(game1.state == GameState.OBJECT_PLACEMENT) {
+                final boolean allObjectsPlaced =game1.processBlobDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        overlayImView.setImageBitmap(bmpOverlay);
+                        if(allObjectsPlaced){
+                            tvInfo.setText("Which cat has more food?" );
+                            tvDebug.setText("Assesment has started");
+                        }
                     }
-                }
-            });
+                });
+            }
+            else if(game1.state == GameState.ASSESMENT_RUNNING)
+            {
+                final int correctAnswer = game1.processGestureDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(correctAnswer == 1){
+                            StopCaptureNative();
+                            tvInfo.setText("That is correct" );
+                            playSound(sApplause, sCong);
+                            overlayImView.setImageDrawable(null);
+                            addKonfetti("burst");
+                            float secs = (float)game1.assestmentTime /1000;
+                            String time = String.format("Answered in %.3f seconds", secs);
+                            tvDebug.setText(time);
+                        }
+                        else if(correctAnswer == -1){
+                            tvInfo.setText("That is wrong. Try again");
+                            playSound(sWrong);
+                        }
+                    }
+                });
+            }
         }
-        else if(game1.state == GameState.ASSESMENT_RUNNING)
-        {
-            final int correctAnswer = game1.processGestureDescriptors(descriptors);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if(correctAnswer == 1){
-                        StopCaptureNative();
-                        tvInfo.setText("That is correct" );
-                        playSound(sApplause, sCong);
-                        overlayImView.setImageDrawable(null);
-                        addKonfetti("burst");
-                        float secs = (float)game1.assestmentTime /1000;
-                        String time = String.format("Answered in %.3f seconds", secs);
-                        tvDebug.setText(time);
+
+        else if(game2 != null){
+            if(game2.state == GameState.OBJECT_PLACEMENT) {
+                final boolean allObjectsPlaced =game2.processBlobDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        overlayImView.setImageBitmap(bmpOverlay);
+                        if(allObjectsPlaced){
+                            tvInfo.setText("Which cat has more food?" );
+                            tvDebug.setText("Assesment has started");
+                        }
                     }
-                    else if(correctAnswer == -1){
-                        tvInfo.setText("That is wrong. Try again");
-                        playSound(sWrong);
+                });
+            }
+            else if(game2.state == GameState.ASSESMENT_RUNNING)
+            {
+                final int correctAnswer = game2.processGestureDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(correctAnswer == 1){
+                            StopCaptureNative();
+                            tvInfo.setText("That is correct" );
+                            playSound(sApplause, sCong);
+                            overlayImView.setImageDrawable(null);
+                            addKonfetti("burst");
+                            float secs = (float)game2.assestmentTime /1000;
+                            String time = String.format("Answered in %.3f seconds", secs);
+                            tvDebug.setText(time);
+                        }
+                        else if(correctAnswer == -1){
+                            tvInfo.setText("That is wrong. Try again");
+                            playSound(sWrong);
+                        }
                     }
+                });
+
+                if(correctAnswer == 1 && game2.level == 1){
+                    try {
+                        Thread.sleep(4000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    game2 = new GameHalfVirtual(getApplicationContext(), 2);
+                    StartCaptureNative();
                 }
-            });
+            }
         }
+
+
 
     }
 
