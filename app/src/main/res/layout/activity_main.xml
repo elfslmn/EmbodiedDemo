@@ -96,7 +96,7 @@
         android:background="@drawable/textview_style"
         android:gravity="center_vertical|center_horizontal"
         android:text="Level"
-        android:textColor="@color/gray"
+        android:textColor="@color/lightgray"
         android:textSize="30dp"
         android:visibility="gone" />
 
