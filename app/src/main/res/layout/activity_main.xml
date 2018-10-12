@@ -87,4 +87,17 @@
         android:textColor="@color/lightgray"
         android:visibility="gone"/>
 
+    <TextView
+        android:id="@+id/textViewLevel"
+        android:layout_width="500dp"
+        android:layout_height="200dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:background="@drawable/textview_style"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="Level"
+        android:textColor="@color/gray"
+        android:textSize="30dp"
+        android:visibility="gone" />
+
 </RelativeLayout>

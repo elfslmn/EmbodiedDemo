@@ -6,6 +6,7 @@
     <color name="black">#000000</color>
     <color name="transparent">#00000000</color>
     <color name="lightgray">#C2C2C2</color>
+    <color name="gray">#463f3f</color>
     <color name="blue">#0d8caf</color>
     <color name="green">#57cc34</color>
     <color name="red">#d41616</color>

@@ -16,14 +16,21 @@ import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.transitionseverywhere.Slide;
+import com.transitionseverywhere.TransitionManager;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import nl.dionsegijn.konfetti.KonfettiView;
 import nl.dionsegijn.konfetti.models.Shape;
@@ -44,9 +51,13 @@ public class MainActivity extends Activity {
 
     public Bitmap bmpCam = null;
     public static Bitmap bmpOverlay = null;
-    private ImageView mainImView, overlayImView;
-    TextView tvInfo, tvDebug;
+
+    RelativeLayout mainLayout;
+    ImageView mainImView, overlayImView;
+    TextView tvInfo, tvDebug, tvLevel;
     KonfettiView konfettiView;
+
+    Slide slide = new Slide();
 
     boolean m_opened;
     Mode currentMode;
@@ -123,11 +134,13 @@ public class MainActivity extends Activity {
             }
         });
 
+        mainLayout = findViewById(R.id.mainLayout);
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
         konfettiView = findViewById(R.id.viewKonfetti);
         tvInfo = findViewById(R.id.textViewInfo);
         tvDebug = findViewById(R.id.textViewDebug);
+        tvLevel = findViewById(R.id.textViewLevel);
 
         findViewById(R.id.buttonCamera).setOnClickListener(new View.OnClickListener() {
 
@@ -168,7 +181,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        soundPool = new SoundPool(3, AudioManager.STREAM_MUSIC, 0);
+        soundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
         soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             @Override
             public void onLoadComplete(SoundPool soundPool, int i, int i1) {
@@ -180,6 +193,10 @@ public class MainActivity extends Activity {
         sApplause = soundPool.load(this, R.raw.applause, 1);
         sWrong = soundPool.load(this, R.raw.wrong2, 1);
         sCong = soundPool.load(this, R.raw.congratulations, 1);
+
+        slide.setSlideEdge(Gravity.BOTTOM);
+        slide.addTarget(tvLevel);
+        slide.setDuration(500);
 
     }
 
@@ -340,12 +357,14 @@ public class MainActivity extends Activity {
             game1.setBackground(mainImView, R.drawable.demo1);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
             game2 = null;
+            showLevelInfo("LEVEL 1\nPlace the objects into red circles");
         }
         else if(test == 2){
             game2 = new GameHalfVirtual(this, 1);
             game2.setBackground(mainImView, R.drawable.demo2); // bmpOverlay is initalized in game constructor
             overlayImView.setImageBitmap(bmpOverlay);
             game1 =null;
+            showLevelInfo("LEVEL 2\nPlace the objects into red circles");
         }
         wrong = 0;
 
@@ -443,13 +462,17 @@ public class MainActivity extends Activity {
                     }
                 });
 
+                // Test2 finished , apply test2 plus
                 if(correctAnswer == 1 && game2.level == 1){
-                    try {
-                        Thread.sleep(4000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    game2 = new GameHalfVirtual(getApplicationContext(), 2);
+                    sleep(4000);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLevelInfo("LEVEL 3\n Choose one of the rectangles");
+                        }
+                    });
+                    sleep(3500); 
+                    game2.initialize(2);
                     wrong = 0;
                     StartCaptureNative();
                 }
@@ -475,11 +498,7 @@ public class MainActivity extends Activity {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    sleep(1000);
                     isPlaying = false;
                 }
             }).start();
@@ -535,6 +554,32 @@ public class MainActivity extends Activity {
 
         }
 
+    }
+
+    private void showLevelInfo(String info){
+        tvLevel.setText(info);
+        TransitionManager.beginDelayedTransition(mainLayout,slide);
+        tvLevel.setVisibility(View.VISIBLE);
+        Timer t = new Timer(false);
+        t.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        TransitionManager.beginDelayedTransition(mainLayout,slide);
+                        tvLevel.setVisibility(View.GONE);
+                    }
+                });
+            }
+        }, 3000);
+    }
+
+    private void sleep(long millis){
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 

@@ -40,5 +40,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71'
     implementation 'nl.dionsegijn:konfetti:1.1.2'
+    implementation "com.andkulikov:transitionseverywhere:1.8.0"
 
 }
