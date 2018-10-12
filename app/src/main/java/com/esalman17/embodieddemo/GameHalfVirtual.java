@@ -7,7 +7,6 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.widget.ImageView;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -17,23 +16,27 @@ import java.util.Arrays;
 
 public class GameHalfVirtual {
     private static String LOG_TAG = "Game";
-    public ArrayList<Point> wantedPoints = new ArrayList<>(10);
-    public ArrayList<Point> virtualPoints = new ArrayList<>(10);
+    public ArrayList<Point> wantedPoints;
+    public ArrayList<Point> virtualPoints;
     public Rect left, right;
     public long startTime, assestmentTime; // both in msec
     public GameState state;
     public int level;
     private Side correctSide;
     private boolean[] soundPlayedPoints;
-    Context context;
     Drawable orange;
 
     public GameHalfVirtual(Context context, int level) {
-        this.context = context;
+        initialize(level);
+        orange = context.getResources().getDrawable(R.drawable.orange);
+    }
+
+    public void initialize(int level){
         this.level = level;
         state =  GameState.OBJECT_PLACEMENT;
-        initialize(level);
 
+        wantedPoints = new ArrayList<>(10);
+        virtualPoints = new ArrayList<>(10);
         // initialize canvas
         Canvas canvas = new Canvas(MainActivity.bmpOverlay);
         canvas.drawPaint(GamePaint.eraser);
@@ -41,11 +44,6 @@ public class GameHalfVirtual {
             canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
         }
 
-        orange = context.getResources().getDrawable(R.drawable.orange);
-        Log.i(LOG_TAG, "New game object (level=" + level + ") is created");
-    }
-
-    private void initialize(int level){
         switch (level){
             case 1:
                 wantedPoints.add(new Point(280, 450));
@@ -80,6 +78,7 @@ public class GameHalfVirtual {
                 Arrays.fill(soundPlayedPoints, Boolean.TRUE);
                 break;
         }
+        Log.i(LOG_TAG, "New game object (level=" + level + ") is initialized");
     }
 
     public boolean processBlobDescriptors(int[] descriptors){
