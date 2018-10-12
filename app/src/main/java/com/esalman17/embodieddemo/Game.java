@@ -19,32 +19,24 @@ public class Game {
     private static String LOG_TAG = "Game";
     public ArrayList<Point> wantedPoints;
     public Rect left, right;
+    public Rect gesture_left, gesture_right;
     public long startTime, assestmentTime; // both in msec
     public GameState state;
     public int level;
     private Side correctSide;
     private boolean[] soundPlayedPoints;
-    Context context;
     Drawable lemon;
 
     public Game(Context context, int level) {
-        this.context = context;
         this.level = level;
-        state =  GameState.OBJECT_PLACEMENT;
         initialize(level);
-
-        // initialize canvas
-        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
-        canvas.drawPaint(GamePaint.eraser);
-        for(Point p : wantedPoints){
-            canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
-        }
-
         lemon = context.getResources().getDrawable(R.drawable.apple);
-        Log.i(LOG_TAG, "New game object (level=" + level + ") is created");
     }
 
-    private void initialize(int level){
+    public void initialize(int level){
+        this.level = level;
+        state =  GameState.OBJECT_PLACEMENT;
+
         wantedPoints = new ArrayList<>(10);
         switch (level){
             case 1:
@@ -60,6 +52,20 @@ public class Game {
                 break;
 
         }
+
+        // initialize canvas
+        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
+        canvas.drawPaint(GamePaint.eraser);
+        for(Point p : wantedPoints){
+            canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
+        }
+
+        gesture_left = new Rect(left);
+        gesture_left.top = 0;
+        gesture_right = new Rect(right);
+        gesture_right.top = 0;
+
+        Log.i(LOG_TAG, "New game object (level=" + level + ") is initialized");
     }
 
     public boolean processBlobDescriptors(int[] descriptors){
@@ -157,14 +163,14 @@ public class Game {
     }
 
     private Rect getCorrectSide(){
-        if(correctSide == Side.LEFT) return left;
-        else if(correctSide == Side.RIGHT) return right;
+        if(correctSide == Side.LEFT) return gesture_left;
+        else if(correctSide == Side.RIGHT) return gesture_right;
         else return null;
     }
 
     private Rect getWrongSide(){
-        if(correctSide == Side.LEFT) return right;
-        else if(correctSide == Side.RIGHT) return left;
+        if(correctSide == Side.LEFT) return gesture_right;
+        else if(correctSide == Side.RIGHT) return gesture_left;
         else return null;
     }
 

@@ -19,6 +19,7 @@ public class GameHalfVirtual {
     public ArrayList<Point> wantedPoints;
     public ArrayList<Point> virtualPoints;
     public Rect left, right;
+    public Rect gesture_left, gesture_right;
     public long startTime, assestmentTime; // both in msec
     public GameState state;
     public int level;
@@ -37,12 +38,6 @@ public class GameHalfVirtual {
 
         wantedPoints = new ArrayList<>(10);
         virtualPoints = new ArrayList<>(10);
-        // initialize canvas
-        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
-        canvas.drawPaint(GamePaint.eraser);
-        for(Point p : wantedPoints){
-            canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
-        }
 
         switch (level){
             case 1:
@@ -78,6 +73,19 @@ public class GameHalfVirtual {
                 Arrays.fill(soundPlayedPoints, Boolean.TRUE);
                 break;
         }
+
+        // initialize canvas
+        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
+        canvas.drawPaint(GamePaint.eraser);
+        for(Point p : wantedPoints){
+            canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
+        }
+
+        gesture_left = new Rect(left);
+        gesture_left.top = 0;
+        gesture_right = new Rect(right);
+        gesture_right.top = 0;
+
         Log.i(LOG_TAG, "New game object (level=" + level + ") is initialized");
     }
 
@@ -185,14 +193,14 @@ public class GameHalfVirtual {
     }
 
     private Rect getCorrectSide(){
-        if(correctSide == Side.LEFT) return left;
-        else if(correctSide == Side.RIGHT) return right;
+        if(correctSide == Side.LEFT) return gesture_left;
+        else if(correctSide == Side.RIGHT) return gesture_right;
         else return null;
     }
 
     private Rect getWrongSide(){
-        if(correctSide == Side.LEFT) return right;
-        else if(correctSide == Side.RIGHT) return left;
+        if(correctSide == Side.LEFT) return gesture_right;
+        else if(correctSide == Side.RIGHT) return gesture_left;
         else return null;
     }
 
