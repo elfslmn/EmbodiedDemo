@@ -1,7 +1,6 @@
 package com.esalman17.embodieddemo;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -25,21 +24,20 @@ public class Game {
     public int level;
     private Side correctSide;
     private boolean[] soundPlayedPoints;
-    Drawable lemon;
+    Drawable apple;
 
     public Game(Context context, int level) {
         this.level = level;
         initialize(level);
-        lemon = context.getResources().getDrawable(R.drawable.apple);
+        apple = context.getResources().getDrawable(R.drawable.apple);
     }
 
     public void initialize(int level){
         this.level = level;
-        state =  GameState.OBJECT_PLACEMENT;
-
         wantedPoints = new ArrayList<>(10);
         switch (level){
             case 1:
+                state =  GameState.OBJECT_PLACEMENT;
                 wantedPoints.add(new Point(280, 450));
                 wantedPoints.add(new Point(400, 400));
                 wantedPoints.add(new Point(500, 500));
@@ -49,6 +47,11 @@ public class Game {
                 right = new Rect(700, 250, 1080, 600);
                 correctSide = Side.LEFT;
                 soundPlayedPoints = new boolean[wantedPoints.size()];
+                break;
+            case 2:
+                state = GameState.ASSESMENT_RUNNING;
+                left = new Rect(200, 250, 580, 600);
+                right = new Rect(700, 250, 1080, 600);
                 break;
 
         }
@@ -92,8 +95,8 @@ public class Game {
                     canvas.drawCircle(p2.x, p2.y, 55, GamePaint.eraser);
                     //canvas.drawCircle(p1.x, p1.y, 50, GamePaint.green);
 
-                    lemon.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-                    lemon.draw(canvas);
+                    apple.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                    apple.draw(canvas);
 
                     match = true;
                     if( !soundPlayedPoints[j]){
@@ -172,6 +175,50 @@ public class Game {
         if(correctSide == Side.LEFT) return gesture_right;
         else if(correctSide == Side.RIGHT) return gesture_left;
         else return null;
+    }
+
+    int correctCounter = 0;
+    public boolean processBlobDescriptorsForLevel2(int[] descriptors){
+        // initialize canvas
+        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
+        canvas.drawPaint(GamePaint.eraser);
+        canvas.drawRect(left, GamePaint.red);
+        canvas.drawRect(right, GamePaint.red);
+
+        // start processing
+        int countLeft = 0, countRight = 0;
+        for (int i = 0; i <= descriptors.length - 3; i += 3)
+        {
+            if (descriptors[i + 2] == 1) continue; // it is edge-connected blob
+
+            Point p1 = new Point(descriptors[i], descriptors[i + 1]);
+            if(left.contains(p1.x, p1.y)){
+                apple.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                apple.draw(canvas);
+                countLeft++;
+            }
+            else if(right.contains(p1.x, p1.y)){
+                apple.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                apple.draw(canvas);
+                countRight++;
+            }
+
+        }
+        if(countLeft == countRight && countLeft !=0){
+            correctCounter++;
+        }
+        else{
+            correctCounter = 0;
+        }
+        Log.d(LOG_TAG, "left ="+countLeft+" right="+countRight+" correct counter="+correctCounter);
+        if(correctCounter >= 5){
+            state = GameState.ASSESMENT_FINISHED; // level finshed
+            assestmentTime = (System.currentTimeMillis() -startTime);
+            Log.i(LOG_TAG, "ASSESMENT_FINISHED: Left and right has equal number of objects.");
+            return true;
+        }
+
+        return false;
     }
 
 

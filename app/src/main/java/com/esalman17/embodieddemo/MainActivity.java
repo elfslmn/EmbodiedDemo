@@ -364,7 +364,7 @@ public class MainActivity extends Activity {
             game2.setBackground(mainImView, R.drawable.demo2); // bmpOverlay is initalized in game constructor
             overlayImView.setImageBitmap(bmpOverlay);
             game1 =null;
-            showLevelInfo("LEVEL 2\nPlace the objects into red circles");
+            showLevelInfo("LEVEL 3\nPlace the objects into red circles");
         }
         wrong = 0;
 
@@ -386,7 +386,7 @@ public class MainActivity extends Activity {
             return;
         }
 
-        if(game1 != null){
+        if(game1 != null && game1.level == 1){
             if(game1.state == GameState.OBJECT_PLACEMENT) {
                 final boolean allObjectsPlaced =game1.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -419,6 +419,46 @@ public class MainActivity extends Activity {
                         else if(correctAnswer == -1){
                             tvInfo.setText("That is wrong. Try again");
                             playSound(sWrong);
+                        }
+                    }
+                });
+
+                // Test1 finished , apply test1 plus (equality)
+                if(correctAnswer == 1 && game1.level == 1){
+                    sleep(4000);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            tvInfo.setText(null);
+                            showLevelInfo("LEVEL 2\n Give equal number of apples to both cats");
+                        }
+                    });
+                    sleep(3500);
+                    game1.initialize(2);
+                    wrong = 0;
+                    StartCaptureNative();
+                    game1.startTime = System.currentTimeMillis();
+                }
+            }
+        }
+
+        else if(game1 != null && game1.level == 2){
+            if(game1.state == GameState.ASSESMENT_RUNNING) {
+                final boolean correctAnswer = game1.processBlobDescriptorsForLevel2(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (correctAnswer) {
+                            StopCaptureNative();
+                            tvInfo.setText("That is correct");
+                            playSound(sApplause, sCong);
+                            overlayImView.setImageDrawable(null);
+                            addKonfetti("burst");
+                            float secs = (float) game1.assestmentTime / 1000;
+                            String time = String.format("Solved in %.3f seconds", secs);
+                            tvDebug.setText(time);
+                        } else {
+                            overlayImView.setImageBitmap(bmpOverlay);
                         }
                     }
                 });
@@ -468,7 +508,7 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showLevelInfo("LEVEL 3\n Choose one of the rectangles");
+                            showLevelInfo("LEVEL 4\n Choose one of the rectangles");
                         }
                     });
                     sleep(3500); 
