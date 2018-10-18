@@ -54,7 +54,7 @@ public class MainActivity extends Activity {
 
     RelativeLayout mainLayout;
     ImageView mainImView, overlayImView;
-    TextView tvInfo, tvDebug, tvLevel;
+    TextView tvInfo, tvDebug, tvLevel, tvResult;
     KonfettiView konfettiView;
 
     Slide slide = new Slide();
@@ -141,6 +141,7 @@ public class MainActivity extends Activity {
         tvInfo = findViewById(R.id.textViewInfo);
         tvDebug = findViewById(R.id.textViewDebug);
         tvLevel = findViewById(R.id.textViewLevel);
+        tvResult = findViewById(R.id.textViewResults);
 
         findViewById(R.id.buttonCamera).setOnClickListener(new View.OnClickListener() {
 
@@ -343,6 +344,7 @@ public class MainActivity extends Activity {
 
     Game game1;
     GameHalfVirtual game2;
+    String[] results = new String[4];
     private void initializeTestMode(int test){
         if (bmpOverlay == null) {
             bmpOverlay = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
@@ -376,6 +378,7 @@ public class MainActivity extends Activity {
         mainImView.setImageBitmap(bmpCam);
         overlayImView.setVisibility(View.GONE);
         tvInfo.setVisibility(View.GONE);
+        tvResult.setVisibility(View.GONE);
         soundPool.stop(sBackPlayId);
     }
 
@@ -413,7 +416,8 @@ public class MainActivity extends Activity {
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
                             float secs = (float)game1.assestmentTime /1000;
-                            String time = String.format("Answered in %.3f seconds with %d wrong", secs, wrong);
+                            String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
+                            results[0] = time;
                             tvDebug.setText(time);
                         }
                         else if(correctAnswer == -1){
@@ -456,6 +460,7 @@ public class MainActivity extends Activity {
                             addKonfetti("burst");
                             float secs = (float) game1.assestmentTime / 1000;
                             String time = String.format("Solved in %.3f seconds", secs);
+                            results[1] = time;
                             tvDebug.setText(time);
                         } else {
                             overlayImView.setImageBitmap(bmpOverlay);
@@ -492,7 +497,8 @@ public class MainActivity extends Activity {
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
                             float secs = (float)game2.assestmentTime /1000;
-                            String time = String.format("Answered in %.3f seconds with %d wrong", secs, wrong);
+                            String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
+                            results[game2.level+1] = time;
                             tvDebug.setText(time);
                         }
                         else if(correctAnswer == -1){
@@ -515,6 +521,30 @@ public class MainActivity extends Activity {
                     game2.initialize(2);
                     wrong = 0;
                     StartCaptureNative();
+                }
+                // Test2 finished , end of the session
+                else if(correctAnswer == 1 && game2.level == 2){
+                    sleep(4000);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String info = "Results: \n";
+                            for(int i=0; i <4; i++){
+                                info += "Level "+(i+1)+": ";
+                                if(results[i] == null){
+                                   info += "Did not attempted \n";
+                                }
+                                else{
+                                   info += results[i]+"\n";
+                                }
+                            }
+                            tvInfo.setText(null);
+                            soundPool.stop(sBackPlayId);
+                            tvResult.setText(info);
+                            TransitionManager.beginDelayedTransition(mainLayout,slide);
+                            tvResult.setVisibility(View.VISIBLE);
+                        }
+                    });
                 }
             }
         }
