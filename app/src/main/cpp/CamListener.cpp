@@ -83,6 +83,11 @@ void CamListener::setMode(int i){
 
 void CamListener::onNewData (const DepthData *data)
 {
+    /*if (data->exposureTimes.size () >= 3)
+    {
+        LOGD ("ExposureTimes: %d, %d, %d", data->exposureTimes.at (0), data->exposureTimes.at (1), data->exposureTimes.at (2));
+    }*/
+
     lock_guard<mutex> lock (flagMutex);
     if(back_detecting)
     {
@@ -110,7 +115,7 @@ void CamListener::onNewData (const DepthData *data)
         // calculate differences between new image and background then find contours of diff blobs
         diff = backgrMat - zImage;
         medianBlur(diff, diff, 5);
-        threshold(diff, diffBin, averageNoise, 255, CV_THRESH_BINARY);
+        threshold(diff, diffBin, averageNoise+0.002, 255, CV_THRESH_BINARY); //TODO threshold??
         diffBin.convertTo(diffBin, CV_8UC1);
         vector<vector<Point> > contours;
         findContours(diffBin, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
@@ -142,23 +147,30 @@ void CamListener::onNewData (const DepthData *data)
 float CamListener::getDepthImage(const DepthData* data, Mat & img, bool background){
     int noiseCounter = 0;
     float sumNoise = 0;
+    //float maxNoise = 0;
     int confidence = background ? 0:MIN_DEPTH_CONFIDENCE;
     // save data as image matrix
     int k = img.rows * img.cols -1 ; // to flip screen
-    for (int y = 0; y < img.rows; y++)
+    k -= MARGIN*img.cols;
+    for (int y = MARGIN; y < img.rows-MARGIN; y++)
     {
         float *zRowPtr = img.ptr<float> (y);
-        for (int x = 0; x < img.cols; x++, k--)
+        k -= MARGIN;
+        for (int x = MARGIN; x < img.cols-MARGIN; x++, k--)
         {
             auto curPoint = data->points.at (k);
             if (curPoint.depthConfidence > confidence)
             {
                 zRowPtr[x] = curPoint.z < MAX_DISTANCE ? curPoint.z : MAX_DISTANCE;
+                //maxNoise = max(maxNoise, curPoint.noise);
                 sumNoise += curPoint.noise;
                 noiseCounter++;
             }
+
         }
+        k -= MARGIN;
     }
+    //LOGD("Avg noise = %.3f\t Max noise=%.3f",sumNoise/noiseCounter, maxNoise);
     return sumNoise/noiseCounter;
 }
 
@@ -170,7 +182,7 @@ pair<int, int> CamListener::convertCamPixel2ProPixel(float x, float y, float z){
         return {-1,-1};
     }
 
-    //scale = sin(camFov/2) / sin(proFov/2)
+    //scale = sin(camFov/2) / sin(projFov/2)
     float scale_x = 1.3074;
     float scale_y = 1.8256;
     float shifty = 486.69004 * exp(-0.048035356*z);
@@ -189,7 +201,8 @@ pair<int, int> CamListener::convertCamPixel2ProPixel(float x, float y, float z){
 bool CamListener::checkIfContourIntersectWithEdge(const vector<Point>& pts, int img_width, int img_height)
 {
     auto rect = boundingRect(pts);
-    return (rect.tl().x == 0 || rect.tl().y == 0 || rect.br().y ==img_height || rect.br().x == img_width);
+    return (rect.tl().x <= MARGIN || rect.tl().y <= MARGIN ||
+            rect.br().y >= img_height-MARGIN || rect.br().x >= img_width-MARGIN);
 }
 
 void CamListener::visualizeContours(Mat & src, Mat & output, const vector<vector<Point> > & contours){

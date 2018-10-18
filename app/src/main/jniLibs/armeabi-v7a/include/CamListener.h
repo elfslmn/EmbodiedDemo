@@ -15,8 +15,9 @@ using namespace cv;
 
 const float MAX_DISTANCE = 1.0f;
 const int BACKGROUND_FRAME_COUNT = 20;
-const int MIN_CONTOUR_AREA = 50;
-const int MIN_DEPTH_CONFIDENCE = 70;
+const int MIN_CONTOUR_AREA = 20;
+const int MIN_DEPTH_CONFIDENCE = 170;
+const int MARGIN = 20;
 
 class CamListener : public royale::IDepthDataListener {
 
