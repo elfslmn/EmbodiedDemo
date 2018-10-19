@@ -15,9 +15,12 @@ using namespace cv;
 
 const float MAX_DISTANCE = 1.0f;
 const int BACKGROUND_FRAME_COUNT = 20;
-const int MIN_CONTOUR_AREA = 20;
-const int MIN_DEPTH_CONFIDENCE = 170;
-const int MARGIN = 20;
+const int MIN_CONTOUR_AREA = 100;
+const int MIN_DEPTH_CONFIDENCE = 100;
+const int MARGIN = 10;
+const int RETRO_THRESHOLD = 1000;
+const int MIN_RETRO_AREA = 0;
+const float OBJECT_HEIGHT = 0.02f; // in meter
 
 class CamListener : public royale::IDepthDataListener {
 
@@ -40,9 +43,11 @@ private:
     pair<int, int> convertCamPixel2ProPixel(float x, float y, float z);
     bool checkIfContourIntersectWithEdge(const vector<Point>& pts, int img_width, int img_height);
     void onNewData (const DepthData *data);
-    void visualizeContours(Mat & src, Mat & output, const vector<vector<Point> > & contours);
-    void getBlobs(vector<int> & blobs, const vector<vector<Point> > & contours);
-    float getDepthImage(const DepthData* data, Mat & img, bool background);
+    void visualizeBlobs(Mat & src, Mat & output, const vector<vector<Point> > & contours,
+                        const vector<vector<Point> > & retro_contours = vector<vector<Point> >());
+    void getBlobs(vector<int> & blobs, const vector<vector<Point> > & contours,
+                  const vector<vector<Point> > & retro_contours = vector<vector<Point> >());
+    float updateDepthGrayImage(const DepthData* data, Mat & depth, Mat & gray, bool background);
 
 
     // Private variables
@@ -53,6 +58,7 @@ private:
     Mat zImage, backgrMat;
     Mat diff, diffBin;
     Mat drawing;
+    Mat gray, grayBin;
 
     mutex flagMutex;
 

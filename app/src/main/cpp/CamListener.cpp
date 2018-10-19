@@ -18,6 +18,8 @@ void CamListener::initialize(uint16_t width, uint16_t height){
     backgrMat.create (Size (cam_width,cam_height), CV_32FC1);
     backgrMat = Scalar::all (0);
     drawing = Mat::zeros(cam_height, cam_width, CV_8UC3);
+    gray.create (Size (cam_width,cam_height), CV_16UC1);
+
     putText(drawing, "Click Backgr button",Point(30,30),FONT_HERSHEY_PLAIN ,1,Scalar(0,0,255),1);
 }
 
@@ -92,7 +94,7 @@ void CamListener::onNewData (const DepthData *data)
     if(back_detecting)
     {
         zImage = Scalar::all(0);
-        float frameNoise = getDepthImage(data, zImage, true);
+        float frameNoise = updateDepthGrayImage(data, zImage, gray, true);
 
         // get avarage around 20 frame
         backgrMat += zImage;
@@ -110,7 +112,7 @@ void CamListener::onNewData (const DepthData *data)
     else if (detected)
     {
         zImage = backgrMat.clone();
-        getDepthImage(data, zImage, false);
+        updateDepthGrayImage(data, zImage, gray, false);
 
         // calculate differences between new image and background then find contours of diff blobs
         diff = backgrMat - zImage;
@@ -120,14 +122,23 @@ void CamListener::onNewData (const DepthData *data)
         vector<vector<Point> > contours;
         findContours(diffBin, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
+        // Find retro blobs
+        vector<vector<Point> > retro_contours;
+        if(!gray.empty()){
+            threshold(gray, grayBin, RETRO_THRESHOLD, 255, CV_THRESH_BINARY);
+            grayBin.convertTo(grayBin, CV_8UC1);
+            findContours(grayBin, retro_contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));;
+        }
+
 
         if(currentMode == CAMERA)
         {
-            visualizeContours(zImage, drawing, contours);
+            visualizeBlobs(zImage, drawing, contours, retro_contours);
         }
         else if(currentMode == TEST)
         {
-            getBlobs(blobCenters, contours);
+            blobCenters.clear();
+            getBlobs(blobCenters, contours, retro_contours);
         }
 
     }
@@ -144,28 +155,50 @@ void CamListener::onNewData (const DepthData *data)
 
 }
 
-float CamListener::getDepthImage(const DepthData* data, Mat & img, bool background){
+float CamListener::updateDepthGrayImage(const DepthData* data, Mat & depth, Mat & gray, bool background){
     int noiseCounter = 0;
     float sumNoise = 0;
-    //float maxNoise = 0;
+    bool isDepth =true , isGray = true;
+    if(depth.empty()) {isDepth = false; LOGD("depth not found");}
+    if(gray.empty()) {isGray = false; LOGD("gray not found");}
+    if(!isGray && !isDepth){
+        LOGE("Both depth and gray image is null");
+        return -1;
+    }
+
     int confidence = background ? 0:MIN_DEPTH_CONFIDENCE;
     // save data as image matrix
-    int k = img.rows * img.cols -1 ; // to flip screen
-    k -= MARGIN*img.cols;
-    for (int y = MARGIN; y < img.rows-MARGIN; y++)
+    int k = 0, rows =0, cols = 0;
+    if(isDepth){
+        k = depth.rows * depth.cols -1 ; // to flip screen
+        k -= MARGIN*depth.cols;
+        rows = depth.rows;
+        cols = depth.cols;
+    }
+    else if(isGray){
+        k = gray.rows * gray.cols -1 ; // to flip screen
+        k -= MARGIN*gray.cols;
+        rows = gray.rows;
+        cols = gray.cols;
+    }
+
+    for (int y = MARGIN; y < rows-MARGIN; y++)
     {
-        float *zRowPtr = img.ptr<float> (y);
+        float *zRowPtr;
+        uint16_t *gRowPtr;
+        if(isDepth) zRowPtr = depth.ptr<float> (y);
+        if(isGray ) gRowPtr = gray.ptr<uint16_t> (y);
         k -= MARGIN;
-        for (int x = MARGIN; x < img.cols-MARGIN; x++, k--)
+        for (int x = MARGIN; x < cols-MARGIN; x++, k--)
         {
             auto curPoint = data->points.at (k);
             if (curPoint.depthConfidence > confidence)
             {
-                zRowPtr[x] = curPoint.z < MAX_DISTANCE ? curPoint.z : MAX_DISTANCE;
-                //maxNoise = max(maxNoise, curPoint.noise);
+                if(isDepth) zRowPtr[x] = curPoint.z < MAX_DISTANCE ? curPoint.z : MAX_DISTANCE;
                 sumNoise += curPoint.noise;
                 noiseCounter++;
             }
+            if(isGray ) gRowPtr[x] = curPoint.grayValue;
 
         }
         k -= MARGIN;
@@ -187,7 +220,7 @@ pair<int, int> CamListener::convertCamPixel2ProPixel(float x, float y, float z){
     float scale_y = 1.8256;
     float shifty = 486.69004 * exp(-0.048035356*z);
     float px = x * disp_width* scale_x / cam_width - disp_width*(scale_x -1) /2 +10;  // shiftx nearly 0
-    float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty + 580;
+    float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty + 620;
 
     if(px > disp_width || px < 0 || py>disp_height|| py < 0){
         //LOGD("Point is outside of the projector view");
@@ -205,7 +238,9 @@ bool CamListener::checkIfContourIntersectWithEdge(const vector<Point>& pts, int 
             rect.br().y >= img_height-MARGIN || rect.br().x >= img_width-MARGIN);
 }
 
-void CamListener::visualizeContours(Mat & src, Mat & output, const vector<vector<Point> > & contours){
+void CamListener::visualizeBlobs(Mat & src, Mat & output, const vector<vector<Point> > & contours,
+                                 const vector<vector<Point> > & retro_contours)
+{
     src.at<float>(0, 0) = MAX_DISTANCE;
     normalize(src, output, 0, 255, NORM_MINMAX, CV_8UC1);
     output = 255 - output;
@@ -238,10 +273,25 @@ void CamListener::visualizeContours(Mat & src, Mat & output, const vector<vector
             circle(output, center, 2, Scalar(255, 0, 0));
         }
     }
+
+    for (unsigned int i = 0; i < retro_contours.size(); i++)
+    {
+        if (contourArea(retro_contours[i]) < MIN_RETRO_AREA)
+        {
+            drawContours(output, retro_contours, i, Scalar(255, 0, 255));
+            continue;
+        }
+        else
+        {
+            drawContours(output, retro_contours, i, Scalar(255, 255, 0));
+        }
+    }
+
 }
 
-void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & contours){
-    blobs.clear();
+void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & contours,
+                           const vector<vector<Point> > & retro_contours)
+{
     for (unsigned int i = 0; i < contours.size(); i++)
     {
         if (contourArea(contours[i]) < MIN_CONTOUR_AREA) continue;
@@ -259,12 +309,13 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
         }
         else
         {
-            Moments mu = moments(contours[i], false);
+            /*Moments mu = moments(contours[i], false);
             x = mu.m10 / mu.m00;
-            y = mu.m01 / mu.m00;
+            y = mu.m01 / mu.m00; */
+            continue;
         }
 
-        if(x >= cam_width || x < 0 || y >= cam_height || y < 0)  continue;
+        if(x >= cam_width - MARGIN || x < MARGIN || y >= cam_height - MARGIN || y < MARGIN )  continue;
 
         float z = zImage.at<float>((int)y,(int)x);
         auto center = convertCamPixel2ProPixel(x,y,z);
@@ -272,6 +323,27 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
 
         blobs.push_back(center.first);
         blobs.push_back(center.second);
-        blobs.push_back(conEdge);
+        blobs.push_back(1); // 1 means it is a gesture blob
     }
+
+    for (unsigned int i = 0; i < retro_contours.size(); i++)
+    {
+        if (contourArea(retro_contours[i]) < MIN_RETRO_AREA) continue;
+
+        Moments mu = moments(retro_contours[i], false);
+        float x = mu.m10 / mu.m00;
+        float y = mu.m01 / mu.m00;
+
+        if(x >= cam_width - MARGIN || x < MARGIN || y >= cam_height - MARGIN || y < MARGIN )  continue;
+
+        float z = backgrMat.at<float>((int)y,(int)x) + OBJECT_HEIGHT;
+        auto center = convertCamPixel2ProPixel(x,y,z);
+
+        blobs.push_back(center.first);
+        blobs.push_back(center.second);
+        blobs.push_back(0); // 0 means it is a retro blob
+
+    }
+
+
 }
