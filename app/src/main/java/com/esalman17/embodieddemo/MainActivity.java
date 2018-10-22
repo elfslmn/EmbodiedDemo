@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -355,7 +354,7 @@ public class MainActivity extends Activity {
         tvInfo.setText("Feed the cats");
 
         if(test == 1) {
-            game1 = new Game(this, 1);
+            game1 = new GameBothReal(this, 1);
             game1.setBackground(mainImView, R.drawable.demo1);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
             game2 = null;
@@ -389,7 +388,7 @@ public class MainActivity extends Activity {
             return;
         }
 
-        if(game1 != null && game1.level == 1){
+        if(game1 != null && game1 instanceof GameBothReal){
             if(game1.state == GameState.OBJECT_PLACEMENT) {
                 final boolean allObjectsPlaced =game1.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -438,7 +437,7 @@ public class MainActivity extends Activity {
                         }
                     });
                     sleep(3500);
-                    game1.initialize(2);
+                    game1 = new GameEqualize(this, 1);
                     wrong = 0;
                     StartCaptureNative();
                     game1.startTime = System.currentTimeMillis();
@@ -446,9 +445,9 @@ public class MainActivity extends Activity {
             }
         }
 
-        else if(game1 != null && game1.level == 2){
+        else if(game1 != null && game1 instanceof GameEqualize){
             if(game1.state == GameState.ASSESMENT_RUNNING) {
-                final boolean correctAnswer = game1.processBlobDescriptorsForLevel2(descriptors);
+                final boolean correctAnswer = game1.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
