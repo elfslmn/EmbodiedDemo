@@ -17,10 +17,10 @@ const float MAX_DISTANCE = 1.0f;
 const int BACKGROUND_FRAME_COUNT = 20;
 const int MIN_CONTOUR_AREA = 100;
 const int MIN_DEPTH_CONFIDENCE = 100;
-const int MARGIN = 10;
+const int MARGIN = 20;
 const int RETRO_THRESHOLD = 1000;
 const int MIN_RETRO_AREA = 0;
-const float OBJECT_HEIGHT = 0.02f; // in meter
+const float OBJECT_HEIGHT = 0.025f; // in meter
 
 class CamListener : public royale::IDepthDataListener {
 

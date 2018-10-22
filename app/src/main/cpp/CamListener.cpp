@@ -117,7 +117,7 @@ void CamListener::onNewData (const DepthData *data)
         // calculate differences between new image and background then find contours of diff blobs
         diff = backgrMat - zImage;
         medianBlur(diff, diff, 5);
-        threshold(diff, diffBin, averageNoise+0.002, 255, CV_THRESH_BINARY); //TODO threshold??
+        threshold(diff, diffBin, averageNoise+0.005, 255, CV_THRESH_BINARY); //TODO threshold??
         diffBin.convertTo(diffBin, CV_8UC1);
         vector<vector<Point> > contours;
         findContours(diffBin, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
@@ -219,8 +219,8 @@ pair<int, int> CamListener::convertCamPixel2ProPixel(float x, float y, float z){
     float scale_x = 1.3074;
     float scale_y = 1.8256;
     float shifty = 486.69004 * exp(-0.048035356*z);
-    float px = x * disp_width* scale_x / cam_width - disp_width*(scale_x -1) /2 +10;  // shiftx nearly 0
-    float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty + 620;
+    float px = x * disp_width* scale_x / cam_width - disp_width*(scale_x -1) /2 -5;  // shiftx nearly 0
+    float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty + 565;
 
     if(px > disp_width || px < 0 || py>disp_height|| py < 0){
         //LOGD("Point is outside of the projector view");
