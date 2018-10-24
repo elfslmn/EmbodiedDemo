@@ -47,24 +47,77 @@
         android:text="Backgr" />
 
     <Button
-        android:id="@+id/buttonTest"
+        android:id="@+id/buttonStart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/buttonBackGr"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:alpha="0.5"
-        android:text="Test" />
+        android:text="Levels" />
 
-    <Button
-        android:id="@+id/buttonTest2"
+    <TableLayout
+        android:id="@+id/layout_levels"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonTest"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:alpha="0.5"
-        android:text="Test2" />
+        android:layout_above="@+id/buttonStart"
+        android:layout_alignParentEnd="true">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <Button
+                android:id="@+id/button3"
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:alpha="0.5"
+                android:text="3" />
+
+            <Button
+                android:id="@+id/button4"
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:alpha="0.5"
+                android:text="4" />
+
+            <Button
+                android:id="@+id/button5"
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:alpha="0.5"
+                android:text="5" />
+            />
+        </TableRow>
+
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <Button
+            android:id="@+id/button0"
+            android:layout_width="30dp"
+            android:layout_height="wrap_content"
+            android:alpha="0.5"
+            android:text="0" />
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="30dp"
+            android:layout_height="wrap_content"
+            android:alpha="0.5"
+            android:text="1" />
+
+        <Button
+            android:id="@+id/button2"
+            android:layout_width="30dp"
+            android:layout_height="wrap_content"
+            android:alpha="0.5"
+            android:text="2" />
+            />
+        </TableRow>
+
+    </TableLayout>
+
 
     <TextView
         android:id="@+id/textViewDebug"

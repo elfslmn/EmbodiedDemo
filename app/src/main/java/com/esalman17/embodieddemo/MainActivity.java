@@ -20,7 +20,10 @@ import android.view.View;
 import android.widget.ImageView;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.transitionseverywhere.Slide;
@@ -52,6 +55,7 @@ public class MainActivity extends Activity {
     public static Bitmap bmpOverlay = null;
 
     RelativeLayout mainLayout;
+    TableLayout levelLayout;
     ImageView mainImView, overlayImView;
     TextView tvInfo, tvDebug, tvLevel, tvResult;
     KonfettiView konfettiView;
@@ -104,6 +108,24 @@ public class MainActivity extends Activity {
         }
     };
 
+    View.OnClickListener levelListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            clearPreviousMode();
+            switch (view.getId()){
+                case R.id.button0:
+                    initializeTestMode(1);
+                    break;
+                case R.id.button1:
+                    initializeTestMode(2);
+                    break;
+            }
+
+            currentMode = Mode.TEST;
+            ChangeModeNative(2);
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -134,6 +156,17 @@ public class MainActivity extends Activity {
         });
 
         mainLayout = findViewById(R.id.mainLayout);
+        levelLayout = findViewById(R.id.layout_levels);
+        for (int i = 0; i < levelLayout.getChildCount(); i++) {
+            View child = levelLayout.getChildAt(i);
+            if (child instanceof TableRow) {
+                TableRow row = (TableRow) child;
+                for (int j = 0; j < row.getChildCount(); j++) {
+                    row.getChildAt(j).setOnClickListener(levelListener);
+                }
+            }
+        }
+
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
         konfettiView = findViewById(R.id.viewKonfetti);
@@ -161,23 +194,10 @@ public class MainActivity extends Activity {
                 DetectBackgroundNative();
             }
         });
-        findViewById(R.id.buttonTest).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.buttonStart).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                clearPreviousMode();
-                initializeTestMode(1);
-                currentMode = Mode.TEST;
-                ChangeModeNative(2);
-            }
-        });
-
-        findViewById(R.id.buttonTest2).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                clearPreviousMode();
-                initializeTestMode(2);
-                currentMode = Mode.TEST;
-                ChangeModeNative(2);
+                findViewById(R.id.button0).performClick();
             }
         });
 
