@@ -14,22 +14,17 @@ import java.util.Arrays;
  * Created by esalman17 on 8.10.2018.
  */
 
-public class GameHalfVirtual {
-    private static String LOG_TAG = "Game";
+public class GameHalfVirtual extends Game{
+    private static String LOG_TAG = "GameHalfVirtual";
     public ArrayList<Point> wantedPoints;
     public ArrayList<Point> virtualPoints;
-    public Rect left, right;
-    public Rect gesture_left, gesture_right;
-    public long startTime, assestmentTime; // both in msec
-    public GameState state;
-    public int level;
-    private Side correctSide;
     private boolean[] soundPlayedPoints;
-    Drawable orange;
+    Drawable drawable;
 
     public GameHalfVirtual(Context context, int level) {
+        this.level = level;
         initialize(level);
-        orange = context.getResources().getDrawable(R.drawable.orange);
+        drawable = context.getResources().getDrawable(R.drawable.orange);
     }
 
     public void initialize(int level){
@@ -70,16 +65,10 @@ public class GameHalfVirtual {
                 right = new Rect(700, 250, 1080, 600);
                 correctSide = Side.RIGHT;
                 soundPlayedPoints = new boolean[wantedPoints.size()];
-                Arrays.fill(soundPlayedPoints, Boolean.TRUE);
                 break;
         }
 
-        // initialize canvas
-        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
-        canvas.drawPaint(GamePaint.eraser);
-        for(Point p : wantedPoints){
-            canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
-        }
+        initializeCanvas();
 
         gesture_left = new Rect(left);
         gesture_left.top = 0;
@@ -89,13 +78,18 @@ public class GameHalfVirtual {
         Log.i(LOG_TAG, "New game object (level=" + level + ") is initialized");
     }
 
-    public boolean processBlobDescriptors(int[] descriptors){
-        // initialize canvas
+    @Override
+    Canvas initializeCanvas() {
         Canvas canvas = new Canvas(MainActivity.bmpOverlay);
         canvas.drawPaint(GamePaint.eraser);
         for(Point p : wantedPoints){
             canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
         }
+        return canvas;
+    }
+
+    public boolean processBlobDescriptors(int[] descriptors){
+        Canvas canvas = initializeCanvas();
 
         // start processing
         int count = 0;
@@ -111,10 +105,9 @@ public class GameHalfVirtual {
                 if (areClose(p1, p2, 50))
                 {
                     canvas.drawCircle(p2.x, p2.y, 55, GamePaint.eraser);
-                    //canvas.drawCircle(p1.x, p1.y, 50, GamePaint.green);
 
-                    orange.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-                    orange.draw(canvas);
+                    drawable.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                    drawable.draw(canvas);
 
                     match = true;
                     if( !soundPlayedPoints[j]){
@@ -135,8 +128,8 @@ public class GameHalfVirtual {
             state = GameState.ALL_PLACED;
             Log.i(LOG_TAG, "Blobs: All objects are placed.");
             for(Point p1: virtualPoints){
-                orange.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-                orange.draw(canvas);
+                drawable.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                drawable.draw(canvas);
             }
             MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
 
@@ -183,26 +176,5 @@ public class GameHalfVirtual {
         }
         return 0;
     }
-
-    public void setBackground(ImageView view, int drawableId){
-        view.setImageResource(drawableId);
-    }
-
-    private boolean areClose(Point p1, Point p2, int maxDist){
-        return Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2) <= maxDist*maxDist ;
-    }
-
-    private Rect getCorrectSide(){
-        if(correctSide == Side.LEFT) return gesture_left;
-        else if(correctSide == Side.RIGHT) return gesture_right;
-        else return null;
-    }
-
-    private Rect getWrongSide(){
-        if(correctSide == Side.LEFT) return gesture_right;
-        else if(correctSide == Side.RIGHT) return gesture_left;
-        else return null;
-    }
-
 
 }

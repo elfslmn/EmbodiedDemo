@@ -341,8 +341,7 @@ public class MainActivity extends Activity {
 
 // TEST MODE FUNCTIONS ---------------------------------------------------------------------------------
 
-    Game game1;
-    GameHalfVirtual game2;
+    Game game;
     String[] results = new String[4];
     private void initializeTestMode(int test){
         if (bmpOverlay == null) {
@@ -354,17 +353,15 @@ public class MainActivity extends Activity {
         tvInfo.setText("Feed the cats");
 
         if(test == 1) {
-            game1 = new GameBothReal(this, 1);
-            game1.setBackground(mainImView, R.drawable.demo1);
+            game = new GameBothReal(this, 1);
+            game.setBackground(mainImView, R.drawable.demo1);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
-            game2 = null;
             showLevelInfo("LEVEL 1\nPlace the objects into red circles");
         }
         else if(test == 2){
-            game2 = new GameHalfVirtual(this, 1);
-            game2.setBackground(mainImView, R.drawable.demo2); // bmpOverlay is initalized in game constructor
+            game = new GameHalfVirtual(this, 1);
+            game.setBackground(mainImView, R.drawable.demo2); // bmpOverlay is initalized in game constructor
             overlayImView.setImageBitmap(bmpOverlay);
-            game1 =null;
             showLevelInfo("LEVEL 3\nPlace the objects into red circles");
         }
         wrong = 0;
@@ -388,9 +385,9 @@ public class MainActivity extends Activity {
             return;
         }
 
-        if(game1 != null && game1 instanceof GameBothReal){
-            if(game1.state == GameState.OBJECT_PLACEMENT) {
-                final boolean allObjectsPlaced =game1.processBlobDescriptors(descriptors);
+        if(game instanceof GameBothReal){
+            if(game.state == GameState.OBJECT_PLACEMENT) {
+                final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -402,9 +399,9 @@ public class MainActivity extends Activity {
                     }
                 });
             }
-            else if(game1.state == GameState.ASSESMENT_RUNNING)
+            else if(game.state == GameState.ASSESMENT_RUNNING)
             {
-                final int correctAnswer = game1.processGestureDescriptors(descriptors);
+                final int correctAnswer = game.processGestureDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -414,7 +411,7 @@ public class MainActivity extends Activity {
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
-                            float secs = (float)game1.assestmentTime /1000;
+                            float secs = (float)game.assestmentTime /1000;
                             String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
                             results[0] = time;
                             tvDebug.setText(time);
@@ -427,7 +424,7 @@ public class MainActivity extends Activity {
                 });
 
                 // Test1 finished , apply test1 plus (equality)
-                if(correctAnswer == 1 && game1.level == 1){
+                if(correctAnswer == 1 && game.level == 1){
                     sleep(4000);
                     runOnUiThread(new Runnable() {
                         @Override
@@ -437,17 +434,17 @@ public class MainActivity extends Activity {
                         }
                     });
                     sleep(3500);
-                    game1 = new GameEqualize(this, 1);
+                    game = new GameEqualize(this, 1);
                     wrong = 0;
                     StartCaptureNative();
-                    game1.startTime = System.currentTimeMillis();
+                    game.startTime = System.currentTimeMillis();
                 }
             }
         }
 
-        else if(game1 != null && game1 instanceof GameEqualize){
-            if(game1.state == GameState.ASSESMENT_RUNNING) {
-                final boolean correctAnswer = game1.processBlobDescriptors(descriptors);
+        else if(game instanceof GameEqualize){
+            if(game.state == GameState.ASSESMENT_RUNNING) {
+                final boolean correctAnswer = game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -457,7 +454,7 @@ public class MainActivity extends Activity {
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
-                            float secs = (float) game1.assestmentTime / 1000;
+                            float secs = (float) game.assestmentTime / 1000;
                             String time = String.format("Solved in %.3f seconds", secs);
                             results[1] = time;
                             tvDebug.setText(time);
@@ -469,9 +466,9 @@ public class MainActivity extends Activity {
             }
         }
 
-        else if(game2 != null){
-            if(game2.state == GameState.OBJECT_PLACEMENT) {
-                final boolean allObjectsPlaced =game2.processBlobDescriptors(descriptors);
+        else if(game instanceof GameHalfVirtual){
+            if(game.state == GameState.OBJECT_PLACEMENT) {
+                final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -483,9 +480,9 @@ public class MainActivity extends Activity {
                     }
                 });
             }
-            else if(game2.state == GameState.ASSESMENT_RUNNING)
+            else if(game.state == GameState.ASSESMENT_RUNNING)
             {
-                final int correctAnswer = game2.processGestureDescriptors(descriptors);
+                final int correctAnswer = game.processGestureDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -495,9 +492,9 @@ public class MainActivity extends Activity {
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
-                            float secs = (float)game2.assestmentTime /1000;
+                            float secs = (float)game.assestmentTime /1000;
                             String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
-                            results[game2.level+1] = time;
+                            results[game.level+1] = time;
                             tvDebug.setText(time);
                         }
                         else if(correctAnswer == -1){
@@ -508,7 +505,7 @@ public class MainActivity extends Activity {
                 });
 
                 // Test2 finished , apply test2 plus
-                if(correctAnswer == 1 && game2.level == 1){
+                if(correctAnswer == 1 && game.level == 1){
                     sleep(4000);
                     runOnUiThread(new Runnable() {
                         @Override
@@ -517,12 +514,12 @@ public class MainActivity extends Activity {
                         }
                     });
                     sleep(3500); 
-                    game2.initialize(2);
+                    game = new GameHalfVirtual(this, 2);
                     wrong = 0;
                     StartCaptureNative();
                 }
                 // Test2 finished , end of the session
-                else if(correctAnswer == 1 && game2.level == 2){
+                else if(correctAnswer == 1 && game.level == 2){
                     sleep(4000);
                     runOnUiThread(new Runnable() {
                         @Override
