@@ -35,6 +35,21 @@ public class GameHalfVirtual extends Game{
         virtualPoints = new ArrayList<>(10);
 
         switch (level){
+            case 0: // demo level
+                wantedPoints.add(new Point(400, 400));
+                wantedPoints.add(new Point(280, 450));
+
+                virtualPoints.add(new Point(880, 400));
+                virtualPoints.add(new Point(980, 420));
+                virtualPoints.add(new Point(950, 480));
+                virtualPoints.add(new Point(850, 500));
+
+                left = new Rect(200, 250, 580, 600);
+                right = new Rect(700, 250, 1080, 600);
+                correctSide = Side.RIGHT;
+                soundPlayedPoints = new boolean[wantedPoints.size()];
+
+                break;
             case 1:
                 wantedPoints.add(new Point(280, 450));
                 wantedPoints.add(new Point(400, 400));
