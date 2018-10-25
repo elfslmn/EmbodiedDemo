@@ -25,6 +25,7 @@ import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.transitionseverywhere.Slide;
 import com.transitionseverywhere.TransitionManager;
@@ -305,6 +306,7 @@ public class MainActivity extends Activity {
                     RegisterCallback();
                     m_opened = performUsbPermissionCallback(device);
                     Log.d(LOG_TAG, "m_opened = " + m_opened);
+                    Toast.makeText(this, "Camera is not connected!", Toast.LENGTH_LONG).show();
                     createBitmap();
                 }
                 break;
@@ -312,6 +314,7 @@ public class MainActivity extends Activity {
         }
         if (!found) {
             Log.e(LOG_TAG, "No royale device found!!!");
+            Toast.makeText(this, "Camera is not connected!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -326,9 +329,11 @@ public class MainActivity extends Activity {
 
         if (resolution[0] > 0) {
             StartCaptureNative();
+            Toast.makeText(this, "Camera opened.", Toast.LENGTH_SHORT).show();
             return true;
         }
         else{
+            Toast.makeText(this, "Camera cannot opened.", Toast.LENGTH_SHORT).show();
             return false;
         }
     }
