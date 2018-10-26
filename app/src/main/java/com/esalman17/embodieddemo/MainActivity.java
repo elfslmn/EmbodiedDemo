@@ -474,12 +474,12 @@ public class MainActivity extends Activity {
                                 @Override
                                 public void onCompletion(MediaPlayer mediaPlayer) {
                                     Log.d(LOG_TAG, "ana_naratif2 finish");
-                                    mediaPlayer.reset();
                                     mediaPlayer.release();
                                     MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.soru_fazla);
                                     mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                         @Override
                                         public void onCompletion(MediaPlayer mediaPlayer) {
+                                            mediaPlayer.release();
                                             Log.d(LOG_TAG, "soru_fazla finish");
                                             game.state = GameState.ASSESMENT_RUNNING;
                                             game.startTime = System.currentTimeMillis();
@@ -522,11 +522,39 @@ public class MainActivity extends Activity {
                         }
                     }
                 });
+
+                if(correctAnswer == 1){
+                    sleep(2000);
+                    mediaPlayer = MediaPlayer.create(this, R.raw.taslari_al);
+                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mediaPlayer) {
+                            mediaPlayer.release();
+                            MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.next_game);
+                            mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mediaPlayer) {
+                                    mediaPlayer.release();
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            findViewById(R.id.button1).performClick();
+                                        }
+                                    });
+                                }
+                            });
+                            sleep(4000);
+                            mediaPlayer2.start();
+                        }
+                    });
+                    mediaPlayer.start();
+                }
             }
 
 
         }
 
+        //---------------------------------------------------------------------------------------------
 
         if(game instanceof GameBothReal){
             if(game.state == GameState.OBJECT_PLACEMENT) {
