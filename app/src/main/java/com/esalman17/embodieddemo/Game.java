@@ -21,6 +21,10 @@ abstract public class Game {
 
     protected Drawable drawable;
 
+    public enum Side {
+        LEFT,
+        RIGHT
+    }
     abstract void initialize(int level);
     abstract Canvas initializeCanvas();
     abstract boolean processBlobDescriptors(int[] descriptors);
