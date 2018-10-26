@@ -206,6 +206,11 @@ jboolean Java_com_esalman17_embodieddemo_MainActivity_StartCaptureNative (JNIEnv
 jboolean Java_com_esalman17_embodieddemo_MainActivity_StopCaptureNative (JNIEnv *env, jobject thiz)
 {
     LOGD("StopCaptureNative()");
+    if (cameraDevice == nullptr)
+    {
+        LOGE ("There is no camera device");
+        return (jboolean)false;
+    }
     auto ret = cameraDevice->stopCapture();
     if (ret != CameraStatus::SUCCESS)
     {
