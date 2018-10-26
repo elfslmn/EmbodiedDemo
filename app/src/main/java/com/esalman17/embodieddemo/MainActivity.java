@@ -384,17 +384,21 @@ public class MainActivity extends Activity {
     Game game;
     String[] results = new String[4];
     MediaPlayer mediaPlayer;
+    Timer timer;
+
     private void initializeTestMode(int test){
         if (bmpOverlay == null) {
             bmpOverlay = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
         }
 
+        timer = new Timer(false);
         overlayImView.setVisibility(View.VISIBLE);
 
         if(test == 0){
             StopCaptureNative();
             game = new GameHalfVirtual(this, 0);
             game.setBackground(mainImView, R.drawable.dima_and_garden);
+
             mediaPlayer = MediaPlayer.create(this, R.raw.ana_naratif1);
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
@@ -403,18 +407,14 @@ public class MainActivity extends Activity {
                 }
             });
             mediaPlayer.start();
-            Timer t = new Timer(false);
-            t.schedule(new TimerTask() {
+
+            delayedUICommand(19000, new Runnable() {
                 @Override
                 public void run() {
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            overlayImView.setImageBitmap(bmpOverlay);
-                            StartCaptureNative();
-                        }
-                    });
+                    overlayImView.setImageBitmap(bmpOverlay);
+                    StartCaptureNative();
                 }
-            }, 19000);
+            });
 
         }
         if(test == 1) {
@@ -444,6 +444,7 @@ public class MainActivity extends Activity {
         if(mediaPlayer != null){
             mediaPlayer.release();
         }
+        timer.cancel();
     }
 
     public void shapeDetectedCallback(int[] descriptors){
@@ -483,19 +484,14 @@ public class MainActivity extends Activity {
                                             game.state = GameState.ASSESMENT_RUNNING;
                                             game.startTime = System.currentTimeMillis();
                                             StartCaptureNative();
-                                            Timer t = new Timer(false);
-                                            t.schedule(new TimerTask() {
+                                            delayedUICommand(2500, new Runnable() { //TODO for 3 year
                                                 @Override
                                                 public void run() {
-                                                    runOnUiThread(new Runnable() {
-                                                        public void run() {
-                                                            Log.d(LOG_TAG, "object removed");
-                                                            ((GameHalfVirtual)game).removeObjects();
-                                                            overlayImView.setImageBitmap(bmpOverlay);
-                                                        }
-                                                    });
+                                                    Log.d(LOG_TAG, "object removed");
+                                                    ((GameHalfVirtual)game).removeObjects();
+                                                    overlayImView.setImageBitmap(bmpOverlay);
                                                 }
-                                            }, 2500); //TODO for 3 year
+                                            });
                                         }
                                     });
                                     mediaPlayer2.start();
@@ -770,18 +766,13 @@ public class MainActivity extends Activity {
         tvLevel.setText(info);
         TransitionManager.beginDelayedTransition(mainLayout,slide);
         tvLevel.setVisibility(View.VISIBLE);
-        Timer t = new Timer(false);
-        t.schedule(new TimerTask() {
+        delayedUICommand(3000, new Runnable() {
             @Override
             public void run() {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        TransitionManager.beginDelayedTransition(mainLayout,slide);
-                        tvLevel.setVisibility(View.GONE);
-                    }
-                });
+                TransitionManager.beginDelayedTransition(mainLayout,slide);
+                tvLevel.setVisibility(View.GONE);
             }
-        }, 3000);
+        });
     }
 
     private void sleep(long millis){
@@ -790,6 +781,15 @@ public class MainActivity extends Activity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    private void delayedUICommand(long delay, final Runnable r){
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(r);
+            }
+        }, delay);
     }
 
 
