@@ -409,7 +409,6 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         public void run() {
                             overlayImView.setImageBitmap(bmpOverlay);
-                            game.state = GameState.OBJECT_PLACEMENT;
                             StartCaptureNative();
                         }
                     });
@@ -448,8 +447,88 @@ public class MainActivity extends Activity {
             Log.i(LOG_TAG, "Device in Java not initialized");
             return;
         }
+        if(game == null)
+        {
+            Log.i(LOG_TAG, "Game is null");
+            return;
+        }
+        // Not need instance check because all of them is half virtual for now.
+        if(game.level == 0){
+            if(game.state == GameState.OBJECT_PLACEMENT) {
+                final boolean allObjectsPlaced = game.processBlobDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        overlayImView.setImageBitmap(bmpOverlay);
+                        if (allObjectsPlaced) {
+                            StopCaptureNative();
 
-        if(game instanceof GameBothReal){
+                            MediaPlayer mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.ana_naratif2);
+                            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mediaPlayer) {
+                                    Log.d(LOG_TAG, "ana_naratif2 finish");
+                                    mediaPlayer.reset();
+                                    mediaPlayer.release();
+                                    MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.soru_az);
+                                    mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                        @Override
+                                        public void onCompletion(MediaPlayer mediaPlayer) {
+                                            Log.d(LOG_TAG, "soru_az finish");
+                                            game.state = GameState.ASSESMENT_RUNNING;
+                                            game.startTime = System.currentTimeMillis();
+                                            StartCaptureNative();
+                                        }
+                                    });
+                                    mediaPlayer2.start();
+
+                                }
+                            });
+                            mediaPlayer.start();
+                            Timer t = new Timer(false);
+                            t.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    runOnUiThread(new Runnable() {
+                                        public void run() {
+                                            Log.d(LOG_TAG, "object removed");
+                                            ((GameHalfVirtual)game).removeObjects();
+                                            overlayImView.setImageBitmap(bmpOverlay);
+                                        }
+                                    });
+                                }
+                            }, 18000);
+
+                        }
+                    }
+                });
+
+            }
+            else if(game.state == GameState.ASSESMENT_RUNNING) {
+                final int correctAnswer = game.processGestureDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (correctAnswer == 1) {
+                            StopCaptureNative();
+                            playSound(sApplause, sCong);
+                            overlayImView.setImageDrawable(null);
+                            addKonfetti("burst");
+                            float secs = (float) game.assestmentTime / 1000;
+                            String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
+                            tvDebug.setText(time);
+                        } else if (correctAnswer == -1) {
+                            playSound(sWrong);
+                        }
+                    }
+                });
+            }
+
+
+        }
+
+
+/*        if(game instanceof GameBothReal){
             if(game.state == GameState.OBJECT_PLACEMENT) {
                 final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -605,8 +684,7 @@ public class MainActivity extends Activity {
                     });
                 }
             }
-        }
-
+        } */
 
 
     }

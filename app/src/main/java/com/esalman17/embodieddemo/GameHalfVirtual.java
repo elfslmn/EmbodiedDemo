@@ -39,7 +39,6 @@ public class GameHalfVirtual extends Game{
 
         switch (level){
             case 0: // demo level
-                state = GameState.INTRO;
                 wantedPoints.add(new Point(400, 400));
                 //wantedPoints.add(new Point(280, 450));
 
@@ -99,13 +98,12 @@ public class GameHalfVirtual extends Game{
 
     @Override
     Canvas initializeCanvas() {
-        Log.d(LOG_TAG, "initializeCanvas");
         Canvas canvas = new Canvas(MainActivity.bmpOverlay);
         canvas.drawPaint(GamePaint.eraser);
 
         for(Point p : wantedPoints){
             canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
-            if(state == GameState.INTRO){
+            if(level == 0 && state == GameState.OBJECT_PLACEMENT){
                 finger.setBounds(p.x-60, p.y+60, p.x+60, p.y+200);
                 finger.draw(canvas);
             }
@@ -160,21 +158,22 @@ public class GameHalfVirtual extends Game{
 
             canvas.drawRect(left, GamePaint.red);
             canvas.drawRect(right, GamePaint.red);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    state = GameState.ASSESMENT_RUNNING;
-                    startTime = System.currentTimeMillis();
-                    Log.i(LOG_TAG, "Assessment has started");
-                }
-            }).start();
 
-            Log.i(LOG_TAG, "Assessment has started");
+            if(level != 0) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        state = GameState.ASSESMENT_RUNNING;
+                        startTime = System.currentTimeMillis();
+                        Log.i(LOG_TAG, "Assessment has started");
+                    }
+                }).start();
+            }
 
             return true;
         }
@@ -200,6 +199,13 @@ public class GameHalfVirtual extends Game{
             }
         }
         return 0;
+    }
+
+    public void removeObjects(){
+        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
+        canvas.drawPaint(GamePaint.eraser);
+        canvas.drawRect(left, GamePaint.red);
+        canvas.drawRect(right, GamePaint.red);
     }
 
 }

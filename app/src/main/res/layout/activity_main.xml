@@ -54,7 +54,7 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:alpha="0.5"
-        android:text="Levels" />
+        android:text="Start" />
 
     <TableLayout
         android:id="@+id/layout_levels"
@@ -127,18 +127,6 @@
         android:layout_alignParentTop="true"
         android:textColor="@color/colorAccent"
         android:text="Debug info:" />
-
-    <TextView
-        android:id="@+id/textViewInfo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="20dp"
-        android:text="TextViewInfo"
-        android:textSize="30dp"
-        android:textColor="@color/lightgray"
-        android:visibility="gone"/>
 
     <TextView
         android:id="@+id/textViewLevel"
