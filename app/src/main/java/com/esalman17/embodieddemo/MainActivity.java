@@ -215,8 +215,8 @@ public class MainActivity extends Activity {
         sBack = soundPool.load(this, R.raw.back_music, 10);
         sOkay = soundPool.load(this, R.raw.correct, 1);
         sApplause = soundPool.load(this, R.raw.applause, 1);
-        sWrong = soundPool.load(this, R.raw.wrong2, 1);
-        sCong = soundPool.load(this, R.raw.congratulations, 1);
+        sWrong = soundPool.load(this, R.raw.bir_daha_dusun, 1);
+        sCong = soundPool.load(this, R.raw.supersin, 1);
 
         slide.setSlideEdge(Gravity.BOTTOM);
         slide.addTarget(tvLevel);
@@ -383,6 +383,7 @@ public class MainActivity extends Activity {
 
     Game game;
     String[] results = new String[4];
+    MediaPlayer mediaPlayer;
     private void initializeTestMode(int test){
         if (bmpOverlay == null) {
             bmpOverlay = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
@@ -394,7 +395,7 @@ public class MainActivity extends Activity {
             StopCaptureNative();
             game = new GameHalfVirtual(this, 0);
             game.setBackground(mainImView, R.drawable.dima_and_garden);
-            MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.ana_naratif1);
+            mediaPlayer = MediaPlayer.create(this, R.raw.ana_naratif1);
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mediaPlayer) {
@@ -436,9 +437,13 @@ public class MainActivity extends Activity {
     }
     private void endTestMode(){
         mainImView.setImageBitmap(bmpCam);
+        overlayImView.setImageDrawable(null);
         overlayImView.setVisibility(View.GONE);
         tvResult.setVisibility(View.GONE);
         soundPool.stop(sBackPlayId);
+        if(mediaPlayer != null){
+            mediaPlayer.release();
+        }
     }
 
     public void shapeDetectedCallback(int[] descriptors){
@@ -463,7 +468,7 @@ public class MainActivity extends Activity {
                         if (allObjectsPlaced) {
                             StopCaptureNative();
 
-                            MediaPlayer mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.ana_naratif2);
+                            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.ana_naratif2);
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
                                 public void onCompletion(MediaPlayer mediaPlayer) {
@@ -481,11 +486,19 @@ public class MainActivity extends Activity {
                                         }
                                     });
                                     mediaPlayer2.start();
+                                    runOnUiThread(new Runnable() {
+                                        public void run() {
+                                            Log.d(LOG_TAG, "object removed");
+                                            ((GameHalfVirtual)game).removeObjects();
+                                            overlayImView.setImageBitmap(bmpOverlay);
+                                        }
+                                    });
 
                                 }
                             });
                             mediaPlayer.start();
-                            Timer t = new Timer(false);
+
+                            /*Timer t = new Timer(false);
                             t.schedule(new TimerTask() {
                                 @Override
                                 public void run() {
@@ -497,7 +510,7 @@ public class MainActivity extends Activity {
                                         }
                                     });
                                 }
-                            }, 18000);
+                            }, 18000); */
 
                         }
                     }
@@ -528,7 +541,7 @@ public class MainActivity extends Activity {
         }
 
 
-/*        if(game instanceof GameBothReal){
+        if(game instanceof GameBothReal){
             if(game.state == GameState.OBJECT_PLACEMENT) {
                 final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -584,7 +597,7 @@ public class MainActivity extends Activity {
             }
         }
 
-        else if(game instanceof GameEqualize){
+        /*else if(game instanceof GameEqualize){
             if(game.state == GameState.ASSESMENT_RUNNING) {
                 final boolean correctAnswer = game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -704,7 +717,7 @@ public class MainActivity extends Activity {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    sleep(1000);
+                    sleep(2000);
                     isPlaying = false;
                 }
             }).start();
