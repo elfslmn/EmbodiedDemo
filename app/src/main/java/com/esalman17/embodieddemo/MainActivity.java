@@ -468,50 +468,41 @@ public class MainActivity extends Activity {
                         if (allObjectsPlaced) {
                             StopCaptureNative();
 
-                            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.ana_naratif2);
+                            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.ana_naratif2_kisa);
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
                                 public void onCompletion(MediaPlayer mediaPlayer) {
                                     Log.d(LOG_TAG, "ana_naratif2 finish");
                                     mediaPlayer.reset();
                                     mediaPlayer.release();
-                                    MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.soru_az);
+                                    MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.soru_fazla);
                                     mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                         @Override
                                         public void onCompletion(MediaPlayer mediaPlayer) {
-                                            Log.d(LOG_TAG, "soru_az finish");
+                                            Log.d(LOG_TAG, "soru_fazla finish");
                                             game.state = GameState.ASSESMENT_RUNNING;
                                             game.startTime = System.currentTimeMillis();
                                             StartCaptureNative();
+                                            Timer t = new Timer(false);
+                                            t.schedule(new TimerTask() {
+                                                @Override
+                                                public void run() {
+                                                    runOnUiThread(new Runnable() {
+                                                        public void run() {
+                                                            Log.d(LOG_TAG, "object removed");
+                                                            ((GameHalfVirtual)game).removeObjects();
+                                                            overlayImView.setImageBitmap(bmpOverlay);
+                                                        }
+                                                    });
+                                                }
+                                            }, 2500); //TODO for 3 year
                                         }
                                     });
                                     mediaPlayer2.start();
-                                    runOnUiThread(new Runnable() {
-                                        public void run() {
-                                            Log.d(LOG_TAG, "object removed");
-                                            ((GameHalfVirtual)game).removeObjects();
-                                            overlayImView.setImageBitmap(bmpOverlay);
-                                        }
-                                    });
 
                                 }
                             });
                             mediaPlayer.start();
-
-                            /*Timer t = new Timer(false);
-                            t.schedule(new TimerTask() {
-                                @Override
-                                public void run() {
-                                    runOnUiThread(new Runnable() {
-                                        public void run() {
-                                            Log.d(LOG_TAG, "object removed");
-                                            ((GameHalfVirtual)game).removeObjects();
-                                            overlayImView.setImageBitmap(bmpOverlay);
-                                        }
-                                    });
-                                }
-                            }, 18000); */
-
                         }
                     }
                 });
