@@ -23,7 +23,7 @@ public class GamePaint {
 
         red.setColor(Color.RED);
         red.setStyle(android.graphics.Paint.Style.STROKE);
-        red.setStrokeWidth(3);
+        red.setStrokeWidth(4);
 
         eraser.setColor(Color.TRANSPARENT);
         eraser.setStyle(android.graphics.Paint.Style.FILL);

@@ -19,10 +19,13 @@ public class GameHalfVirtual extends Game{
     public ArrayList<Point> wantedPoints;
     public ArrayList<Point> virtualPoints;
     private boolean[] soundPlayedPoints;
-    Drawable drawable;
+    Drawable drawable, finger;
 
     public GameHalfVirtual(Context context, int level) {
         this.level = level;
+        if(level == 0){
+            finger = context.getResources().getDrawable(R.drawable.finger);
+        }
         initialize(level);
         drawable = context.getResources().getDrawable(R.drawable.orange);
     }
@@ -36,13 +39,14 @@ public class GameHalfVirtual extends Game{
 
         switch (level){
             case 0: // demo level
+                state = GameState.INTRO;
                 wantedPoints.add(new Point(400, 400));
-                wantedPoints.add(new Point(280, 450));
+                //wantedPoints.add(new Point(280, 450));
 
                 virtualPoints.add(new Point(880, 400));
-                virtualPoints.add(new Point(980, 420));
+                //virtualPoints.add(new Point(980, 420));
                 virtualPoints.add(new Point(950, 480));
-                virtualPoints.add(new Point(850, 500));
+                //virtualPoints.add(new Point(850, 500));
 
                 left = new Rect(200, 250, 580, 600);
                 right = new Rect(700, 250, 1080, 600);
@@ -95,10 +99,16 @@ public class GameHalfVirtual extends Game{
 
     @Override
     Canvas initializeCanvas() {
+        Log.d(LOG_TAG, "initializeCanvas");
         Canvas canvas = new Canvas(MainActivity.bmpOverlay);
         canvas.drawPaint(GamePaint.eraser);
+
         for(Point p : wantedPoints){
             canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
+            if(state == GameState.INTRO){
+                finger.setBounds(p.x-60, p.y+60, p.x+60, p.y+200);
+                finger.draw(canvas);
+            }
         }
         return canvas;
     }

@@ -12,6 +12,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,7 +21,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.graphics.Bitmap;
 import android.graphics.Point;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
     RelativeLayout mainLayout;
     TableLayout levelLayout;
     ImageView mainImView, overlayImView;
-    TextView tvInfo, tvDebug, tvLevel, tvResult;
+    TextView tvDebug, tvLevel, tvResult;
     KonfettiView konfettiView;
 
     Slide slide = new Slide();
@@ -76,6 +76,7 @@ public class MainActivity extends Activity {
     public static boolean soundsLoaded = false, isPlaying = false;
     public static int sOkay;
     int sWrong, sApplause, sBack, sBackPlayId, sCong;
+    int sMerhaba, sTas, sHarika, sHazırsın;
 
     public native int[] OpenCameraNative(int fd, int vid, int pid);
     public native boolean StartCaptureNative();
@@ -115,9 +116,12 @@ public class MainActivity extends Activity {
             clearPreviousMode();
             switch (view.getId()){
                 case R.id.button0:
-                    initializeTestMode(1);
+                    initializeTestMode(0);
                     break;
                 case R.id.button1:
+                    initializeTestMode(1);
+                    break;
+                case R.id.button2:
                     initializeTestMode(2);
                     break;
             }
@@ -171,7 +175,6 @@ public class MainActivity extends Activity {
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
         konfettiView = findViewById(R.id.viewKonfetti);
-        tvInfo = findViewById(R.id.textViewInfo);
         tvDebug = findViewById(R.id.textViewDebug);
         tvLevel = findViewById(R.id.textViewLevel);
         tvResult = findViewById(R.id.textViewResults);
@@ -365,6 +368,18 @@ public class MainActivity extends Activity {
     }
 
 // TEST MODE FUNCTIONS ---------------------------------------------------------------------------------
+ /*   MediaPlayer mediaPlayer;
+    int current_media_id;
+    MediaPlayer.OnCompletionListener completionListener = new MediaPlayer.OnCompletionListener() {
+        @Override
+        public void onCompletion(final MediaPlayer mp) {
+            switch (current_media_id){
+                case R.raw.ana_naratif1:
+                 mp.release();
+                 mp = MediaPlayer.create(MainActivity.this, R.raw.ana_naratif2_harika);
+            }
+        }
+    }; */
 
     Game game;
     String[] results = new String[4];
@@ -374,9 +389,34 @@ public class MainActivity extends Activity {
         }
 
         overlayImView.setVisibility(View.VISIBLE);
-        tvInfo.setVisibility(View.VISIBLE);
-        tvInfo.setText("Feed the cats");
 
+        if(test == 0){
+            StopCaptureNative();
+            game = new GameHalfVirtual(this, 0);
+            game.setBackground(mainImView, R.drawable.dima_and_garden);
+            MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.ana_naratif1);
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                    mediaPlayer.release();
+                }
+            });
+            mediaPlayer.start();
+            Timer t = new Timer(false);
+            t.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            overlayImView.setImageBitmap(bmpOverlay);
+                            game.state = GameState.OBJECT_PLACEMENT;
+                            StartCaptureNative();
+                        }
+                    });
+                }
+            }, 19000);
+
+        }
         if(test == 1) {
             game = new GameBothReal(this, 1);
             game.setBackground(mainImView, R.drawable.demo1);
@@ -391,14 +431,13 @@ public class MainActivity extends Activity {
         }
         wrong = 0;
 
-        if(soundsLoaded){
+        if(soundsLoaded && test !=0){
             sBackPlayId = soundPool.play(sBack, 0.1f, 0.1f,1,-1,1f);
         }
     }
     private void endTestMode(){
         mainImView.setImageBitmap(bmpCam);
         overlayImView.setVisibility(View.GONE);
-        tvInfo.setVisibility(View.GONE);
         tvResult.setVisibility(View.GONE);
         soundPool.stop(sBackPlayId);
     }
@@ -418,7 +457,7 @@ public class MainActivity extends Activity {
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if(allObjectsPlaced){
-                            tvInfo.setText("Which cat has more apple?" );
+                            //tvInfo.setText("Which cat has more apple?" );
                             tvDebug.setText("Assesment has started");
                         }
                     }
@@ -432,7 +471,7 @@ public class MainActivity extends Activity {
                     public void run() {
                         if(correctAnswer == 1){
                             StopCaptureNative();
-                            tvInfo.setText("That is correct" );
+                            //tvInfo.setText("That is correct" );
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
@@ -442,7 +481,7 @@ public class MainActivity extends Activity {
                             tvDebug.setText(time);
                         }
                         else if(correctAnswer == -1){
-                            tvInfo.setText("That is wrong. Try again");
+                            //tvInfo.setText("That is wrong. Try again");
                             playSound(sWrong);
                         }
                     }
@@ -454,7 +493,6 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            tvInfo.setText(null);
                             showLevelInfo("LEVEL 2\n Give equal number of apples to both cats");
                         }
                     });
@@ -475,7 +513,7 @@ public class MainActivity extends Activity {
                     public void run() {
                         if (correctAnswer) {
                             StopCaptureNative();
-                            tvInfo.setText("That is correct");
+                            //tvInfo.setText("That is correct");
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
@@ -499,7 +537,7 @@ public class MainActivity extends Activity {
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if(allObjectsPlaced){
-                            tvInfo.setText("Which cat has more oranges?" );
+                            //tvInfo.setText("Which cat has more oranges?" );
                             tvDebug.setText("Assesment has started");
                         }
                     }
@@ -513,7 +551,7 @@ public class MainActivity extends Activity {
                     public void run() {
                         if(correctAnswer == 1){
                             StopCaptureNative();
-                            tvInfo.setText("That is correct" );
+                            //tvInfo.setText("That is correct" );
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
@@ -523,7 +561,7 @@ public class MainActivity extends Activity {
                             tvDebug.setText(time);
                         }
                         else if(correctAnswer == -1){
-                            tvInfo.setText("That is wrong. Try again");
+                            //tvInfo.setText("That is wrong. Try again");
                             playSound(sWrong);
                         }
                     }
@@ -559,7 +597,6 @@ public class MainActivity extends Activity {
                                    info += results[i]+"\n";
                                 }
                             }
-                            tvInfo.setText(null);
                             soundPool.stop(sBackPlayId);
                             tvResult.setText(info);
                             TransitionManager.beginDelayedTransition(mainLayout,slide);

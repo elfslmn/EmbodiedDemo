@@ -5,6 +5,7 @@ package com.esalman17.embodieddemo;
  */
 
 public enum GameState {
+    INTRO,
     OBJECT_PLACEMENT,
     ALL_PLACED,
     ASSESMENT_RUNNING,
