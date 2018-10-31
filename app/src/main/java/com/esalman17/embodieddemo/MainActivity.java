@@ -380,9 +380,10 @@ public class MainActivity extends Activity {
 // TEST MODE FUNCTIONS ---------------------------------------------------------------------------------
 
     Game game;
-    String[] results = new String[4];
+    String[] results = new String[7];
     MediaPlayer mediaPlayer;
     Timer timer;
+    int wrong = 0;
 
     private void initializeTestMode(int test){
         if (bmpOverlay == null) {
@@ -391,6 +392,7 @@ public class MainActivity extends Activity {
 
         timer = new Timer(false);
         overlayImView.setVisibility(View.VISIBLE);
+        wrong = 0;
 
         if(test == 0){ // PILOT LEVEL
             StopCaptureNative();
@@ -407,16 +409,21 @@ public class MainActivity extends Activity {
                 }
             });
         }
-        else{
+        else {
             game = new GameHalfVirtual(this, test);
             game.setBackground(mainImView, R.drawable.dima_and_garden);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
 
-            showLevelInfo("LEVEL "+test);
+            showLevelInfo("LEVEL " + test);
             playMedia(R.raw.taslari_koy);
+            delayedUICommand(3000, new Runnable() {
+                @Override
+                public void run() {
+                    StartCaptureNative();
+                }
+            });
 
         }
-        wrong = 0;
 
         /*if(soundsLoaded && test !=0){
             sBackPlayId = soundPool.play(sBack, 0.1f, 0.1f,1,-1,1f);
@@ -456,8 +463,6 @@ public class MainActivity extends Activity {
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if (allObjectsPlaced) {
-                            StopCaptureNative();
-
                             mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.ana_naratif2_kisa);
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
@@ -472,7 +477,6 @@ public class MainActivity extends Activity {
                                             Log.d(LOG_TAG, "soru_fazla finish");
                                             game.state = GameState.ASSESMENT_RUNNING;
                                             game.startTime = System.currentTimeMillis();
-                                            StartCaptureNative();
                                             delayedUICommand(REMOVAL_DELAY, new Runnable() {
                                                 @Override
                                                 public void run() {
@@ -535,7 +539,7 @@ public class MainActivity extends Activity {
                             mediaPlayer2.start();
                         }
                     });
-                    sleep(2000);
+                    sleep(3000);
                     mediaPlayer.start();
                 }
             }
@@ -548,7 +552,6 @@ public class MainActivity extends Activity {
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if(allObjectsPlaced){
-                            StopCaptureNative();
                             tvDebug.setText("Assesment has started");
                             mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -559,7 +562,6 @@ public class MainActivity extends Activity {
                                     game.state = GameState.ASSESMENT_RUNNING;
                                     game.startTime = System.currentTimeMillis();
                                     Log.d(LOG_TAG, "Assesment has started");
-                                    StartCaptureNative();
                                     delayedUICommand(2500, new Runnable() { //TODO for 3 year
                                         @Override
                                         public void run() {
@@ -596,177 +598,42 @@ public class MainActivity extends Activity {
                 });
 
                 if(correctAnswer == 1){
-                    playMedia(R.raw.taslari_al, 3000);
+                    mediaPlayer = MediaPlayer.create(this, R.raw.taslari_al);
+                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mediaPlayer) {
+                            mediaPlayer.release();
+                            MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.next_game);
+                            mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mediaPlayer) {
+                                    mediaPlayer.release();
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            // start next level
+                                            initializeTestMode(game.level + 1);
+                                        }
+                                    });
+
+                                }
+                            });
+                            sleep(4000);
+                            mediaPlayer2.start();
+                        }
+                    });
+                    sleep(3000);
+                    mediaPlayer.start();
                 }
             }
         }
-        //---------------------------------------------------------------------------------------------
-
- /*       if(game instanceof GameBothReal){
-            if(game.state == GameState.OBJECT_PLACEMENT) {
-                final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        overlayImView.setImageBitmap(bmpOverlay);
-                        if(allObjectsPlaced){
-                            //tvInfo.setText("Which cat has more apple?" );
-                            tvDebug.setText("Assesment has started");
-                        }
-                    }
-                });
-            }
-            else if(game.state == GameState.ASSESMENT_RUNNING)
-            {
-                final int correctAnswer = game.processGestureDescriptors(descriptors);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(correctAnswer == 1){
-                            StopCaptureNative();
-                            //tvInfo.setText("That is correct" );
-                            playSound(sApplause, sCong);
-                            overlayImView.setImageDrawable(null);
-                            addKonfetti("burst");
-                            float secs = (float)game.assestmentTime /1000;
-                            String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
-                            results[0] = time;
-                            tvDebug.setText(time);
-                        }
-                        else if(correctAnswer == -1){
-                            //tvInfo.setText("That is wrong. Try again");
-                            playSound(sWrong);
-                        }
-                    }
-                });
-
-                // Test1 finished , apply test1 plus (equality)
-                if(correctAnswer == 1 && game.level == 1){
-                    sleep(4000);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            showLevelInfo("LEVEL 2\n Give equal number of apples to both cats");
-                        }
-                    });
-                    sleep(3500);
-                    game = new GameEqualize(this, 1);
-                    wrong = 0;
-                    StartCaptureNative();
-                    game.startTime = System.currentTimeMillis();
-                }
-            }
-        } */
-
-        /*else if(game instanceof GameEqualize){
-            if(game.state == GameState.ASSESMENT_RUNNING) {
-                final boolean correctAnswer = game.processBlobDescriptors(descriptors);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (correctAnswer) {
-                            StopCaptureNative();
-                            //tvInfo.setText("That is correct");
-                            playSound(sApplause, sCong);
-                            overlayImView.setImageDrawable(null);
-                            addKonfetti("burst");
-                            float secs = (float) game.assestmentTime / 1000;
-                            String time = String.format("Solved in %.3f seconds", secs);
-                            results[1] = time;
-                            tvDebug.setText(time);
-                        } else {
-                            overlayImView.setImageBitmap(bmpOverlay);
-                        }
-                    }
-                });
-            }
-        }
-
-        else if(game instanceof GameHalfVirtual){
-            if(game.state == GameState.OBJECT_PLACEMENT) {
-                final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        overlayImView.setImageBitmap(bmpOverlay);
-                        if(allObjectsPlaced){
-                            //tvInfo.setText("Which cat has more oranges?" );
-                            tvDebug.setText("Assesment has started");
-                        }
-                    }
-                });
-            }
-            else if(game.state == GameState.ASSESMENT_RUNNING)
-            {
-                final int correctAnswer = game.processGestureDescriptors(descriptors);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(correctAnswer == 1){
-                            StopCaptureNative();
-                            //tvInfo.setText("That is correct" );
-                            playSound(sApplause, sCong);
-                            overlayImView.setImageDrawable(null);
-                            addKonfetti("burst");
-                            float secs = (float)game.assestmentTime /1000;
-                            String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
-                            results[game.level+1] = time;
-                            tvDebug.setText(time);
-                        }
-                        else if(correctAnswer == -1){
-                            //tvInfo.setText("That is wrong. Try again");
-                            playSound(sWrong);
-                        }
-                    }
-                });
-
-                // Test2 finished , apply test2 plus
-                if(correctAnswer == 1 && game.level == 1){
-                    sleep(4000);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            showLevelInfo("LEVEL 4\n Choose one of the rectangles");
-                        }
-                    });
-                    sleep(3500); 
-                    game = new GameHalfVirtual(this, 2);
-                    wrong = 0;
-                    StartCaptureNative();
-                }
-                // Test2 finished , end of the session
-                else if(correctAnswer == 1 && game.level == 2){
-                    sleep(4000);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            String info = "Results: \n";
-                            for(int i=0; i <4; i++){
-                                info += "Level "+(i+1)+": ";
-                                if(results[i] == null){
-                                   info += "Did not attempted \n";
-                                }
-                                else{
-                                   info += results[i]+"\n";
-                                }
-                            }
-                            soundPool.stop(sBackPlayId);
-                            tvResult.setText(info);
-                            TransitionManager.beginDelayedTransition(mainLayout,slide);
-                            tvResult.setVisibility(View.VISIBLE);
-                        }
-                    });
-                }
-            }
-        } */
-
 
     }
 
     private void playSound(int id){
         playSound(id,0);
     }
-    int wrong = 0;
+
     private void playSound(int id, int id2){
         if(!isPlaying && soundsLoaded){
             isPlaying = true;
@@ -788,6 +655,7 @@ public class MainActivity extends Activity {
     private void playMedia(int raw_id){
         playMedia(raw_id, 0);
     }
+
     private void playMedia(int raw_id, int delay){
         mediaPlayer = MediaPlayer.create(MainActivity.this, raw_id);
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -798,6 +666,64 @@ public class MainActivity extends Activity {
         });
         if(delay > 0) sleep(delay);
         mediaPlayer.start();
+    }
+
+    private void showLevelInfo(String info){
+        tvLevel.setText(info);
+        TransitionManager.beginDelayedTransition(mainLayout,slide);
+        tvLevel.setVisibility(View.VISIBLE);
+        delayedUICommand(3000, new Runnable() {
+            @Override
+            public void run() {
+                TransitionManager.beginDelayedTransition(mainLayout,slide);
+                tvLevel.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private void sleep(long millis){
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void delayedUICommand(long delay, final Runnable r){
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(r);
+            }
+        }, delay);
+    }
+
+    private int getButtonId(int level){
+        int id = -1;
+        switch (level){
+            case 0:
+                id = R.id.buttonIntro;
+                break;
+            case 1:
+                id = R.id.button1;
+                break;
+            case 2:
+                id = R.id.button2;
+                break;
+            case 3:
+                id = R.id.button3;
+                break;
+            case 4:
+                id = R.id.button4;
+                break;
+            case 5:
+                id = R.id.button5;
+                break;
+            case 6:
+                id = R.id.button6;
+                break;
+        }
+        return id;
     }
 
     private void addKonfetti(String type){
@@ -849,36 +775,6 @@ public class MainActivity extends Activity {
 
         }
 
-    }
-
-    private void showLevelInfo(String info){
-        tvLevel.setText(info);
-        TransitionManager.beginDelayedTransition(mainLayout,slide);
-        tvLevel.setVisibility(View.VISIBLE);
-        delayedUICommand(3000, new Runnable() {
-            @Override
-            public void run() {
-                TransitionManager.beginDelayedTransition(mainLayout,slide);
-                tvLevel.setVisibility(View.GONE);
-            }
-        });
-    }
-
-    private void sleep(long millis){
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void delayedUICommand(long delay, final Runnable r){
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                runOnUiThread(r);
-            }
-        }, delay);
     }
 
 
