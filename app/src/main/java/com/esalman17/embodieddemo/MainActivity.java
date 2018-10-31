@@ -228,6 +228,7 @@ public class MainActivity extends Activity {
 
         slide.setSlideEdge(Gravity.BOTTOM);
         slide.addTarget(tvLevel);
+        slide.addTarget(tvResult);
         slide.setDuration(500);
 
     }
@@ -598,32 +599,46 @@ public class MainActivity extends Activity {
                 });
 
                 if(correctAnswer == 1){
-                    mediaPlayer = MediaPlayer.create(this, R.raw.taslari_al);
-                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                        @Override
-                        public void onCompletion(MediaPlayer mediaPlayer) {
-                            mediaPlayer.release();
-                            MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.next_game);
-                            mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                @Override
-                                public void onCompletion(MediaPlayer mediaPlayer) {
-                                    mediaPlayer.release();
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            // start next level
-                                            initializeTestMode(game.level + 1);
-                                        }
-                                    });
+                    if(game.level == 6){
+                        // ALL LEVELS ARE FINISHED
+                        delayedUICommand(4000, new Runnable() {
+                            @Override
+                            public void run() {
+                                // TODO write reults to txt and textview
+                                tvResult.setText("Finished");
+                                TransitionManager.beginDelayedTransition(mainLayout,slide);
+                                tvResult.setVisibility(View.VISIBLE);
+                            }
+                        });
+                    }
+                    else {
+                        mediaPlayer = MediaPlayer.create(this, R.raw.taslari_al);
+                        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mediaPlayer) {
+                                mediaPlayer.release();
+                                MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.next_game);
+                                mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                    @Override
+                                    public void onCompletion(MediaPlayer mediaPlayer) {
+                                        mediaPlayer.release();
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                // start next level
+                                                initializeTestMode(game.level + 1);
+                                            }
+                                        });
 
-                                }
-                            });
-                            sleep(4000);
-                            mediaPlayer2.start();
-                        }
-                    });
-                    sleep(3000);
-                    mediaPlayer.start();
+                                    }
+                                });
+                                sleep(4000);
+                                mediaPlayer2.start();
+                            }
+                        });
+                        sleep(3000);
+                        mediaPlayer.start();
+                    }
                 }
             }
         }
