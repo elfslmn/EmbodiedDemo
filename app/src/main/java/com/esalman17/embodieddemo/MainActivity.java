@@ -15,6 +15,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -30,6 +31,11 @@ import android.widget.Toast;
 import com.transitionseverywhere.Slide;
 import com.transitionseverywhere.TransitionManager;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Timer;
@@ -42,6 +48,9 @@ import nl.dionsegijn.konfetti.models.Size;
 
 public class MainActivity extends Activity {
     public static int REMOVAL_DELAY = 2500; //TODO for 3 year
+    public static String CHILD_NAME = "Elif";
+    public static int CHILD_AGE = 3;
+    SimpleDateFormat parser = new SimpleDateFormat("d_MMM_HH:mm");
 
     static {
         System.loadLibrary("usb_android");
@@ -77,7 +86,6 @@ public class MainActivity extends Activity {
     public static boolean soundsLoaded = false, isPlaying = false;
     public static int sOkay;
     int sWrong, sApplause, sBack, sBackPlayId, sCong;
-    int sMerhaba, sTas, sHarika, sHazırsın;
 
     public native int[] OpenCameraNative(int fd, int vid, int pid);
     public native boolean StartCaptureNative();
@@ -510,6 +518,7 @@ public class MainActivity extends Activity {
                             addKonfetti("burst");
                             float secs = (float) game.assestmentTime / 1000;
                             String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
+                            results[game.level] = time;
                             tvDebug.setText(time);
                         } else if (correctAnswer == -1) {
                             playSound(sWrong);
@@ -581,6 +590,11 @@ public class MainActivity extends Activity {
 
             else if(game.state == GameState.ASSESMENT_RUNNING) {
                 final int correctAnswer = game.processGestureDescriptors(descriptors);
+                if (correctAnswer == 1) {
+                    float secs = (float) game.assestmentTime / 1000;
+                    String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
+                    results[game.level] = time;
+                }
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -589,9 +603,7 @@ public class MainActivity extends Activity {
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
-                            float secs = (float) game.assestmentTime / 1000;
-                            String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
-                            tvDebug.setText(time);
+                            tvDebug.setText(results[game.level]);
                         } else if (correctAnswer == -1) {
                             playSound(sWrong);
                         }
@@ -600,14 +612,37 @@ public class MainActivity extends Activity {
 
                 if(correctAnswer == 1){
                     if(game.level == 6){
-                        // ALL LEVELS ARE FINISHED
+                        Log.d(LOG_TAG, "ALL LEVELS ARE FINISHED");
+
+                        final StringBuilder sb = new StringBuilder();
+                        sb.append("Name: "+CHILD_NAME+"\n");
+                        sb.append("Age: "+ CHILD_AGE+"\n");
+                        sb.append("Results: \n");
+
+                        for(int i=0; i <results.length; i++){
+                            sb.append("Level "+ i +": ");
+                            if(results[i] == null){
+                                sb.append("Did not attempted \n");
+                            }
+                            else{
+                                sb.append(results[i]+"\n");
+                            }
+                        }
+                        final boolean res = saveResults(CHILD_NAME, sb.toString());
+
                         delayedUICommand(4000, new Runnable() {
                             @Override
                             public void run() {
-                                // TODO write reults to txt and textview
-                                tvResult.setText("Finished");
+                                tvResult.setText(sb.toString());
                                 TransitionManager.beginDelayedTransition(mainLayout,slide);
                                 tvResult.setVisibility(View.VISIBLE);
+
+                                if(res){
+                                    Toast.makeText(MainActivity.this, "Results are saved", Toast.LENGTH_LONG).show();
+                                }
+                                else{
+                                    Toast.makeText(MainActivity.this, "Results cannot be saved", Toast.LENGTH_LONG).show();
+                                }
                             }
                         });
                     }
@@ -790,6 +825,27 @@ public class MainActivity extends Activity {
 
         }
 
+    }
+
+    private boolean saveResults(String childName, String result){
+        File path = new File(Environment.getExternalStorageDirectory(), "Embodied/Study1");
+        if(!path.exists() || !path.isDirectory()){
+            path.mkdirs();
+        }
+        File file = new File(path, childName+"_" + parser.format(new Date())+ ".txt");
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            out.write(result.getBytes());
+            out.flush();
+            out.close();
+            Log.d(LOG_TAG, "Results are saved into "+ file.getName());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
 
