@@ -116,7 +116,7 @@ public class MainActivity extends Activity {
         public void onClick(View view) {
             clearPreviousMode();
             switch (view.getId()){
-                case R.id.button0:
+                case R.id.buttonIntro:
                     initializeTestMode(0);
                     break;
                 case R.id.button1:
@@ -133,6 +133,9 @@ public class MainActivity extends Activity {
                     break;
                 case R.id.button5:
                     initializeTestMode(5);
+                    break;
+                case R.id.button6:
+                    initializeTestMode(6);
                     break;
             }
 
@@ -208,12 +211,7 @@ public class MainActivity extends Activity {
                 DetectBackgroundNative();
             }
         });
-        findViewById(R.id.buttonStart).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                findViewById(R.id.button0).performClick();
-            }
-        });
+        findViewById(R.id.buttonIntro).setOnClickListener(levelListener);
 
         soundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
         soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
@@ -394,7 +392,7 @@ public class MainActivity extends Activity {
         timer = new Timer(false);
         overlayImView.setVisibility(View.VISIBLE);
 
-        if(test == 0){
+        if(test == 0){ // PILOT LEVEL
             StopCaptureNative();
             game = new GameHalfVirtual(this, 0);
             game.setBackground(mainImView, R.drawable.dima_and_garden);
@@ -409,7 +407,7 @@ public class MainActivity extends Activity {
                 }
             });
         }
-        else if(test == 1 || test == 2){
+        else{
             game = new GameHalfVirtual(this, test);
             game.setBackground(mainImView, R.drawable.dima_and_garden);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
@@ -417,18 +415,6 @@ public class MainActivity extends Activity {
             showLevelInfo("LEVEL "+test);
             playMedia(R.raw.taslari_koy);
 
-        }
-        else if(test == 4) {
-            game = new GameBothReal(this, 1);
-            game.setBackground(mainImView, R.drawable.demo1);
-            overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
-            showLevelInfo("LEVEL 4\nPlace the objects into red circles");
-        }
-        else if(test == 5){
-            game = new GameHalfVirtual(this, 1);
-            game.setBackground(mainImView, R.drawable.demo2); // bmpOverlay is initalized in game constructor
-            overlayImView.setImageBitmap(bmpOverlay);
-            showLevelInfo("LEVEL 5\nPlace the objects into red circles");
         }
         wrong = 0;
 
@@ -554,8 +540,7 @@ public class MainActivity extends Activity {
                 }
             }
         }
-
-        else if(game.level == 1 || game.level == 2) {
+        else{
             if(game.state == GameState.OBJECT_PLACEMENT) {
                 final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -617,7 +602,7 @@ public class MainActivity extends Activity {
         }
         //---------------------------------------------------------------------------------------------
 
-        if(game instanceof GameBothReal){
+ /*       if(game instanceof GameBothReal){
             if(game.state == GameState.OBJECT_PLACEMENT) {
                 final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -671,7 +656,7 @@ public class MainActivity extends Activity {
                     game.startTime = System.currentTimeMillis();
                 }
             }
-        }
+        } */
 
         /*else if(game instanceof GameEqualize){
             if(game.state == GameState.ASSESMENT_RUNNING) {

@@ -46,12 +46,12 @@ public class GameHalfVirtual extends Game{
         switch (level){
             case 0: // demo level
                 wantedPoints.add(new Point(400, 400));
-                //wantedPoints.add(new Point(280, 450));
+                wantedPoints.add(new Point(280, 450));
 
-                virtualPoints.add(new Point(880, 400));
-                //virtualPoints.add(new Point(980, 420));
-                virtualPoints.add(new Point(950, 480));
-                //virtualPoints.add(new Point(850, 500));
+                virtualPoints.add(new Point(870, 390));
+                virtualPoints.add(new Point(990, 410));
+                virtualPoints.add(new Point(960, 490));
+                virtualPoints.add(new Point(840, 510));
 
                 left = new Rect(200, 250, 580, 600);
                 right = new Rect(700, 250, 1080, 600);
@@ -84,6 +84,58 @@ public class GameHalfVirtual extends Game{
                 left = new Rect(150, 150, 580, 700);
                 right = new Rect(720, 150, 1130, 700);
                 correctSide = Side.LEFT;
+
+                question = Question.MORE;
+                soundPlayedPoints = new boolean[wantedPoints.size()];
+                break;
+            case 3:
+                indicesWanted = Arrays.asList(2,4,5,6,7,8,9,10,11);
+                initializePoints(indicesWanted, center_left, true);
+                indicesVirtual = Arrays.asList(1,2,3,10,11,12);
+                initializePoints(indicesVirtual, center_right, false);
+
+                left = new Rect(150, 150, 580, 700);
+                right = new Rect(720, 150, 1130, 700);
+                correctSide = Side.RIGHT;
+
+                question = Question.LESS;
+                soundPlayedPoints = new boolean[wantedPoints.size()];
+                break;
+            case 4:
+                indicesWanted = Arrays.asList(2,4,5,6,7,8,9,10,11);
+                initializePoints(indicesWanted, center_right, true);
+                indicesVirtual = Arrays.asList(1,2,4,5,6,7,8,9,10,11,12);
+                initializePoints(indicesVirtual, center_left, false);
+
+                left = new Rect(150, 150, 580, 700);
+                right = new Rect(720, 150, 1130, 700);
+                correctSide = Side.LEFT;
+
+                question = Question.MORE;
+                soundPlayedPoints = new boolean[wantedPoints.size()];
+                break;
+            case 5:
+                indicesWanted = Arrays.asList(4,5,6,7,8,9);
+                initializePoints(indicesWanted, center_left, true);
+                indicesVirtual = Arrays.asList(2,4,5,6,7,8,9,11);
+                initializePoints(indicesVirtual, center_right, false);
+
+                left = new Rect(150, 150, 580, 700);
+                right = new Rect(720, 150, 1130, 700);
+                correctSide = Side.LEFT;
+
+                question = Question.LESS;
+                soundPlayedPoints = new boolean[wantedPoints.size()];
+                break;
+            case 6:
+                indicesWanted = Arrays.asList(2,4,5,6,7,8,9,11);
+                initializePoints(indicesWanted, center_left, true);
+                indicesVirtual = Arrays.asList(2,3,4,5,6,7,8,9,10,11);
+                initializePoints(indicesVirtual, center_right, false);
+
+                left = new Rect(150, 150, 580, 700);
+                right = new Rect(720, 150, 1130, 700);
+                correctSide = Side.RIGHT;
 
                 question = Question.MORE;
                 soundPlayedPoints = new boolean[wantedPoints.size()];
@@ -123,6 +175,7 @@ public class GameHalfVirtual extends Game{
         for (int i = 0; i <= descriptors.length - 3; i += 3)
         {
             if (descriptors[i + 2] == 1) continue; // it is edge-connected blob
+            if(descriptors[i] < 10) continue;
 
             Point p1 = new Point(descriptors[i], descriptors[i + 1]);
             boolean match = false;
@@ -133,7 +186,7 @@ public class GameHalfVirtual extends Game{
                 {
                     canvas.drawCircle(p2.x, p2.y, 55, GamePaint.eraser);
 
-                    drawable.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                    drawable.setBounds(p1.x-50, p1.y-50, p1.x+50, p1.y+50);
                     drawable.draw(canvas);
 
                     match = true;
@@ -155,7 +208,7 @@ public class GameHalfVirtual extends Game{
             state = GameState.ALL_PLACED;
             Log.i(LOG_TAG, "Blobs: All objects are placed.");
             for(Point p1: virtualPoints){
-                drawable.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                drawable.setBounds(p1.x-50, p1.y-50, p1.x+50, p1.y+50);
                 drawable.draw(canvas);
             }
             MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
