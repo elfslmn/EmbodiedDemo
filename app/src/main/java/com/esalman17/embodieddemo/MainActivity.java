@@ -409,12 +409,12 @@ public class MainActivity extends Activity {
                 }
             });
         }
-        else if(test == 1){
-            game = new GameHalfVirtual(this, 1);
+        else if(test == 1 || test == 2){
+            game = new GameHalfVirtual(this, test);
             game.setBackground(mainImView, R.drawable.dima_and_garden);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
 
-            showLevelInfo("LEVEL 1");
+            showLevelInfo("LEVEL "+test);
             playMedia(R.raw.taslari_koy);
 
         }
@@ -478,7 +478,7 @@ public class MainActivity extends Activity {
                                 public void onCompletion(MediaPlayer mediaPlayer) {
                                     Log.d(LOG_TAG, "ana_naratif2 finish");
                                     mediaPlayer.release();
-                                    MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.soru_fazla);
+                                    MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, game.getQuestion());
                                     mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                         @Override
                                         public void onCompletion(MediaPlayer mediaPlayer) {
@@ -555,7 +555,7 @@ public class MainActivity extends Activity {
             }
         }
 
-        else if(game.level == 1) {
+        else if(game.level == 1 || game.level == 2) {
             if(game.state == GameState.OBJECT_PLACEMENT) {
                 final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -565,7 +565,7 @@ public class MainActivity extends Activity {
                         if(allObjectsPlaced){
                             StopCaptureNative();
                             tvDebug.setText("Assesment has started");
-                            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.soru_az);
+                            mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
                                 public void onCompletion(MediaPlayer mediaPlayer) {

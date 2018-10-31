@@ -9,6 +9,7 @@ import android.util.Log;
 import android.widget.ImageView;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by esalman17 on 8.10.2018.
@@ -30,12 +31,17 @@ public class GameHalfVirtual extends Game{
         drawable = context.getResources().getDrawable(R.drawable.orange);
     }
 
+    Point center_right = new Point(915, 425);
+    Point center_left = new Point(350, 425);
+
     public void initialize(int level){
         this.level = level;
         state =  GameState.OBJECT_PLACEMENT;
 
         wantedPoints = new ArrayList<>(10);
         virtualPoints = new ArrayList<>(10);
+        List<Integer> indicesWanted;
+        List<Integer> indicesVirtual;
 
         switch (level){
             case 0: // demo level
@@ -50,38 +56,36 @@ public class GameHalfVirtual extends Game{
                 left = new Rect(200, 250, 580, 600);
                 right = new Rect(700, 250, 1080, 600);
                 correctSide = Side.RIGHT;
+
+                question = Question.MORE;
                 soundPlayedPoints = new boolean[wantedPoints.size()];
 
                 break;
             case 1:
-                wantedPoints.add(new Point(280, 450));
-                wantedPoints.add(new Point(400, 400));
-                wantedPoints.add(new Point(500, 500));
+                indicesWanted = Arrays.asList(5,7,8,9,11);
+                initializePoints(indicesWanted, center_right, true);
+                indicesVirtual = Arrays.asList(2,3,4,5,6,7,8,9,10,11);
+                initializePoints(indicesVirtual, center_left, false);
 
-                virtualPoints.add(new Point(770, 400));
-                virtualPoints.add(new Point(1000, 400));
-                virtualPoints.add(new Point(1000, 530));
-                virtualPoints.add(new Point(770, 530));
-
-                left = new Rect(200, 250, 580, 600);
-                right = new Rect(700, 250, 1080, 600);
+                left = new Rect(150, 150, 580, 700);
+                right = new Rect(720, 150, 1130, 700);
                 correctSide = Side.RIGHT;
+
+                question = Question.LESS;
                 soundPlayedPoints = new boolean[wantedPoints.size()];
                 break;
 
             case 2:
-                wantedPoints.add(new Point(280, 450));
-                wantedPoints.add(new Point(400, 400));
-                wantedPoints.add(new Point(500, 500));
+                indicesWanted = Arrays.asList(4,5,6,7,8,9);
+                initializePoints(indicesWanted, center_right, true);
+                indicesVirtual = Arrays.asList(2,4,5,6,7,8,9,10,11);
+                initializePoints(indicesVirtual, center_left, false);
 
-                virtualPoints.add(new Point(850, 400));
-                virtualPoints.add(new Point(950, 400));
-                virtualPoints.add(new Point(950, 500));
-                virtualPoints.add(new Point(850, 500));
+                left = new Rect(150, 150, 580, 700);
+                right = new Rect(720, 150, 1130, 700);
+                correctSide = Side.LEFT;
 
-                left = new Rect(200, 250, 580, 600);
-                right = new Rect(700, 250, 1080, 600);
-                correctSide = Side.RIGHT;
+                question = Question.MORE;
                 soundPlayedPoints = new boolean[wantedPoints.size()];
                 break;
         }
@@ -206,6 +210,18 @@ public class GameHalfVirtual extends Game{
         canvas.drawPaint(GamePaint.eraser);
         canvas.drawRect(left, GamePaint.red);
         canvas.drawRect(right, GamePaint.red);
+    }
+
+    private void initializePoints(List<Integer> indices, Point offset, boolean isWanted){
+        for(int ind : indices){
+            Point pt = basePoints.get(ind-1);
+            if(isWanted){
+                wantedPoints.add(new Point(pt.x + offset.x, pt.y+ offset.y));
+            }
+            else{
+                virtualPoints.add(new Point(pt.x + offset.x, pt.y+ offset.y));
+            }
+        }
     }
 
 }
