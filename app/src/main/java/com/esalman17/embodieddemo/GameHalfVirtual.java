@@ -159,7 +159,7 @@ public class GameHalfVirtual extends Game{
             canvas.drawRect(left, GamePaint.red);
             canvas.drawRect(right, GamePaint.red);
 
-            if(level != 0) {
+          /*  if(level != 0) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -173,7 +173,7 @@ public class GameHalfVirtual extends Game{
                         Log.i(LOG_TAG, "Assessment has started");
                     }
                 }).start();
-            }
+            } */
 
             return true;
         }

@@ -41,6 +41,7 @@ import nl.dionsegijn.konfetti.models.Size;
 
 
 public class MainActivity extends Activity {
+    public static int REMOVAL_DELAY = 2500; //TODO for 3 year
 
     static {
         System.loadLibrary("usb_android");
@@ -123,6 +124,15 @@ public class MainActivity extends Activity {
                     break;
                 case R.id.button2:
                     initializeTestMode(2);
+                    break;
+                case R.id.button3:
+                    initializeTestMode(3);
+                    break;
+                case R.id.button4:
+                    initializeTestMode(4);
+                    break;
+                case R.id.button5:
+                    initializeTestMode(5);
                     break;
             }
 
@@ -225,7 +235,10 @@ public class MainActivity extends Activity {
     }
 
     private void clearPreviousMode(){
-        if(m_opened) StartCaptureNative();
+        if(m_opened){
+            //if(currentMode != Mode.TEST ) StartCaptureNative(); // TODO it will be started in test initilize
+            StartCaptureNative();
+        }
         else openCamera();
         if(currentMode ==  Mode.TEST)
         {
@@ -309,7 +322,6 @@ public class MainActivity extends Activity {
                     RegisterCallback();
                     m_opened = performUsbPermissionCallback(device);
                     Log.d(LOG_TAG, "m_opened = " + m_opened);
-                    Toast.makeText(this, "Camera is not connected!", Toast.LENGTH_LONG).show();
                     createBitmap();
                 }
                 break;
@@ -368,18 +380,6 @@ public class MainActivity extends Activity {
     }
 
 // TEST MODE FUNCTIONS ---------------------------------------------------------------------------------
- /*   MediaPlayer mediaPlayer;
-    int current_media_id;
-    MediaPlayer.OnCompletionListener completionListener = new MediaPlayer.OnCompletionListener() {
-        @Override
-        public void onCompletion(final MediaPlayer mp) {
-            switch (current_media_id){
-                case R.raw.ana_naratif1:
-                 mp.release();
-                 mp = MediaPlayer.create(MainActivity.this, R.raw.ana_naratif2_harika);
-            }
-        }
-    }; */
 
     Game game;
     String[] results = new String[4];
@@ -399,14 +399,7 @@ public class MainActivity extends Activity {
             game = new GameHalfVirtual(this, 0);
             game.setBackground(mainImView, R.drawable.dima_and_garden);
 
-            mediaPlayer = MediaPlayer.create(this, R.raw.ana_naratif1);
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mediaPlayer) {
-                    mediaPlayer.release();
-                }
-            });
-            mediaPlayer.start();
+            playMedia(R.raw.ana_naratif1);
 
             delayedUICommand(19000, new Runnable() {
                 @Override
@@ -415,25 +408,33 @@ public class MainActivity extends Activity {
                     StartCaptureNative();
                 }
             });
+        }
+        else if(test == 1){
+            game = new GameHalfVirtual(this, 1);
+            game.setBackground(mainImView, R.drawable.dima_and_garden);
+            overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
+
+            showLevelInfo("LEVEL 1");
+            playMedia(R.raw.taslari_koy);
 
         }
-        if(test == 1) {
+        else if(test == 4) {
             game = new GameBothReal(this, 1);
             game.setBackground(mainImView, R.drawable.demo1);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
-            showLevelInfo("LEVEL 1\nPlace the objects into red circles");
+            showLevelInfo("LEVEL 4\nPlace the objects into red circles");
         }
-        else if(test == 2){
+        else if(test == 5){
             game = new GameHalfVirtual(this, 1);
             game.setBackground(mainImView, R.drawable.demo2); // bmpOverlay is initalized in game constructor
             overlayImView.setImageBitmap(bmpOverlay);
-            showLevelInfo("LEVEL 3\nPlace the objects into red circles");
+            showLevelInfo("LEVEL 5\nPlace the objects into red circles");
         }
         wrong = 0;
 
-        if(soundsLoaded && test !=0){
+        /*if(soundsLoaded && test !=0){
             sBackPlayId = soundPool.play(sBack, 0.1f, 0.1f,1,-1,1f);
-        }
+        }*/
     }
     private void endTestMode(){
         mainImView.setImageBitmap(bmpCam);
@@ -444,7 +445,9 @@ public class MainActivity extends Activity {
         if(mediaPlayer != null){
             mediaPlayer.release();
         }
-        timer.cancel();
+        if(timer != null) {
+            timer.cancel();
+        }
     }
 
     public void shapeDetectedCallback(int[] descriptors){
@@ -484,7 +487,7 @@ public class MainActivity extends Activity {
                                             game.state = GameState.ASSESMENT_RUNNING;
                                             game.startTime = System.currentTimeMillis();
                                             StartCaptureNative();
-                                            delayedUICommand(2500, new Runnable() { //TODO for 3 year
+                                            delayedUICommand(REMOVAL_DELAY, new Runnable() {
                                                 @Override
                                                 public void run() {
                                                     Log.d(LOG_TAG, "object removed");
@@ -524,7 +527,6 @@ public class MainActivity extends Activity {
                 });
 
                 if(correctAnswer == 1){
-                    sleep(2000);
                     mediaPlayer = MediaPlayer.create(this, R.raw.taslari_al);
                     mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                         @Override
@@ -547,13 +549,72 @@ public class MainActivity extends Activity {
                             mediaPlayer2.start();
                         }
                     });
+                    sleep(2000);
                     mediaPlayer.start();
                 }
             }
-
-
         }
 
+        else if(game.level == 1) {
+            if(game.state == GameState.OBJECT_PLACEMENT) {
+                final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        overlayImView.setImageBitmap(bmpOverlay);
+                        if(allObjectsPlaced){
+                            StopCaptureNative();
+                            tvDebug.setText("Assesment has started");
+                            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.soru_az);
+                            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mediaPlayer) {
+                                    mediaPlayer.release();
+                                    Log.d(LOG_TAG, "soru finish");
+                                    game.state = GameState.ASSESMENT_RUNNING;
+                                    game.startTime = System.currentTimeMillis();
+                                    Log.d(LOG_TAG, "Assesment has started");
+                                    StartCaptureNative();
+                                    delayedUICommand(2500, new Runnable() { //TODO for 3 year
+                                        @Override
+                                        public void run() {
+                                            Log.d(LOG_TAG, "object removed");
+                                            ((GameHalfVirtual)game).removeObjects();
+                                            overlayImView.setImageBitmap(bmpOverlay);
+                                        }
+                                    });
+                                }
+                            });
+                            mediaPlayer.start();
+                        }
+                    }
+                });
+            }
+
+            else if(game.state == GameState.ASSESMENT_RUNNING) {
+                final int correctAnswer = game.processGestureDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (correctAnswer == 1) {
+                            StopCaptureNative();
+                            playSound(sApplause, sCong);
+                            overlayImView.setImageDrawable(null);
+                            addKonfetti("burst");
+                            float secs = (float) game.assestmentTime / 1000;
+                            String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
+                            tvDebug.setText(time);
+                        } else if (correctAnswer == -1) {
+                            playSound(sWrong);
+                        }
+                    }
+                });
+
+                if(correctAnswer == 1){
+                    playMedia(R.raw.taslari_al, 3000);
+                }
+            }
+        }
         //---------------------------------------------------------------------------------------------
 
         if(game instanceof GameBothReal){
@@ -737,6 +798,21 @@ public class MainActivity extends Activity {
                 }
             }).start();
         }
+    }
+
+    private void playMedia(int raw_id){
+        playMedia(raw_id, 0);
+    }
+    private void playMedia(int raw_id, int delay){
+        mediaPlayer = MediaPlayer.create(MainActivity.this, raw_id);
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.release();
+            }
+        });
+        if(delay > 0) sleep(delay);
+        mediaPlayer.start();
     }
 
     private void addKonfetti(String type){
