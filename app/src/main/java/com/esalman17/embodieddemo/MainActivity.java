@@ -482,10 +482,12 @@ public class MainActivity extends Activity {
                                     mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                         @Override
                                         public void onCompletion(MediaPlayer mediaPlayer) {
-                                            mediaPlayer.release();
-                                            Log.d(LOG_TAG, "soru_fazla finish");
-                                            game.state = GameState.ASSESMENT_RUNNING;
+                                            Log.d(LOG_TAG, "soru finish");
                                             game.startTime = System.currentTimeMillis();
+                                            game.state = GameState.ASSESMENT_RUNNING;
+                                            Log.d(LOG_TAG, "Assesment has started");
+                                            mediaPlayer.release();
+
                                             delayedUICommand(REMOVAL_DELAY, new Runnable() {
                                                 @Override
                                                 public void run() {
@@ -567,12 +569,13 @@ public class MainActivity extends Activity {
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
                                 public void onCompletion(MediaPlayer mediaPlayer) {
-                                    mediaPlayer.release();
                                     Log.d(LOG_TAG, "soru finish");
-                                    game.state = GameState.ASSESMENT_RUNNING;
                                     game.startTime = System.currentTimeMillis();
+                                    game.state = GameState.ASSESMENT_RUNNING;
                                     Log.d(LOG_TAG, "Assesment has started");
-                                    delayedUICommand(2500, new Runnable() { //TODO for 3 year
+                                    mediaPlayer.release();
+
+                                    delayedUICommand(REMOVAL_DELAY, new Runnable() { //TODO for 3 year
                                         @Override
                                         public void run() {
                                             Log.d(LOG_TAG, "object removed");

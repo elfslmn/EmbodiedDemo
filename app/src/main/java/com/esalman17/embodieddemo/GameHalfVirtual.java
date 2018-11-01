@@ -28,7 +28,31 @@ public class GameHalfVirtual extends Game{
             finger = context.getResources().getDrawable(R.drawable.finger);
         }
         initialize(level);
-        drawable = context.getResources().getDrawable(R.drawable.orange);
+
+        switch (level) {
+            case 0:
+                drawable = context.getResources().getDrawable(R.drawable.pilot);
+                break;
+            case 1:
+                drawable = context.getResources().getDrawable(R.drawable.pink);
+                break;
+            case 2:
+                drawable = context.getResources().getDrawable(R.drawable.orange);
+                break;
+            case 3:
+                drawable = context.getResources().getDrawable(R.drawable.green);
+                break;
+            case 4:
+                drawable = context.getResources().getDrawable(R.drawable.red);
+                break;
+            case 5:
+                drawable = context.getResources().getDrawable(R.drawable.purple);
+                break;
+            case 6:
+                drawable = context.getResources().getDrawable(R.drawable.blue);
+                break;
+        }
+
     }
 
     Point center_right = new Point(915, 425);
@@ -186,7 +210,7 @@ public class GameHalfVirtual extends Game{
                 {
                     canvas.drawCircle(p2.x, p2.y, 55, GamePaint.eraser);
 
-                    drawable.setBounds(p1.x-50, p1.y-50, p1.x+50, p1.y+50);
+                    drawable.setBounds(p1.x-55, p1.y-55, p1.x+55, p1.y+55);
                     drawable.draw(canvas);
 
                     match = true;
@@ -200,7 +224,7 @@ public class GameHalfVirtual extends Game{
 
             if(match) count++;
             else{
-                canvas.drawCircle(p1.x, p1.y, 50, GamePaint.blue);
+                canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
             }
         }
         if(count == wantedPoints.size())
@@ -208,7 +232,7 @@ public class GameHalfVirtual extends Game{
             state = GameState.ALL_PLACED;
             Log.i(LOG_TAG, "Blobs: All objects are placed.");
             for(Point p1: virtualPoints){
-                drawable.setBounds(p1.x-50, p1.y-50, p1.x+50, p1.y+50);
+                drawable.setBounds(p1.x-55, p1.y-55, p1.x+55, p1.y+55);
                 drawable.draw(canvas);
             }
             MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);

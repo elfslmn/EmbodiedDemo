@@ -21,7 +21,7 @@ public class GameEqualize extends Game {
     public GameEqualize(Context context, int level) {
         this.level = level;
         initialize(level);
-        drawable = context.getResources().getDrawable(R.drawable.apple);
+        drawable = context.getResources().getDrawable(R.drawable.red);
     }
 
     @Override
