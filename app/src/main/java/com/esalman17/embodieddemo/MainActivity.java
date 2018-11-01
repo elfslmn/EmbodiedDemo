@@ -68,7 +68,7 @@ public class MainActivity extends Activity {
     RelativeLayout mainLayout;
     TableLayout levelLayout;
     ImageView mainImView, overlayImView;
-    TextView tvDebug, tvLevel, tvResult;
+    TextView tvDebug, tvLevel, tvResult, tvInfo;
     KonfettiView konfettiView;
 
     Slide slide = new Slide();
@@ -199,6 +199,7 @@ public class MainActivity extends Activity {
         tvDebug = findViewById(R.id.textViewDebug);
         tvLevel = findViewById(R.id.textViewLevel);
         tvResult = findViewById(R.id.textViewResults);
+        tvInfo = findViewById(R.id.textViewInfo);
 
         findViewById(R.id.buttonCamera).setOnClickListener(new View.OnClickListener() {
 
@@ -207,7 +208,6 @@ public class MainActivity extends Activity {
                 clearPreviousMode();
                 ChangeModeNative(1);
                 currentMode = Mode.CAMERA;
-
             }
         });
         findViewById(R.id.buttonBackGr).setOnClickListener(new View.OnClickListener() {
@@ -399,8 +399,10 @@ public class MainActivity extends Activity {
             bmpOverlay = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
         }
 
-        timer = new Timer(false);
         overlayImView.setVisibility(View.VISIBLE);
+        tvInfo.setText("Level "+test);
+
+        timer = new Timer(false);
         wrong = 0;
 
         if(test == 0){ // PILOT LEVEL
@@ -443,6 +445,7 @@ public class MainActivity extends Activity {
         overlayImView.setImageDrawable(null);
         overlayImView.setVisibility(View.GONE);
         tvResult.setVisibility(View.GONE);
+        tvInfo.setText(null);
         soundPool.stop(sBackPlayId);
         if(mediaPlayer != null){
             mediaPlayer.release();
