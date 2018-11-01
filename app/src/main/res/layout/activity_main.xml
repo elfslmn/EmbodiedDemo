@@ -4,6 +4,8 @@
     android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusableInTouchMode="true"
     tools:context=".MainActivity">
 
     <ImageView
@@ -162,5 +164,58 @@
         android:layout_alignParentTop="true"
         android:textColor="@color/colorAccent"
         android:textSize="25dp"/>
+
+    <LinearLayout
+        android:id="@+id/layout_info"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerVertical="true"
+        android:layout_centerInParent="true"
+        android:padding="20dp"
+        android:background="@drawable/textview_style">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/lightgray"
+            android:textSize="20dp"
+            android:text="İsim:"
+            />
+
+        <EditText
+            android:id="@+id/etName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:textColor="@color/lightgray"
+            android:hint="Type here"
+            android:textColorHint="@color/gray"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/lightgray"
+            android:textSize="20dp"
+            android:text="Yaş:"
+            />
+
+        <EditText
+            android:id="@+id/etAge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:textColor="@color/lightgray"
+            android:hint="Type here"
+            android:textColorHint="@color/gray"/>
+
+        <Button
+            android:id="@+id/buttonSubmit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Onayla"
+            />
+
+    </LinearLayout>
 
 </RelativeLayout>

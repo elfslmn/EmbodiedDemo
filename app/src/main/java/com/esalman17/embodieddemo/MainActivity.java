@@ -16,12 +16,16 @@ import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -67,9 +71,11 @@ public class MainActivity extends Activity {
 
     RelativeLayout mainLayout;
     TableLayout levelLayout;
+    LinearLayout infoLayout;
     ImageView mainImView, overlayImView;
     TextView tvDebug, tvLevel, tvResult, tvInfo;
     KonfettiView konfettiView;
+    EditText etName, etAge;
 
     Slide slide = new Slide();
 
@@ -152,6 +158,16 @@ public class MainActivity extends Activity {
         }
     };
 
+    View.OnFocusChangeListener focusChangeListener =  new View.OnFocusChangeListener(){
+        @Override
+        public void onFocusChange(View view, boolean hasFocus) {
+            if (!hasFocus) {
+                InputMethodManager inputMethodManager =(InputMethodManager)getSystemService(Activity.INPUT_METHOD_SERVICE);
+                inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -192,6 +208,7 @@ public class MainActivity extends Activity {
                 }
             }
         }
+        infoLayout = findViewById(R.id.layout_info);
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
@@ -200,6 +217,54 @@ public class MainActivity extends Activity {
         tvLevel = findViewById(R.id.textViewLevel);
         tvResult = findViewById(R.id.textViewResults);
         tvInfo = findViewById(R.id.textViewInfo);
+
+        etName = findViewById(R.id.etName);
+        etName.setOnFocusChangeListener(focusChangeListener);
+        etAge = findViewById(R.id.etAge);
+        etAge.setOnFocusChangeListener(focusChangeListener);
+
+        slide.setSlideEdge(Gravity.BOTTOM);
+        slide.addTarget(tvLevel);
+        slide.addTarget(tvResult);
+        slide.addTarget(infoLayout);
+        slide.setDuration(500);
+
+        findViewById(R.id.buttonSubmit).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String name = etName.getText().toString();
+                if(TextUtils.isEmpty(name)){
+                    Toast.makeText(MainActivity.this, "İsim girin", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                else{
+                    CHILD_NAME = name;
+                }
+
+                String age = etAge.getText().toString();
+                if(TextUtils.isEmpty(age)){
+                    Toast.makeText(MainActivity.this, "Yaş girin", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                else{
+                    try {
+                        CHILD_AGE = Integer.parseInt(age.trim());
+                        if (CHILD_AGE <= 3) REMOVAL_DELAY = 2500;
+                        else REMOVAL_DELAY = 1250;
+                    }
+                    catch (NumberFormatException e){
+                        e.printStackTrace();
+                        Toast.makeText(MainActivity.this, "Yaşı rakamla girin", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                }
+                TransitionManager.beginDelayedTransition(mainLayout,slide);
+                infoLayout.setVisibility(View.GONE);
+                mainLayout.setClickable(false);
+                mainLayout.setFocusableInTouchMode(false);
+            }
+        });
+
 
         findViewById(R.id.buttonCamera).setOnClickListener(new View.OnClickListener() {
 
@@ -210,6 +275,7 @@ public class MainActivity extends Activity {
                 currentMode = Mode.CAMERA;
             }
         });
+
         findViewById(R.id.buttonBackGr).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -233,11 +299,6 @@ public class MainActivity extends Activity {
         sApplause = soundPool.load(this, R.raw.applause, 1);
         sWrong = soundPool.load(this, R.raw.bir_daha_dusun, 1);
         sCong = soundPool.load(this, R.raw.supersin, 1);
-
-        slide.setSlideEdge(Gravity.BOTTOM);
-        slide.addTarget(tvLevel);
-        slide.addTarget(tvResult);
-        slide.setDuration(500);
 
     }
 
