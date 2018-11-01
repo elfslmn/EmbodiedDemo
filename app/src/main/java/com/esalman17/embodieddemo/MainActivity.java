@@ -492,14 +492,13 @@ public class MainActivity extends Activity {
                 @Override
                 public void run() {
                     StartCaptureNative();
+                    if(soundsLoaded ){
+                        sBackPlayId = soundPool.play(sBack, 0.1f, 0.1f,1,-1,1f);
+                    }
                 }
             });
 
         }
-
-        /*if(soundsLoaded && test !=0){
-            sBackPlayId = soundPool.play(sBack, 0.1f, 0.1f,1,-1,1f);
-        }*/
     }
     private void endTestMode(){
         mainImView.setImageBitmap(bmpCam);
@@ -528,7 +527,8 @@ public class MainActivity extends Activity {
             return;
         }
         // Not need instance check because all of them is half virtual for now.
-        if(game.level == 0){
+
+        if(game.level == 0){ // ------------------ PILOT ------------------------------------------------
             if(game.state == GameState.OBJECT_PLACEMENT) {
                 final boolean allObjectsPlaced = game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -540,22 +540,20 @@ public class MainActivity extends Activity {
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
                                 public void onCompletion(MediaPlayer mediaPlayer) {
-                                    Log.d(LOG_TAG, "ana_naratif2 finish");
                                     mediaPlayer.release();
                                     MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, game.getQuestion());
                                     mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                         @Override
                                         public void onCompletion(MediaPlayer mediaPlayer) {
-                                            Log.d(LOG_TAG, "soru finish");
-                                            game.startTime = System.currentTimeMillis();
                                             game.state = GameState.ASSESMENT_RUNNING;
+                                            game.startTime = System.currentTimeMillis();
                                             Log.d(LOG_TAG, "Assesment has started");
                                             mediaPlayer.release();
 
                                             delayedUICommand(REMOVAL_DELAY, new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    Log.d(LOG_TAG, "object removed");
+                                                    //Log.d(LOG_TAG, "object removed");
                                                     ((GameHalfVirtual)game).removeObjects();
                                                     overlayImView.setImageBitmap(bmpOverlay);
                                                 }
@@ -620,7 +618,7 @@ public class MainActivity extends Activity {
                 }
             }
         }
-        else{
+        else{  //------------------------ OTHER LEVELS -----------------------------------------------------------
             if(game.state == GameState.OBJECT_PLACEMENT) {
                 final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -628,21 +626,20 @@ public class MainActivity extends Activity {
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if(allObjectsPlaced){
-                            tvDebug.setText("Assesment has started");
+                            tvDebug.setText("Question asked");
                             mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
                                 public void onCompletion(MediaPlayer mediaPlayer) {
-                                    Log.d(LOG_TAG, "soru finish");
-                                    game.startTime = System.currentTimeMillis();
                                     game.state = GameState.ASSESMENT_RUNNING;
+                                    game.startTime = System.currentTimeMillis();
                                     Log.d(LOG_TAG, "Assesment has started");
                                     mediaPlayer.release();
 
-                                    delayedUICommand(REMOVAL_DELAY, new Runnable() { //TODO for 3 year
+                                    delayedUICommand(REMOVAL_DELAY, new Runnable() {
                                         @Override
                                         public void run() {
-                                            Log.d(LOG_TAG, "object removed");
+                                            //Log.d(LOG_TAG, "object removed");
                                             ((GameHalfVirtual)game).removeObjects();
                                             overlayImView.setImageBitmap(bmpOverlay);
                                         }
@@ -667,6 +664,7 @@ public class MainActivity extends Activity {
                     public void run() {
                         if (correctAnswer == 1) {
                             StopCaptureNative();
+                            soundPool.stop(sBackPlayId);
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
                             addKonfetti("burst");
