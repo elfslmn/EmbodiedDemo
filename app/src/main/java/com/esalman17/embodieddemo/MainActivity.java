@@ -469,7 +469,7 @@ public class MainActivity extends Activity {
         if(test == 0){ // PILOT LEVEL
             StopCaptureNative();
             game = new GameHalfVirtual(this, 0);
-            game.setBackground(mainImView, R.drawable.dima_and_garden);
+            game.setBackground(mainImView, R.drawable.dima_and_garden_small);
 
             playMedia(R.raw.ana_naratif1);
 
@@ -483,7 +483,7 @@ public class MainActivity extends Activity {
         }
         else {
             game = new GameHalfVirtual(this, test);
-            game.setBackground(mainImView, R.drawable.dima_and_garden);
+            game.setBackground(mainImView, R.drawable.dima_and_garden_small);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
 
             showLevelInfo("LEVEL " + test);
@@ -536,6 +536,7 @@ public class MainActivity extends Activity {
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if (allObjectsPlaced) {
+                            game.setBackground(mainImView, R.drawable.dima_and_flare_small);
                             mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.ana_naratif2_kisa);
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
@@ -613,6 +614,7 @@ public class MainActivity extends Activity {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if(allObjectsPlaced){
                             tvDebug.setText("Question asked");
+                            game.setBackground(mainImView, R.drawable.dima_and_flare_small);
                             mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
@@ -625,9 +627,11 @@ public class MainActivity extends Activity {
                                     delayedUICommand(REMOVAL_DELAY, new Runnable() {
                                         @Override
                                         public void run() {
-                                            //Log.d(LOG_TAG, "object removed");
-                                            ((GameHalfVirtual)game).removeObjects();
-                                            overlayImView.setImageBitmap(bmpOverlay);
+                                            if(game.state == GameState.ASSESMENT_RUNNING) {
+                                                ((GameHalfVirtual) game).removeObjects();
+                                                overlayImView.setImageBitmap(bmpOverlay);
+                                                Log.d(LOG_TAG, "Objects are removed");
+                                            }
                                         }
                                     });
                                 }
