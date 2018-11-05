@@ -19,14 +19,17 @@ import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -37,11 +40,12 @@ import com.transitionseverywhere.TransitionManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -76,10 +80,12 @@ public class MainActivity extends Activity {
     TextView tvDebug, tvLevel, tvResult, tvInfo;
     KonfettiView konfettiView;
     EditText etName, etAge;
+    Switch touch_switch;
 
     Slide slide = new Slide();
 
     boolean m_opened;
+    boolean touch_mode = false;
     Mode currentMode;
 
     private static final String LOG_TAG = "MainActivity";
@@ -168,6 +174,52 @@ public class MainActivity extends Activity {
         }
     };
 
+    public static int[] convertIntegers(List<Integer> integers)
+    {
+        int[] ret = new int[integers.size()];
+        Iterator<Integer> iterator = integers.iterator();
+        for (int i = 0; i < ret.length; i++)
+        {
+            ret[i] = iterator.next().intValue();
+        }
+        return ret;
+    }
+
+    ArrayList<Integer> touch_descriptors = new ArrayList<>(30);
+    int downx, downy;
+    View.OnTouchListener touchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent event) {
+            if(event.getAction() == MotionEvent.ACTION_DOWN){
+                downx = (int) event.getX();
+                downy = (int) event.getY();
+            }
+            else if(event.getAction() == MotionEvent.ACTION_UP){
+                if((Math.abs(downx - (int) event.getX()) + Math.abs(downy - (int) event.getY())) < 100 ){
+                    touch_descriptors.add(downx);
+                    touch_descriptors.add(downy);
+                    touch_descriptors.add(0); // 0 means it is a retro blob
+                    Log.d(LOG_TAG,"RETRO x="+downx +" y="+downy +" dist=" + (Math.abs(downx - (int) event.getX()) + Math.abs(downy - (int) event.getY())) );
+                }
+                else{
+                    touch_descriptors.clear();
+                    touch_descriptors.add(downx);
+                    touch_descriptors.add(downy);
+                    touch_descriptors.add(1); // 1 means it is a gesture blob
+                    Log.d(LOG_TAG,"GESTURE x="+downx +" y="+downy+" dist=" + (Math.abs(downx - (int) event.getX()) + Math.abs(downy - (int) event.getY())));
+                }
+                //Log.d(LOG_TAG, "touch_descriptors "+touch_descriptors.size());
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        shapeDetectedCallback(convertIntegers(touch_descriptors));
+                    }
+                }).start();
+            }
+            return true;
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -212,6 +264,7 @@ public class MainActivity extends Activity {
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
+        overlayImView.setOnTouchListener(touchListener);
         konfettiView = findViewById(R.id.viewKonfetti);
         tvDebug = findViewById(R.id.textViewDebug);
         tvLevel = findViewById(R.id.textViewLevel);
@@ -228,6 +281,23 @@ public class MainActivity extends Activity {
         slide.addTarget(tvResult);
         slide.addTarget(infoLayout);
         slide.setDuration(500);
+
+        touch_switch = findViewById(R.id.switch_touch);
+        touch_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                if(isChecked){
+                    StopCaptureNative();
+                    touch_mode = true;
+                    overlayImView.setOnTouchListener(touchListener);
+                }
+                else{
+                    touch_mode = false;
+                    touch_descriptors.clear();
+                    overlayImView.setOnTouchListener(null);
+                }
+            }
+        });
 
         findViewById(R.id.buttonSubmit).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -459,7 +529,7 @@ public class MainActivity extends Activity {
         if (bmpOverlay == null) {
             bmpOverlay = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
         }
-
+        touch_descriptors.clear();
         overlayImView.setVisibility(View.VISIBLE);
         tvInfo.setText("Level "+test);
 
@@ -515,8 +585,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void shapeDetectedCallback(int[] descriptors){
-        if (!m_opened)
+    public void shapeDetectedCallback(final int[] descriptors){
+        //Log.d(LOG_TAG, "shapeDetectedCallback" );
+        if (!touch_mode && !m_opened)
         {
             Log.i(LOG_TAG, "Device in Java not initialized");
             return;
@@ -618,6 +689,7 @@ public class MainActivity extends Activity {
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if(allObjectsPlaced){
+                            touch_descriptors.clear();
                             tvDebug.setText("Question asked");
                             game.setBackground(mainImView, R.drawable.dima_and_flare_small);
                             mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());

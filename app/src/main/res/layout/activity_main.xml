@@ -218,4 +218,14 @@
 
     </LinearLayout>
 
+    <Switch
+        android:id="@+id/switch_touch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/layout_levels"
+        android:layout_alignParentEnd="true"
+        android:text="Touch"
+        android:alpha="0.5"
+        android:textColor="@color/gray"/>
+
 </RelativeLayout>
