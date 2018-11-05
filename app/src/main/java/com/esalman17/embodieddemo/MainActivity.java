@@ -54,7 +54,7 @@ public class MainActivity extends Activity {
     public static int REMOVAL_DELAY = 2500; //TODO for 3 year
     public static String CHILD_NAME = "Elif";
     public static int CHILD_AGE = 3;
-    SimpleDateFormat parser = new SimpleDateFormat("d_MMM_HH:mm");
+    SimpleDateFormat parser = new SimpleDateFormat("d_MMM_HH_mm");
 
     static {
         System.loadLibrary("usb_android");
