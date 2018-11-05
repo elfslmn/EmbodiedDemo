@@ -596,21 +596,7 @@ public class MainActivity extends Activity {
                         @Override
                         public void onCompletion(MediaPlayer mediaPlayer) {
                             mediaPlayer.release();
-                            MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.next_game);
-                            mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                @Override
-                                public void onCompletion(MediaPlayer mediaPlayer) {
-                                    mediaPlayer.release();
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            findViewById(R.id.button1).performClick();
-                                        }
-                                    });
-                                }
-                            });
-                            sleep(4000);
-                            mediaPlayer2.start();
+                            playMedia(R.raw.next_game, 4000);
                         }
                     });
                     sleep(3000);
@@ -717,23 +703,7 @@ public class MainActivity extends Activity {
                             @Override
                             public void onCompletion(MediaPlayer mediaPlayer) {
                                 mediaPlayer.release();
-                                MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.next_game);
-                                mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                    @Override
-                                    public void onCompletion(MediaPlayer mediaPlayer) {
-                                        mediaPlayer.release();
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                // start next level
-                                                initializeTestMode(game.level + 1);
-                                            }
-                                        });
-
-                                    }
-                                });
-                                sleep(4000);
-                                mediaPlayer2.start();
+                                playMedia(R.raw.next_game, 4000);
                             }
                         });
                         sleep(3000);
