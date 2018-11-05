@@ -231,36 +231,27 @@ public class GameHalfVirtual extends Game{
         {
             state = GameState.ALL_PLACED;
             Log.i(LOG_TAG, "Blobs: All objects are placed.");
-            for(Point p1: virtualPoints){
-                drawable.setBounds(p1.x-55, p1.y-55, p1.x+55, p1.y+55);
-                drawable.draw(canvas);
+            if(level != 0){
+                drawVirtualObjects();
             }
-            MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
-
-            canvas.drawRect(left, GamePaint.red);
-            canvas.drawRect(right, GamePaint.red);
-
-          /*  if(level != 0) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        state = GameState.ASSESMENT_RUNNING;
-                        startTime = System.currentTimeMillis();
-                        Log.i(LOG_TAG, "Assessment has started");
-                    }
-                }).start();
-            } */
-
+            // In pilot level, virtual objects are drawn later.
             return true;
         }
         else{
             return false;
         }
+    }
+
+    public void drawVirtualObjects(){
+        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
+        for(Point p1: virtualPoints){
+            drawable.setBounds(p1.x-55, p1.y-55, p1.x+55, p1.y+55);
+            drawable.draw(canvas);
+        }
+        MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
+
+        canvas.drawRect(left, GamePaint.red);
+        canvas.drawRect(right, GamePaint.red);
     }
 
     public int processGestureDescriptors(int[] descriptors){

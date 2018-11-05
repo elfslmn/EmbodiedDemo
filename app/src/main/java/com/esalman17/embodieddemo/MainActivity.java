@@ -536,13 +536,12 @@ public class MainActivity extends Activity {
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if (allObjectsPlaced) {
-                            game.setBackground(mainImView, R.drawable.dima_and_flare_small);
-                            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.ana_naratif2_kisa);
+                            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.vay_canina);
                             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
                                 public void onCompletion(MediaPlayer mediaPlayer) {
                                     mediaPlayer.release();
-                                    MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, game.getQuestion());
+                                    MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.soru_fazla_pilot);
                                     mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                         @Override
                                         public void onCompletion(MediaPlayer mediaPlayer) {
@@ -550,15 +549,14 @@ public class MainActivity extends Activity {
                                             game.startTime = System.currentTimeMillis();
                                             Log.d(LOG_TAG, "Assesment has started");
                                             mediaPlayer.release();
-
-                                            delayedUICommand(REMOVAL_DELAY, new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    //Log.d(LOG_TAG, "object removed");
-                                                    ((GameHalfVirtual)game).removeObjects();
-                                                    overlayImView.setImageBitmap(bmpOverlay);
-                                                }
-                                            });
+                                        }
+                                    });
+                                    sleep(2500);
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ((GameHalfVirtual)game).removeObjects();
+                                            overlayImView.setImageBitmap(bmpOverlay);
                                         }
                                     });
                                     mediaPlayer2.start();
@@ -566,6 +564,13 @@ public class MainActivity extends Activity {
                                 }
                             });
                             mediaPlayer.start();
+                            delayedUICommand(4500, new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((GameHalfVirtual)game).drawVirtualObjects();
+                                    overlayImView.setImageBitmap(bmpOverlay);
+                                }
+                            });
                         }
                     }
                 });
@@ -597,7 +602,7 @@ public class MainActivity extends Activity {
                         @Override
                         public void onCompletion(MediaPlayer mediaPlayer) {
                             mediaPlayer.release();
-                            playMedia(R.raw.next_game, 4000);
+                            playMedia(R.raw.hazirsin, 3000);
                         }
                     });
                     sleep(3000);
