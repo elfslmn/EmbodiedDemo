@@ -557,8 +557,17 @@ public class MainActivity extends Activity {
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
 
             showLevelInfo("LEVEL " + test);
-            playMedia(R.raw.taslari_koy);
-            delayedUICommand(3000, new Runnable() {
+            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.next_game);
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                    mediaPlayer.release();
+                    playMedia(R.raw.taslari_koy);
+                }
+            });
+            mediaPlayer.start();
+
+            delayedUICommand(6000, new Runnable() {
                 @Override
                 public void run() {
                     StartCaptureNative();
@@ -779,7 +788,7 @@ public class MainActivity extends Activity {
                         });
                     }
                     else {
-                        mediaPlayer = MediaPlayer.create(this, R.raw.taslari_al);
+                        /*mediaPlayer = MediaPlayer.create(this, R.raw.taslari_al);
                         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                             @Override
                             public void onCompletion(MediaPlayer mediaPlayer) {
@@ -788,7 +797,8 @@ public class MainActivity extends Activity {
                             }
                         });
                         sleep(3000);
-                        mediaPlayer.start();
+                        mediaPlayer.start();*/
+                        playMedia(R.raw.taslari_al, 3000);
                     }
                 }
             }
@@ -830,8 +840,18 @@ public class MainActivity extends Activity {
                 mediaPlayer.release();
             }
         });
-        if(delay > 0) sleep(delay);
-        mediaPlayer.start();
+        if(delay > 0){
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    mediaPlayer.start();
+                }
+            }, delay);
+        }
+        else{
+            mediaPlayer.start();
+        }
+
     }
 
     private void showLevelInfo(String info){
