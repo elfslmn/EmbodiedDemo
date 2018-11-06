@@ -219,8 +219,8 @@ pair<int, int> CamListener::convertCamPixel2ProPixel(float x, float y, float z){
     float scale_x = 1.3074;
     float scale_y = 1.8256;
     float shifty = 486.69004 * exp(-0.048035356*z);
-    float px = x * disp_width* scale_x / cam_width - disp_width*(scale_x -1) /2 -5;  // shiftx nearly 0
-    float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty + 565;
+    float px = x * disp_width* scale_x / cam_width - disp_width*(scale_x -1) /2 +10;  // shiftx nearly 0
+    float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty + 580;
 
     if(px > disp_width || px < 0 || py>disp_height|| py < 0){
         //LOGD("Point is outside of the projector view");
@@ -276,15 +276,7 @@ void CamListener::visualizeBlobs(Mat & src, Mat & output, const vector<vector<Po
 
     for (unsigned int i = 0; i < retro_contours.size(); i++)
     {
-        if (contourArea(retro_contours[i]) < MIN_RETRO_AREA)
-        {
-            drawContours(output, retro_contours, i, Scalar(255, 0, 255));
-            continue;
-        }
-        else
-        {
-            drawContours(output, retro_contours, i, Scalar(255, 255, 0));
-        }
+        drawContours(output, retro_contours, i, Scalar(255, 0, 255));
     }
 
 }
@@ -328,11 +320,13 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
 
     for (unsigned int i = 0; i < retro_contours.size(); i++)
     {
-        if (contourArea(retro_contours[i]) < MIN_RETRO_AREA) continue;
+        //if (contourArea(retro_contours[i]) < MIN_RETRO_AREA) continue;
 
-        Moments mu = moments(retro_contours[i], false);
+        /*Moments mu = moments(retro_contours[i], false);
         float x = mu.m10 / mu.m00;
-        float y = mu.m01 / mu.m00;
+        float y = mu.m01 / mu.m00; */
+        int x = retro_contours[i][0].x;
+        int y = retro_contours[i][0].y;
 
         if(x >= cam_width - MARGIN || x < MARGIN || y >= cam_height - MARGIN || y < MARGIN )  continue;
 

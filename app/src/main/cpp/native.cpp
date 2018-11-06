@@ -145,7 +145,7 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
     }
 
     //set exposure time (not working above 300)
-    ret = cameraDevice->setExposureTime(250);
+    ret = cameraDevice->setExposureTime(100);
     if (ret != CameraStatus::SUCCESS)
     {
         LOGE ("Failed to set exposure time, CODE %d", (int) ret);
