@@ -20,13 +20,14 @@ public class GameHalfVirtual extends Game{
     public ArrayList<Point> wantedPoints;
     public ArrayList<Point> virtualPoints;
     private boolean[] soundPlayedPoints;
-    Drawable drawable, finger;
+    Drawable drawable, finger, cross;
 
     public GameHalfVirtual(Context context, int level) {
         this.level = level;
         if(level == 0){
             finger = context.getResources().getDrawable(R.drawable.finger);
         }
+        cross = context.getResources().getDrawable(R.drawable.cross);
         initialize(level);
 
         switch (level) {
@@ -182,7 +183,8 @@ public class GameHalfVirtual extends Game{
         canvas.drawPaint(GamePaint.eraser);
 
         for(Point p : wantedPoints){
-            canvas.drawCircle(p.x, p.y, 50, GamePaint.red);
+            cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
+            cross.draw(canvas);
             if(level == 0 && state == GameState.OBJECT_PLACEMENT){
                 finger.setBounds(p.x-60, p.y+60, p.x+60, p.y+200);
                 finger.draw(canvas);
@@ -206,9 +208,9 @@ public class GameHalfVirtual extends Game{
             for (int j=0; j<wantedPoints.size(); j++)
             {
                 Point p2 = wantedPoints.get(j);
-                if (areClose(p1, p2, 50))
+                if (areClose(p1, p2, 55))
                 {
-                    canvas.drawCircle(p2.x, p2.y, 55, GamePaint.eraser);
+                    canvas.drawCircle(p2.x, p2.y, 50, GamePaint.eraser);
 
                     drawable.setBounds(p1.x-55, p1.y-55, p1.x+55, p1.y+55);
                     drawable.draw(canvas);
