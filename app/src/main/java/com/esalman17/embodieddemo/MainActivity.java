@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
-import android.graphics.Color;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -255,6 +254,7 @@ public class MainActivity extends Activity {
             }
         }
         infoLayout = findViewById(R.id.layout_info);
+        infoLayout.setVisibility(View.GONE); // TODO for debug
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
@@ -530,45 +530,13 @@ public class MainActivity extends Activity {
         wrong = 0;
 
         if(test == 0){ // PILOT LEVEL
-            StopCaptureNative();
-            game = new GameHalfVirtual(this, 0);
-            game.setBackground(mainImView, R.drawable.dima_and_garden_small);
 
-            playMedia(R.raw.ana_naratif1);
-
-            delayedUICommand(19000, new Runnable() {
-                @Override
-                public void run() {
-                    overlayImView.setImageBitmap(bmpOverlay);
-                    StartCaptureNative();
-                }
-            });
         }
-        else {
-            game = new GameHalfVirtual(this, test);
-            game.setBackground(mainImView, R.drawable.dima_and_garden_small);
-            overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor
-
+        else if(test == 1){
+            game = new GameBothReal(this, test);
+            game.setBackground(mainImView, R.drawable.task_a1);
+            overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             showLevelInfo("LEVEL " + test);
-            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.next_game);
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mediaPlayer) {
-                    mediaPlayer.release();
-                    playMedia(R.raw.taslari_koy);
-                }
-            });
-            mediaPlayer.start();
-
-            delayedUICommand(6000, new Runnable() {
-                @Override
-                public void run() {
-                    StartCaptureNative();
-                    if(soundsLoaded ){
-                        sBackPlayId = soundPool.play(sBack, 0.1f, 0.1f,1,-1,1f);
-                    }
-                }
-            });
 
         }
     }
@@ -602,124 +570,35 @@ public class MainActivity extends Activity {
         // Not need instance check because all of them is half virtual for now.
 
         if(game.level == 0){ // ------------------ PILOT ------------------------------------------------
-            if(game.state == GameState.OBJECT_PLACEMENT) {
-                final boolean allObjectsPlaced = game.processBlobDescriptors(descriptors);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        overlayImView.setImageBitmap(bmpOverlay);
-                        if (allObjectsPlaced) {
-                            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.vay_canina);
-                            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                @Override
-                                public void onCompletion(MediaPlayer mediaPlayer) {
-                                    mediaPlayer.release();
-                                    MediaPlayer mediaPlayer2 = MediaPlayer.create(MainActivity.this, R.raw.soru_fazla_pilot);
-                                    mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                        @Override
-                                        public void onCompletion(MediaPlayer mediaPlayer) {
-                                            game.state = GameState.ASSESMENT_RUNNING;
-                                            game.startTime = System.currentTimeMillis();
-                                            Log.d(LOG_TAG, "Assesment has started");
-                                            mediaPlayer.release();
-                                        }
-                                    });
-                                    sleep(2500);
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            ((GameHalfVirtual)game).removeObjects();
-                                            overlayImView.setImageBitmap(bmpOverlay);
-                                        }
-                                    });
-                                    mediaPlayer2.start();
 
-                                }
-                            });
-                            mediaPlayer.start();
-                            delayedUICommand(4500, new Runnable() {
-                                @Override
-                                public void run() {
-                                    ((GameHalfVirtual)game).drawVirtualObjects();
-                                    overlayImView.setImageBitmap(bmpOverlay);
-                                }
-                            });
-                        }
-                    }
-                });
-
-            }
-            else if(game.state == GameState.ASSESMENT_RUNNING) {
-                final int correctAnswer = game.processGestureDescriptors(descriptors);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (correctAnswer == 1) {
-                            StopCaptureNative();
-                            playSound(sApplause, sCong);
-                            overlayImView.setImageDrawable(null);
-                            float secs = (float) game.assestmentTime / 1000;
-                            String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
-                            results[game.level] = time;
-                            tvDebug.setText(time);
-                        } else if (correctAnswer == -1) {
-                            playSound(sWrong);
-                        }
-                    }
-                });
-
-                if(correctAnswer == 1){
-                    mediaPlayer = MediaPlayer.create(this, R.raw.taslari_al);
-                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                        @Override
-                        public void onCompletion(MediaPlayer mediaPlayer) {
-                            mediaPlayer.release();
-                            playMedia(R.raw.hazirsin, 3000);
-                        }
-                    });
-                    sleep(3000);
-                    mediaPlayer.start();
-                }
-            }
         }
-        else{  //------------------------ OTHER LEVELS -----------------------------------------------------------
-            if(game.state == GameState.OBJECT_PLACEMENT) {
+        else if(game.level == 1){  //------------------------ OTHER LEVELS -----------------------------------------------------------
+            if(game.state == GameState.OBJECT_PLACEMENT || game.state == GameState.LEFT_PLACED) {
                 final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
-                        if(allObjectsPlaced){
-                            touch_descriptors.clear();
-                            tvDebug.setText("Question asked");
-                            game.setBackground(mainImView, R.drawable.dima_and_flare_small);
-                            mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
-                            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                @Override
-                                public void onCompletion(MediaPlayer mediaPlayer) {
-                                    game.state = GameState.ASSESMENT_RUNNING;
-                                    game.startTime = System.currentTimeMillis();
-                                    Log.d(LOG_TAG, "Assesment has started");
-                                    mediaPlayer.release();
+                        if(allObjectsPlaced) {
+                            if(game.state == GameState.LEFT_PLACED){
+                                Log.d( "Level-1", "All left objects are placed");
+                                // TODO momoyu karşıya gecir.
+                            }
+                            else if(game.state == GameState.ALL_PLACED){
+                                StopCaptureNative();
+                                touch_descriptors.clear();
+                                Log.d( "Level-1", "Both side objects are placed");
+                                // TODO Ask question and start assesment after audio finished
+                                // For debug directly start the assesmnet
+                                game.state = GameState.ASSESMENT_RUNNING;
+                                game.startTime = System.currentTimeMillis();
+                                Log.d(LOG_TAG, "Assesment has started");
+                            }
 
-                                    delayedUICommand(REMOVAL_DELAY, new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if(game.state == GameState.ASSESMENT_RUNNING) {
-                                                ((GameHalfVirtual) game).removeObjects();
-                                                overlayImView.setImageBitmap(bmpOverlay);
-                                                Log.d(LOG_TAG, "Objects are removed");
-                                            }
-                                        }
-                                    });
-                                }
-                            });
-                            mediaPlayer.start();
                         }
                     }
                 });
             }
-
             else if(game.state == GameState.ASSESMENT_RUNNING) {
                 final int correctAnswer = game.processGestureDescriptors(descriptors);
                 if (correctAnswer == 1) {
@@ -731,8 +610,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void run() {
                         if (correctAnswer == 1) {
-                            StopCaptureNative();
-                            soundPool.stop(sBackPlayId);
+                            //soundPool.stop(sBackPlayId);
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
                             tvDebug.setText(results[game.level]);
@@ -741,57 +619,6 @@ public class MainActivity extends Activity {
                         }
                     }
                 });
-
-                if(correctAnswer == 1){
-                    if(game.level == 6){
-                        Log.d(LOG_TAG, "ALL LEVELS ARE FINISHED");
-
-                        final StringBuilder sb = new StringBuilder();
-                        sb.append("Name: "+CHILD_NAME+"\n");
-                        sb.append("Age: "+ CHILD_AGE+"\n");
-                        sb.append("Results: \n");
-
-                        for(int i=0; i <results.length; i++){
-                            sb.append("Level "+ i +": ");
-                            if(results[i] == null){
-                                sb.append("Did not attempted \n");
-                            }
-                            else{
-                                sb.append(results[i]+"\n");
-                            }
-                        }
-                        final boolean res = saveResults(CHILD_NAME, sb.toString());
-
-                        delayedUICommand(4000, new Runnable() {
-                            @Override
-                            public void run() {
-                                tvResult.setText(sb.toString());
-                                TransitionManager.beginDelayedTransition(mainLayout,slide);
-                                tvResult.setVisibility(View.VISIBLE);
-
-                                if(res){
-                                    Toast.makeText(MainActivity.this, "Results are saved", Toast.LENGTH_LONG).show();
-                                }
-                                else{
-                                    Toast.makeText(MainActivity.this, "Results cannot be saved", Toast.LENGTH_LONG).show();
-                                }
-                            }
-                        });
-                    }
-                    else {
-                        /*mediaPlayer = MediaPlayer.create(this, R.raw.taslari_al);
-                        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                            @Override
-                            public void onCompletion(MediaPlayer mediaPlayer) {
-                                mediaPlayer.release();
-                                playMedia(R.raw.next_game, 4000);
-                            }
-                        });
-                        sleep(3000);
-                        mediaPlayer.start();*/
-                        playMedia(R.raw.taslari_al, 3000);
-                    }
-                }
             }
         }
 

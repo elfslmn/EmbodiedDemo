@@ -8,6 +8,7 @@ public enum GameState {
     INTRO,
     OBJECT_PLACEMENT,
     ALL_PLACED,
+    LEFT_PLACED,
     ASSESMENT_RUNNING,
     ASSESMENT_FINISHED
 }

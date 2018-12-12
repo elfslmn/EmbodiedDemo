@@ -47,7 +47,8 @@ abstract public class Game {
 
     public enum Side {
         LEFT,
-        RIGHT
+        RIGHT,
+        MIDDLE
     }
 
     public enum Question{
