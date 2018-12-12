@@ -49,11 +49,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import nl.dionsegijn.konfetti.KonfettiView;
-import nl.dionsegijn.konfetti.models.Shape;
-import nl.dionsegijn.konfetti.models.Size;
-
-
 public class MainActivity extends Activity {
     public static int REMOVAL_DELAY = 2500; //TODO for 3 year
     public static String CHILD_NAME = "Elif";
@@ -78,7 +73,6 @@ public class MainActivity extends Activity {
     LinearLayout infoLayout;
     ImageView mainImView, overlayImView;
     TextView tvDebug, tvLevel, tvResult, tvInfo;
-    KonfettiView konfettiView;
     EditText etName, etAge;
     Switch touch_switch;
 
@@ -265,7 +259,6 @@ public class MainActivity extends Activity {
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
         overlayImView.setOnTouchListener(touchListener);
-        konfettiView = findViewById(R.id.viewKonfetti);
         tvDebug = findViewById(R.id.textViewDebug);
         tvLevel = findViewById(R.id.textViewLevel);
         tvResult = findViewById(R.id.textViewResults);
@@ -665,7 +658,6 @@ public class MainActivity extends Activity {
                             StopCaptureNative();
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
-                            addKonfetti("burst");
                             float secs = (float) game.assestmentTime / 1000;
                             String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
                             results[game.level] = time;
@@ -743,7 +735,6 @@ public class MainActivity extends Activity {
                             soundPool.stop(sBackPlayId);
                             playSound(sApplause, sCong);
                             overlayImView.setImageDrawable(null);
-                            addKonfetti("burst");
                             tvDebug.setText(results[game.level]);
                         } else if (correctAnswer == -1) {
                             playSound(sWrong);
@@ -912,56 +903,6 @@ public class MainActivity extends Activity {
         return id;
     }
 
-    private void addKonfetti(String type){
-        switch (type){
-            case "top":
-                konfettiView.build()
-                        .addColors(Color.YELLOW, Color.GREEN, Color.BLUE, Color.RED)
-                        .setDirection(0.0, 359.0)
-                        .setSpeed(1f, 5f)
-                        .setFadeOutEnabled(true)
-                        .setTimeToLive(1500L)
-                        .addShapes(Shape.RECT, Shape.CIRCLE)
-                        .addSizes(new Size(12, 5f))
-                        .setPosition(-50f, konfettiView.getWidth() + 50f, -50f, -50f)
-                        .streamFor(500, 3000L);
-                break;
-            case "burst":
-                konfettiView.build()
-                        .addColors(Color.YELLOW, Color.GREEN, Color.BLUE, Color.RED)
-                        .setDirection(0.0, 359.0)
-                        .setSpeed(1f, 5f)
-                        .setFadeOutEnabled(true)
-                        .setTimeToLive(3000L)
-                        .addShapes(Shape.RECT, Shape.CIRCLE)
-                        .addSizes(new Size(15, 5f))
-                        .setPosition(konfettiView.getX() + konfettiView.getWidth() / 2, konfettiView.getY() + konfettiView.getHeight() / 3)
-                        .burst(200);
-                konfettiView.build()
-                        .addColors(Color.YELLOW, Color.GREEN, Color.BLUE, Color.RED)
-                        .setDirection(0.0, 359.0)
-                        .setSpeed(1f, 5f)
-                        .setFadeOutEnabled(true)
-                        .setTimeToLive(3000L)
-                        .addShapes(Shape.RECT, Shape.CIRCLE)
-                        .addSizes(new Size(15, 5f))
-                        .setPosition(konfettiView.getX() + konfettiView.getWidth() / 4, konfettiView.getY() + konfettiView.getHeight() / 3)
-                        .burst(200);
-                konfettiView.build()
-                        .addColors(Color.YELLOW, Color.GREEN, Color.BLUE, Color.RED)
-                        .setDirection(0.0, 359.0)
-                        .setSpeed(1f, 5f)
-                        .setFadeOutEnabled(true)
-                        .setTimeToLive(3000L)
-                        .addShapes(Shape.RECT, Shape.CIRCLE)
-                        .addSizes(new Size(15, 5f))
-                        .setPosition(konfettiView.getX() + 3*konfettiView.getWidth() / 4, konfettiView.getY() + konfettiView.getHeight() / 3)
-                        .burst(200);
-                break;
-
-        }
-
-    }
 
     private boolean saveResults(String childName, String result){
         File path = new File(Environment.getExternalStorageDirectory(), "Embodied/Study1");
