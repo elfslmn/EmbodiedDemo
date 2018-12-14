@@ -135,7 +135,7 @@ public class GameBothReal extends Game{
 
             if(match) count++;
             else{
-                canvas.drawCircle(p1.x, p1.y, 50, GamePaint.blue);
+                canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
             }
         }
         if(count == wantedPoints.size())

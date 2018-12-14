@@ -34,6 +34,7 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.transitionseverywhere.Slide;
 import com.transitionseverywhere.TransitionManager;
 
@@ -71,6 +72,7 @@ public class MainActivity extends Activity {
     TableLayout levelLayout;
     LinearLayout infoLayout;
     ImageView mainImView, overlayImView;
+    LottieAnimationView animationView;
     TextView tvDebug, tvLevel, tvResult, tvInfo;
     EditText etName, etAge;
     Switch touch_switch;
@@ -258,7 +260,7 @@ public class MainActivity extends Activity {
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
-        overlayImView.setOnTouchListener(touchListener);
+        animationView = findViewById(R.id.animationView);
         tvDebug = findViewById(R.id.textViewDebug);
         tvLevel = findViewById(R.id.textViewLevel);
         tvResult = findViewById(R.id.textViewResults);
@@ -524,6 +526,7 @@ public class MainActivity extends Activity {
         }
         touch_descriptors.clear();
         overlayImView.setVisibility(View.VISIBLE);
+        animationView.setVisibility(View.VISIBLE);
         tvInfo.setText("Level "+test);
 
         timer = new Timer(false);
@@ -536,6 +539,9 @@ public class MainActivity extends Activity {
             game = new GameBothReal(this, test);
             game.setBackground(mainImView, R.drawable.task_a1);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
+            animationView.setAnimation("hello.json");
+            animationView.setRepeatCount(-1);
+            animationView.playAnimation();
             showLevelInfo("LEVEL " + test);
 
         }
@@ -544,6 +550,7 @@ public class MainActivity extends Activity {
         mainImView.setImageBitmap(bmpCam);
         overlayImView.setImageDrawable(null);
         overlayImView.setVisibility(View.GONE);
+        animationView.setVisibility(View.GONE);
         tvResult.setVisibility(View.GONE);
         tvInfo.setText(null);
         soundPool.stop(sBackPlayId);
