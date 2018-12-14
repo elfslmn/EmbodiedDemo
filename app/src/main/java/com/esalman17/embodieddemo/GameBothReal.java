@@ -150,9 +150,6 @@ public class GameBothReal extends Game{
             }
             else{
                 state = GameState.ALL_PLACED;
-                canvas.drawRect(left, GamePaint.red);
-                canvas.drawRect(right, GamePaint.red);
-                canvas.drawRect(new Rect(middle), GamePaint.red);
             }
             return true;
         }

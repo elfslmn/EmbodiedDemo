@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -602,9 +604,7 @@ public class MainActivity extends Activity {
                                 animationView.startAnimation(walking);
                                 walking.setAnimationListener(new Animation.AnimationListener() {
                                     @Override
-                                    public void onAnimationStart(Animation animation) {
-
-                                    }
+                                    public void onAnimationStart(Animation animation) {}
 
                                     @Override
                                     public void onAnimationEnd(Animation animation) {
@@ -614,11 +614,8 @@ public class MainActivity extends Activity {
                                         down.setFillAfter(true);
                                         animationView.startAnimation(down);
                                     }
-
                                     @Override
-                                    public void onAnimationRepeat(Animation animation) {
-
-                                    }
+                                    public void onAnimationRepeat(Animation animation) {}
                                 });
                             }
                             else if(game.state == GameState.ALL_PLACED){
@@ -630,6 +627,46 @@ public class MainActivity extends Activity {
                                 game.state = GameState.ASSESMENT_RUNNING;
                                 game.startTime = System.currentTimeMillis();
                                 Log.d(LOG_TAG, "Assesment has started");
+
+                                Animation walking = new TranslateAnimation(600, 850,0, -280);
+                                walking.setDuration(2000);
+                                walking.setStartOffset(200);
+                                walking.setFillAfter(true);
+                                animationView.playAnimation();
+                                animationView.startAnimation(walking);
+                                walking.setAnimationListener(new Animation.AnimationListener() {
+                                    @Override
+                                    public void onAnimationStart(Animation animation) {}
+
+                                    @Override
+                                    public void onAnimationEnd(Animation animation) {
+                                        Animation down = new TranslateAnimation(850, 1100,-280, 0);
+                                        down.setDuration(2000);
+                                        down.setFillAfter(true);
+                                        animationView.startAnimation(down);
+                                        down.setAnimationListener(new Animation.AnimationListener() {
+                                            @Override
+                                            public void onAnimationStart(Animation animation) {}
+
+                                            @Override
+                                            public void onAnimationEnd(Animation animation) {
+                                                animationView.pauseAnimation();
+                                                Canvas canvas = new Canvas(MainActivity.bmpOverlay);
+                                                canvas.drawRect(game.left, GamePaint.red);
+                                                canvas.drawRect(game.right, GamePaint.red);
+                                                canvas.drawRect(((GameBothReal)game).middle, GamePaint.red);
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() { overlayImView.setImageBitmap(bmpOverlay);}});
+                                            }
+
+                                            @Override
+                                            public void onAnimationRepeat(Animation animation) {}
+                                        });
+                                    }
+                                    @Override
+                                    public void onAnimationRepeat(Animation animation) {}
+                                });
                             }
 
                         }
