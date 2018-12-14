@@ -20,6 +20,9 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -539,17 +542,18 @@ public class MainActivity extends Activity {
             game = new GameBothReal(this, test);
             game.setBackground(mainImView, R.drawable.task_a1);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
-            animationView.setAnimation("hello.json");
+            animationView.setAnimation("rightanswer.json");
             animationView.setRepeatCount(-1);
-            animationView.playAnimation();
+            animationView.setSpeed(2.0f);
             showLevelInfo("LEVEL " + test);
-
         }
     }
     private void endTestMode(){
         mainImView.setImageBitmap(bmpCam);
         overlayImView.setImageDrawable(null);
         overlayImView.setVisibility(View.GONE);
+        animationView.setImageDrawable(null);
+        animationView.clearAnimation();
         animationView.setVisibility(View.GONE);
         tvResult.setVisibility(View.GONE);
         tvInfo.setText(null);
@@ -589,7 +593,33 @@ public class MainActivity extends Activity {
                         if(allObjectsPlaced) {
                             if(game.state == GameState.LEFT_PLACED){
                                 Log.d( "Level-1", "All left objects are placed");
-                                // TODO momoyu karşıya gecir.
+
+                                Animation walking = new TranslateAnimation(0, 600,-100, -100);
+                                walking.setDuration(2500);
+                                walking.setStartOffset(200);
+                                walking.setFillAfter(true);
+                                animationView.playAnimation();
+                                animationView.startAnimation(walking);
+                                walking.setAnimationListener(new Animation.AnimationListener() {
+                                    @Override
+                                    public void onAnimationStart(Animation animation) {
+
+                                    }
+
+                                    @Override
+                                    public void onAnimationEnd(Animation animation) {
+                                        animationView.pauseAnimation();
+                                        Animation down = new TranslateAnimation(600, 600,-100, 0);
+                                        down.setDuration(500);
+                                        down.setFillAfter(true);
+                                        animationView.startAnimation(down);
+                                    }
+
+                                    @Override
+                                    public void onAnimationRepeat(Animation animation) {
+
+                                    }
+                                });
                             }
                             else if(game.state == GameState.ALL_PLACED){
                                 if(touch_mode) StopCaptureNative();
@@ -620,7 +650,8 @@ public class MainActivity extends Activity {
                             if(!touch_mode) StopCaptureNative();
                             //soundPool.stop(sBackPlayId);
                             playSound(sApplause, sCong);
-                            overlayImView.setImageDrawable(null); // TODO önce momonun geçmesini bekle
+                            // TODO önce momonun geçmesini bekle
+                            overlayImView.setImageDrawable(null);
                             tvDebug.setText(results[game.level]);
                         } else if (correctAnswer == -1) {
                             playSound(sWrong);

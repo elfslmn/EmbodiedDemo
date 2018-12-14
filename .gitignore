@@ -18,3 +18,5 @@ app/.externalNativeBuild/
 build/
 build/android-profile
 drawing
+
+MainActivityOld.java
