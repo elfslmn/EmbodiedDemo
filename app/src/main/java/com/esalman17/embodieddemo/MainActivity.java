@@ -585,7 +585,7 @@ public class MainActivity extends Activity {
                                 // TODO momoyu karşıya gecir.
                             }
                             else if(game.state == GameState.ALL_PLACED){
-                                StopCaptureNative();
+                                if(touch_mode) StopCaptureNative();
                                 touch_descriptors.clear();
                                 Log.d( "Level-1", "Both side objects are placed");
                                 // TODO Ask question and start assesment after audio finished
@@ -610,9 +610,10 @@ public class MainActivity extends Activity {
                     @Override
                     public void run() {
                         if (correctAnswer == 1) {
+                            if(!touch_mode) StopCaptureNative();
                             //soundPool.stop(sBackPlayId);
                             playSound(sApplause, sCong);
-                            overlayImView.setImageDrawable(null);
+                            overlayImView.setImageDrawable(null); // TODO önce momonun geçmesini bekle
                             tvDebug.setText(results[game.level]);
                         } else if (correctAnswer == -1) {
                             playSound(sWrong);
