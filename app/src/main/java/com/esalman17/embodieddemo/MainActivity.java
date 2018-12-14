@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -23,7 +22,6 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CompoundButton;
@@ -77,7 +75,7 @@ public class MainActivity extends Activity {
     TableLayout levelLayout;
     LinearLayout infoLayout;
     ImageView mainImView, overlayImView;
-    LottieAnimationView animationView;
+    LottieAnimationView momoView, confettiView;
     TextView tvDebug, tvLevel, tvResult, tvInfo;
     EditText etName, etAge;
     Switch touch_switch;
@@ -265,7 +263,8 @@ public class MainActivity extends Activity {
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
-        animationView = findViewById(R.id.animationView);
+        momoView = findViewById(R.id.momoView);
+        confettiView = findViewById(R.id.confettiView);
         tvDebug = findViewById(R.id.textViewDebug);
         tvLevel = findViewById(R.id.textViewLevel);
         tvResult = findViewById(R.id.textViewResults);
@@ -531,7 +530,8 @@ public class MainActivity extends Activity {
         }
         touch_descriptors.clear();
         overlayImView.setVisibility(View.VISIBLE);
-        animationView.setVisibility(View.VISIBLE);
+        momoView.setVisibility(View.VISIBLE);
+        confettiView.setVisibility(View.VISIBLE);
         tvInfo.setText("Level "+test);
 
         timer = new Timer(false);
@@ -544,9 +544,9 @@ public class MainActivity extends Activity {
             game = new GameBothReal(this, test);
             game.setBackground(mainImView, R.drawable.task_a1);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
-            animationView.setAnimation("rightanswer.json");
-            animationView.setRepeatCount(-1);
-            animationView.setSpeed(2.0f);
+            momoView.setAnimation("rightanswer.json");
+            momoView.setRepeatCount(-1);
+            momoView.setSpeed(2.0f);
             showLevelInfo("LEVEL " + test);
         }
     }
@@ -554,9 +554,11 @@ public class MainActivity extends Activity {
         mainImView.setImageBitmap(bmpCam);
         overlayImView.setImageDrawable(null);
         overlayImView.setVisibility(View.GONE);
-        animationView.setImageDrawable(null);
-        animationView.clearAnimation();
-        animationView.setVisibility(View.GONE);
+        momoView.setImageDrawable(null);
+        momoView.clearAnimation();
+        momoView.setVisibility(View.GONE);
+        confettiView.setImageDrawable(null);
+        confettiView.setVisibility(View.GONE);
         tvResult.setVisibility(View.GONE);
         tvInfo.setText(null);
         soundPool.stop(sBackPlayId);
@@ -600,19 +602,19 @@ public class MainActivity extends Activity {
                                 walking.setDuration(2500);
                                 walking.setStartOffset(200);
                                 walking.setFillAfter(true);
-                                animationView.playAnimation();
-                                animationView.startAnimation(walking);
+                                momoView.playAnimation();
+                                momoView.startAnimation(walking);
                                 walking.setAnimationListener(new Animation.AnimationListener() {
                                     @Override
                                     public void onAnimationStart(Animation animation) {}
 
                                     @Override
                                     public void onAnimationEnd(Animation animation) {
-                                        animationView.pauseAnimation();
+                                        momoView.pauseAnimation();
                                         Animation down = new TranslateAnimation(600, 600,-100, 0);
                                         down.setDuration(500);
                                         down.setFillAfter(true);
-                                        animationView.startAnimation(down);
+                                        momoView.startAnimation(down);
                                     }
                                     @Override
                                     public void onAnimationRepeat(Animation animation) {}
@@ -632,8 +634,8 @@ public class MainActivity extends Activity {
                                 walking.setDuration(2000);
                                 walking.setStartOffset(200);
                                 walking.setFillAfter(true);
-                                animationView.playAnimation();
-                                animationView.startAnimation(walking);
+                                momoView.playAnimation();
+                                momoView.startAnimation(walking);
                                 walking.setAnimationListener(new Animation.AnimationListener() {
                                     @Override
                                     public void onAnimationStart(Animation animation) {}
@@ -643,21 +645,24 @@ public class MainActivity extends Activity {
                                         Animation down = new TranslateAnimation(850, 1100,-280, 0);
                                         down.setDuration(2000);
                                         down.setFillAfter(true);
-                                        animationView.startAnimation(down);
+                                        momoView.startAnimation(down);
                                         down.setAnimationListener(new Animation.AnimationListener() {
                                             @Override
                                             public void onAnimationStart(Animation animation) {}
 
                                             @Override
                                             public void onAnimationEnd(Animation animation) {
-                                                animationView.pauseAnimation();
+                                                momoView.pauseAnimation();
                                                 Canvas canvas = new Canvas(MainActivity.bmpOverlay);
                                                 canvas.drawRect(game.left, GamePaint.red);
                                                 canvas.drawRect(game.right, GamePaint.red);
                                                 canvas.drawRect(((GameBothReal)game).middle, GamePaint.red);
                                                 runOnUiThread(new Runnable() {
                                                     @Override
-                                                    public void run() { overlayImView.setImageBitmap(bmpOverlay);}});
+                                                    public void run() {
+                                                        overlayImView.setImageBitmap(bmpOverlay);
+                                                        mainImView.setImageDrawable(null);
+                                                    }});
                                             }
 
                                             @Override
@@ -687,7 +692,8 @@ public class MainActivity extends Activity {
                             if(!touch_mode) StopCaptureNative();
                             //soundPool.stop(sBackPlayId);
                             playSound(sApplause, sCong);
-                            // TODO önce momonun geçmesini bekle
+                            confettiView.setAnimation("trophy.json");
+                            confettiView.playAnimation();
                             overlayImView.setImageDrawable(null);
                             tvDebug.setText(results[game.level]);
                         } else if (correctAnswer == -1) {
