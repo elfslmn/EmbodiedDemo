@@ -69,7 +69,7 @@ public class GameEqualize extends Game {
         int countLeft = 0, countRight = 0;
         for (int i = 0; i <= descriptors.length - 3; i += 3)
         {
-            if (descriptors[i + 2] == 0) continue; // 0 is an edge-connected(gesture) blob
+            if (descriptors[i + 2] == -1) continue; // -1 is an edge-connected(gesture) blob
 
             Point p1 = new Point(descriptors[i], descriptors[i + 1]);
             if(left.contains(p1.x, p1.y)){

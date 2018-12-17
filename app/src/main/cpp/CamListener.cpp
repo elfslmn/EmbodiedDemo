@@ -103,6 +103,7 @@ void CamListener::onNewData (const DepthData *data)
         if(frameCounter == BACKGROUND_FRAME_COUNT)
         {
             backgrMat /= BACKGROUND_FRAME_COUNT;
+            medianBlur(backgrMat, backgrMat, 5);
             averageNoise /= BACKGROUND_FRAME_COUNT;
             back_detecting = false;
             detected = true;
@@ -115,8 +116,8 @@ void CamListener::onNewData (const DepthData *data)
         updateDepthGrayImage(data, zImage, gray, false);
 
         // calculate differences between new image and background then find contours of diff blobs
+        medianBlur(zImage, zImage, 5);
         diff = backgrMat - zImage;
-        medianBlur(diff, diff, 5);
         threshold(diff, diffBin, averageNoise+0.005, 255, CV_THRESH_BINARY); //TODO threshold??
         diffBin.convertTo(diffBin, CV_8UC1);
         vector<vector<Point> > contours;
@@ -284,6 +285,7 @@ void CamListener::visualizeBlobs(Mat & src, Mat & output, const vector<vector<Po
 void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & contours,
                            const vector<vector<Point> > & retro_contours)
 {
+    // Get gesture blobs
     for (unsigned int i = 0; i < contours.size(); i++)
     {
         if (contourArea(contours[i]) < MIN_CONTOUR_AREA) continue;
@@ -294,16 +296,13 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
         {
             auto ext = std::minmax_element(contours[i].begin(), contours[i].end(), [](Point const& a, Point const& b)
             {
-                return a.y < b.y;
+                return a.y < b.y; // To sort according to y values
             });
             x = ext.first->x ;
             y = ext.first->y ;
         }
         else
         {
-            /*Moments mu = moments(contours[i], false);
-            x = mu.m10 / mu.m00;
-            y = mu.m01 / mu.m00; */
             continue;
         }
 
@@ -315,9 +314,10 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
 
         blobs.push_back(center.first);
         blobs.push_back(center.second);
-        blobs.push_back(0); // 0 means it is a gesture blob
+        blobs.push_back(-1); // -1 means it is a gesture blob
     }
 
+    // Get retro blobs
     for (unsigned int i = 0; i < retro_contours.size(); i++)
     {
         //if (contourArea(retro_contours[i]) < MIN_RETRO_AREA) continue;
@@ -330,12 +330,14 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
 
         if(x >= cam_width - MARGIN || x < MARGIN || y >= cam_height - MARGIN || y < MARGIN )  continue;
 
-        float z = backgrMat.at<float>((int)y,(int)x) + OBJECT_HEIGHT;
+        float z = zImage.at<float>(y,x);
+        float d = diff.at<float>(y,x)*1000;
+        //LOGD("Retro %d-%f-%d", retro_contours[i].size(),z*100, ((int)d) );
         auto center = convertCamPixel2ProPixel(x,y,z);
 
-        blobs.push_back(center.first);
-        blobs.push_back(center.second);
-        blobs.push_back(1); // 1 means it is a retro blob
+        blobs.push_back(center.first);              // u (px)
+        blobs.push_back(center.second);             // v (px)
+        blobs.push_back(((int)d));  // height of retro in ( mm )
 
     }
 

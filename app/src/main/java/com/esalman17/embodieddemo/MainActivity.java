@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -203,7 +204,7 @@ public class MainActivity extends Activity {
                     touch_descriptors.clear();
                     touch_descriptors.add(downx);
                     touch_descriptors.add(downy);
-                    touch_descriptors.add(0); // 0 means it is a gesture blob
+                    touch_descriptors.add(-1); // 0 means it is a gesture blob
                     Log.d(LOG_TAG,"GESTURE x="+downx +" y="+downy+" dist=" + (Math.abs(downx - (int) event.getX()) + Math.abs(downy - (int) event.getY())));
                 }
                 //Log.d(LOG_TAG, "touch_descriptors "+touch_descriptors.size());
@@ -582,7 +583,6 @@ public class MainActivity extends Activity {
             Log.i(LOG_TAG, "Game is null");
             return;
         }
-        // Not need instance check because all of them is half virtual for now.
 
         if(game.level == 0){ // ------------------ PILOT ------------------------------------------------
 
