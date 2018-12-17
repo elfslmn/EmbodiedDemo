@@ -1,0 +1,157 @@
+package com.esalman17.embodieddemo;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+/**
+ * Created by esalman17 on 17.12.2018.
+ */
+
+public class GameStacking extends Game {
+    private static final String LOG_TAG = "GameStacking";
+    private HashMap<Point, Integer> stackPoints;
+    int wantedStackHeight = 0;
+
+    private ArrayList<Point> otherPoints;
+    private boolean[] soundPlayedPoints;
+    Drawable drawable, cross;
+
+    public GameStacking(Context context, int level){
+        this.level = level;
+        drawable = context.getResources().getDrawable(R.drawable.red);
+        cross = context.getResources().getDrawable(R.drawable.cross);
+
+        initialize(level);
+    }
+
+    @Override
+    void initialize(int level) {
+        state = GameState.OBJECT_PLACEMENT;
+
+        stackPoints = new HashMap<>(2);
+        otherPoints = new ArrayList<>(5);
+
+        switch (level){
+            case 3:
+                // left
+                stackPoints.put(new Point(300, 450), -3);
+                wantedStackHeight = 3;
+
+                // right // TODO adjust for long stones
+                otherPoints.add(new Point(810, 500));
+                otherPoints.add(new Point(870, 400));
+                otherPoints.add(new Point(980, 390));
+                otherPoints.add(new Point(1020, 500));
+
+                correctSide = Side.RIGHT;
+                question = Question.LESS;
+
+                left = new Rect(130, 320, 570, 600);
+                right = new Rect(750, 320, 1080, 600);
+
+        }
+
+        soundPlayedPoints = new boolean[stackPoints.size()*wantedStackHeight + otherPoints.size()];
+        initializeCanvas();
+
+        gesture_left = new Rect(left);
+        gesture_left.top = 0;
+        gesture_right = new Rect(right);
+        gesture_right.top = 0;
+
+        Log.i(LOG_TAG, "New game object (level=" + level + ") is initialized");
+    }
+
+    @Override
+    Canvas initializeCanvas() {
+        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
+        canvas.drawPaint(GamePaint.eraser);
+
+        for(Point p : stackPoints.keySet()){
+            cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
+            cross.draw(canvas);
+        }
+        if(state == GameState.LEFT_PLACED){
+            for(Point p : otherPoints){
+                cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
+                cross.draw(canvas);
+            }
+        }
+        return canvas;
+    }
+
+    @Override
+    boolean processBlobDescriptors(int[] descriptors) {
+        Canvas canvas = initializeCanvas();
+
+        // start processing
+        for (int i = 0; i <= descriptors.length - 3; i += 3)
+        {
+            if (descriptors[i + 2] == -1) continue; // -1 is an edge-connected(gesture) blob
+
+            if(descriptors[i + 2] >= 0) // Circle stones
+            {
+                Point p1 = new Point(descriptors[i], descriptors[i + 1]);
+                int height = descriptors[i + 2];
+                Log.d(LOG_TAG, "retro height : "+height);
+
+                boolean match = false;
+                for (Point p2 : stackPoints.keySet()) {
+                    if (areClose(p1, p2, 70)) {
+                        canvas.drawCircle(p2.x, p2.y, 51, GamePaint.eraser);
+                        if(height > 11*wantedStackHeight){
+                            drawable.setBounds(p1.x - 50, p1.y - 50, p1.x + 60, p1.y + 60);
+                            drawable.draw(canvas);
+                        }
+                        else{
+                            cross.setBounds(p1.x - 50, p1.y - 50, p1.x + 50, p1.y + 50);
+                            cross.draw(canvas);
+                        }
+                        match = true;
+                        if (height - stackPoints.get(p2) > 12) {
+                            MainActivity.soundPool.play(MainActivity.sOkay, 1f, 1f, 1, 0, 1f);
+                        }
+                        stackPoints.put(p2, height);
+                        break;
+                    }
+                }
+                if(!match)
+                {
+                    canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
+                }
+            }
+            else{ // Long Stones
+                //TODO
+            }
+        }
+        if(state == GameState.OBJECT_PLACEMENT){
+            int count = 0;
+            for (Point p2: stackPoints.keySet())
+            {
+                if(stackPoints.get(p2)> 11*wantedStackHeight) count++;
+            }
+            if(count == stackPoints.size())
+            {
+                state = GameState.LEFT_PLACED;
+                Log.d(LOG_TAG, "Stacking done: state = LEFT_PLACED");
+                return true;
+            }
+        }
+        else if(state == GameState.LEFT_PLACED){
+            //TODO
+        }
+        return false;
+    }
+
+    @Override
+    int processGestureDescriptors(int[] descriptors) {
+        return 0;
+    }
+}

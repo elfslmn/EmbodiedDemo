@@ -550,6 +550,15 @@ public class MainActivity extends Activity {
             momoView.setSpeed(2.0f);
             showLevelInfo("LEVEL " + test);
         }
+        else if(test == 3){
+            game = new GameStacking(this, test);
+            game.setBackground(mainImView, R.drawable.task_b3);
+            overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
+            momoView.setAnimation("rightanswer.json");
+            momoView.setRepeatCount(-1);
+            momoView.setSpeed(2.0f);
+            showLevelInfo("LEVEL " + test);
+        }
     }
     private void endTestMode(){
         mainImView.setImageBitmap(bmpCam);
@@ -587,7 +596,7 @@ public class MainActivity extends Activity {
         if(game.level == 0){ // ------------------ PILOT ------------------------------------------------
 
         }
-        else if(game.level == 1){  //------------------------ OTHER LEVELS -----------------------------------------------------------
+        else if(game.level == 1){  //------------------------ LEVEL 1 -----------------------------------------------------------
             if(game.state == GameState.OBJECT_PLACEMENT || game.state == GameState.LEFT_PLACED) {
                 final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -698,6 +707,23 @@ public class MainActivity extends Activity {
                             tvDebug.setText(results[game.level]);
                         } else if (correctAnswer == -1) {
                             playSound(sWrong);
+                        }
+                    }
+                });
+            }
+        }
+
+        else if(game.level == 3){ //------------------------ LEVEL 3 -----------------------------------------------------------
+            if(game.state == GameState.OBJECT_PLACEMENT || game.state == GameState.LEFT_PLACED) {
+                final boolean allObjectsPlaced = game.processBlobDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        overlayImView.setImageBitmap(bmpOverlay);
+                        if(allObjectsPlaced) {
+                            if(game.state == GameState.LEFT_PLACED){
+                                Log.d( "Level-3", "All left objects are placed");
+                            }
                         }
                     }
                 });
