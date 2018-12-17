@@ -19,7 +19,7 @@ public class GameStacking extends Game {
     private HashMap<Point, Integer> stackPoints;
     int wantedStackHeight = 0;
 
-    private ArrayList<Point> otherPoints;
+    private ArrayList<Rect> longStonePoints;
     private boolean[] soundPlayedPoints;
     Drawable drawable, cross;
 
@@ -36,7 +36,7 @@ public class GameStacking extends Game {
         state = GameState.OBJECT_PLACEMENT;
 
         stackPoints = new HashMap<>(2);
-        otherPoints = new ArrayList<>(5);
+        longStonePoints = new ArrayList<>(5);
 
         switch (level){
             case 3:
@@ -45,10 +45,10 @@ public class GameStacking extends Game {
                 wantedStackHeight = 3;
 
                 // right // TODO adjust for long stones
-                otherPoints.add(new Point(810, 500));
-                otherPoints.add(new Point(870, 400));
-                otherPoints.add(new Point(980, 390));
-                otherPoints.add(new Point(1020, 500));
+                longStonePoints.add(new Rect(680, 480, 800, 560));
+                longStonePoints.add(new Rect(810, 480, 930, 560));
+                longStonePoints.add(new Rect(940, 480, 1060, 560));
+                longStonePoints.add(new Rect(1070, 480, 1190, 560));
 
                 correctSide = Side.RIGHT;
                 question = Question.LESS;
@@ -58,7 +58,7 @@ public class GameStacking extends Game {
 
         }
 
-        soundPlayedPoints = new boolean[stackPoints.size()*wantedStackHeight + otherPoints.size()];
+        soundPlayedPoints = new boolean[longStonePoints.size()];
         initializeCanvas();
 
         gesture_left = new Rect(left);
@@ -79,9 +79,8 @@ public class GameStacking extends Game {
             cross.draw(canvas);
         }
         if(state == GameState.LEFT_PLACED){
-            for(Point p : otherPoints){
-                cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
-                cross.draw(canvas);
+            for(Rect r : longStonePoints){
+                canvas.drawRect(r, GamePaint.red);
             }
         }
         return canvas;
@@ -122,6 +121,15 @@ public class GameStacking extends Game {
                         break;
                     }
                 }
+                // TODO kaldır for debug to long stones
+                for(Rect r : longStonePoints){
+                    if(r.contains(p1.x,p1.y)){
+                        canvas.drawRect(r, GamePaint.green);
+                        match = true;
+                        break;
+                    }
+                }
+                // end debug
                 if(!match)
                 {
                     canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
