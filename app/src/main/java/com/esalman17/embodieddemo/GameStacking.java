@@ -41,7 +41,7 @@ public class GameStacking extends Game {
         switch (level){
             case 3:
                 // left
-                stackPoints.put(new Point(300, 450), -3);
+                stackPoints.put(new Point(300, 450), -5);
                 wantedStackHeight = 3;
 
                 // right // TODO adjust for long stones
@@ -91,6 +91,7 @@ public class GameStacking extends Game {
         Canvas canvas = initializeCanvas();
 
         // start processing
+        int foo = 0;
         for (int i = 0; i <= descriptors.length - 3; i += 3)
         {
             if (descriptors[i + 2] == -1) continue; // -1 is an edge-connected(gesture) blob
@@ -110,7 +111,7 @@ public class GameStacking extends Game {
                             drawable.draw(canvas);
                         }
                         else{
-                            cross.setBounds(p1.x - 50, p1.y - 50, p1.x + 50, p1.y + 50);
+                            cross.setBounds(p1.x - 45, p1.y - 45, p1.x + 55, p1.y + 55);
                             cross.draw(canvas);
                         }
                         match = true;
@@ -126,6 +127,7 @@ public class GameStacking extends Game {
                     if(r.contains(p1.x,p1.y)){
                         canvas.drawRect(r, GamePaint.green);
                         match = true;
+                        foo++;
                         break;
                     }
                 }
@@ -154,6 +156,10 @@ public class GameStacking extends Game {
         }
         else if(state == GameState.LEFT_PLACED){
             //TODO
+            if(foo == longStonePoints.size()){
+                state = GameState.ALL_PLACED;
+                return true;
+            }
         }
         return false;
     }

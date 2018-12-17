@@ -557,6 +557,9 @@ public class MainActivity extends Activity {
             momoView.setAnimation("rightanswer.json");
             momoView.setRepeatCount(-1);
             momoView.setSpeed(2.0f);
+            /*RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) momoView.getLayoutParams();
+            params.setMargins(-30,100,0,0);
+            momoView.setLayoutParams(params); */
             showLevelInfo("LEVEL " + test);
         }
     }
@@ -598,12 +601,12 @@ public class MainActivity extends Activity {
         }
         else if(game.level == 1){  //------------------------ LEVEL 1 -----------------------------------------------------------
             if(game.state == GameState.OBJECT_PLACEMENT || game.state == GameState.LEFT_PLACED) {
-                final boolean allObjectsPlaced =game.processBlobDescriptors(descriptors);
+                final boolean objectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
-                        if(allObjectsPlaced) {
+                        if(objectsPlaced) {
                             if(game.state == GameState.LEFT_PLACED){
                                 Log.d( "Level-1", "All left objects are placed");
 
@@ -630,7 +633,7 @@ public class MainActivity extends Activity {
                                 });
                             }
                             else if(game.state == GameState.ALL_PLACED){
-                                if(touch_mode) StopCaptureNative();
+                                if(touch_mode) StopCaptureNative(); // if place with camera but mock gesture
                                 touch_descriptors.clear();
                                 Log.d( "Level-1", "Both side objects are placed");
                                 // TODO Ask question and start assesment after audio finished
@@ -715,14 +718,61 @@ public class MainActivity extends Activity {
 
         else if(game.level == 3){ //------------------------ LEVEL 3 -----------------------------------------------------------
             if(game.state == GameState.OBJECT_PLACEMENT || game.state == GameState.LEFT_PLACED) {
-                final boolean allObjectsPlaced = game.processBlobDescriptors(descriptors);
+                final boolean objectsPlaced = game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
-                        if(allObjectsPlaced) {
+                        if(objectsPlaced) {
                             if(game.state == GameState.LEFT_PLACED){
                                 Log.d( "Level-3", "All left objects are placed");
+                                final Animation walking = new TranslateAnimation(0, 230,0, -20);
+                                walking.setStartOffset(800);
+                                walking.setDuration(1000);
+                                walking.setFillAfter(true);
+                                momoView.startAnimation(walking);
+                                walking.setAnimationListener(new Animation.AnimationListener() {
+                                    @Override
+                                    public void onAnimationStart(Animation animation) {}
+                                    @Override
+                                    public void onAnimationEnd(Animation animation) {
+                                        Animation walking2 = new TranslateAnimation(230, 500,-20, -50);
+                                        walking2.setStartOffset(1000);
+                                        walking2.setDuration(1000);
+                                        walking2.setFillAfter(true);
+                                        momoView.startAnimation(walking2);
+                                    }
+                                    @Override
+                                    public void onAnimationRepeat(Animation animation) {}
+                                });
+                            }
+                            else if(game.state == GameState.ALL_PLACED) {
+                                if (touch_mode) StopCaptureNative(); // if place with camera but mock gesture
+                                touch_descriptors.clear();
+                                Log.d( "Level-3", "Both side objects are placed");
+                                // TODO Ask question and start assesment after audio finished
+                                // For debug directly start the assesmnet
+                                game.state = GameState.ASSESMENT_RUNNING;
+                                game.startTime = System.currentTimeMillis();
+                                Log.d(LOG_TAG, "Assesment has started");
+
+                                Animation walking = new TranslateAnimation(500, 1150,-50, -50);
+                                walking.setDuration(3000);
+                                walking.setStartOffset(200);
+                                walking.setFillAfter(true);
+                                momoView.playAnimation();
+                                momoView.startAnimation(walking);
+                                walking.setAnimationListener(new Animation.AnimationListener() {
+                                    @Override
+                                    public void onAnimationStart(Animation animation) {}
+                                    @Override
+                                    public void onAnimationEnd(Animation animation) {
+                                        momoView.pauseAnimation();
+                                    }
+                                    @Override
+                                    public void onAnimationRepeat(Animation animation) {}
+                                });
+
                             }
                         }
                     }
