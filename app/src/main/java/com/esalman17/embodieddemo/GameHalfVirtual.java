@@ -200,8 +200,8 @@ public class GameHalfVirtual extends Game{
         int count = 0;
         for (int i = 0; i <= descriptors.length - 3; i += 3)
         {
-            if (descriptors[i + 2] == 1) continue; // it is edge-connected blob
-            if(descriptors[i] < 10) continue;
+            if (descriptors[i + 2] == 0) continue; //  0 is an edge-connected(gesture) blob
+            if(descriptors[i] < 10) continue; // to overcome ghost stones
 
             Point p1 = new Point(descriptors[i], descriptors[i + 1]);
             boolean match = false;

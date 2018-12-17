@@ -196,14 +196,14 @@ public class MainActivity extends Activity {
                 if((Math.abs(downx - (int) event.getX()) + Math.abs(downy - (int) event.getY())) < 100 ){
                     touch_descriptors.add(downx);
                     touch_descriptors.add(downy);
-                    touch_descriptors.add(0); // 0 means it is a retro blob
+                    touch_descriptors.add(1); // 1 means it is a retro blob
                     Log.d(LOG_TAG,"RETRO x="+downx +" y="+downy +" dist=" + (Math.abs(downx - (int) event.getX()) + Math.abs(downy - (int) event.getY())) );
                 }
                 else{
                     touch_descriptors.clear();
                     touch_descriptors.add(downx);
                     touch_descriptors.add(downy);
-                    touch_descriptors.add(1); // 1 means it is a gesture blob
+                    touch_descriptors.add(0); // 0 means it is a gesture blob
                     Log.d(LOG_TAG,"GESTURE x="+downx +" y="+downy+" dist=" + (Math.abs(downx - (int) event.getX()) + Math.abs(downy - (int) event.getY())));
                 }
                 //Log.d(LOG_TAG, "touch_descriptors "+touch_descriptors.size());

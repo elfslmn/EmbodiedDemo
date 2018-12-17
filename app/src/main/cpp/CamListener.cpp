@@ -315,7 +315,7 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
 
         blobs.push_back(center.first);
         blobs.push_back(center.second);
-        blobs.push_back(1); // 1 means it is a gesture blob
+        blobs.push_back(0); // 0 means it is a gesture blob
     }
 
     for (unsigned int i = 0; i < retro_contours.size(); i++)
@@ -335,7 +335,7 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
 
         blobs.push_back(center.first);
         blobs.push_back(center.second);
-        blobs.push_back(0); // 0 means it is a retro blob
+        blobs.push_back(1); // 1 means it is a retro blob
 
     }
 
