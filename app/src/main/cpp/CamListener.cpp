@@ -209,7 +209,7 @@ float CamListener::updateDepthGrayImage(const DepthData* data, Mat & depth, Mat 
 }
 
 pair<int, int> CamListener::convertCamPixel2ProPixel(float x, float y, float z){
-    if( x<0 || y<0 || z<=0){
+    if( x<0 || y<0 || z<=0){ // x and y in pixel
         return {-1,-1};
     }
     if(disp_width == 0 || cam_width == 0){
@@ -277,7 +277,15 @@ void CamListener::visualizeBlobs(Mat & src, Mat & output, const vector<vector<Po
 
     for (unsigned int i = 0; i < retro_contours.size(); i++)
     {
-        drawContours(output, retro_contours, i, Scalar(255, 0, 255));
+        RotatedRect rr = minAreaRect(retro_contours[i]);
+        if (rr.size.width > 5 || rr.size.height > 5) // long stone retro
+        {
+            drawContours(output, retro_contours, i, Scalar(0, 255, 255));
+        }
+        else // normal circle retro
+        {
+            drawContours(output, retro_contours, i, Scalar(255, 0, 255));
+        }
     }
 
 }
@@ -320,25 +328,47 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
     // Get retro blobs
     for (unsigned int i = 0; i < retro_contours.size(); i++)
     {
-        //if (contourArea(retro_contours[i]) < MIN_RETRO_AREA) continue;
+        RotatedRect rr = minAreaRect(retro_contours[i]);
+        // It is a long stone retro
+        if (rr.size.width > 5 || rr.size.height > 5)
+        {
+            int x = rr.center.x;
+            int y = rr.center.y;
+            if(x >= cam_width - MARGIN || x < MARGIN || y >= cam_height - MARGIN || y < MARGIN )  continue;
 
-        /*Moments mu = moments(retro_contours[i], false);
-        float x = mu.m10 / mu.m00;
-        float y = mu.m01 / mu.m00; */
-        int x = retro_contours[i][0].x;
-        int y = retro_contours[i][0].y;
+            float z = backgrMat.at<float>(y,x) + OBJECT_HEIGHT;
+            auto center = convertCamPixel2ProPixel(x,y,z);
+            if(center.first < 0) continue;
 
-        if(x >= cam_width - MARGIN || x < MARGIN || y >= cam_height - MARGIN || y < MARGIN )  continue;
+            int angle = rr.angle;
+            if(rr.size.width < rr.size.height)
+            {
+                angle += 90; // TODO ???
+            }
+            if(angle > 0) angle *= -1;
+            if(angle > -2) angle = -2;
 
-        float z = zImage.at<float>(y,x);
-        float d = diff.at<float>(y,x)*1000;
-        //LOGD("Retro %d-%f-%d", retro_contours[i].size(),z*100, ((int)d) );
-        auto center = convertCamPixel2ProPixel(x,y,z);
+            blobs.push_back(center.first);      // u (px)
+            blobs.push_back(center.second);     // v (px)
+            blobs.push_back(angle);             // angle ( between -2 and -90 )
 
-        blobs.push_back(center.first);              // u (px)
-        blobs.push_back(center.second);             // v (px)
-        blobs.push_back(((int)d));  // height of retro in ( mm )
+        }
+        else // It is a circle stone retro
+        {
+            int x = retro_contours[i][0].x;
+            int y = retro_contours[i][0].y;
 
+            if(x >= cam_width - MARGIN || x < MARGIN || y >= cam_height - MARGIN || y < MARGIN )  continue;
+
+            float z = zImage.at<float>(y,x);
+            float d = diff.at<float>(y,x)*1000;
+            auto center = convertCamPixel2ProPixel(x,y,z);
+            if(center.first < 0) continue;
+
+            blobs.push_back(center.first);      // u (px)
+            blobs.push_back(center.second);     // v (px)
+            blobs.push_back(((int)d));          // height of retro in ( mm )
+        }
     }
 
 

@@ -91,18 +91,19 @@ public class GameStacking extends Game {
         Canvas canvas = initializeCanvas();
 
         // start processing
-        int foo = 0;
+        int longCount = 0;
         for (int i = 0; i <= descriptors.length - 3; i += 3)
         {
             if (descriptors[i + 2] == -1) continue; // -1 is an edge-connected(gesture) blob
 
+            Point p1 = new Point(descriptors[i], descriptors[i + 1]);
+            boolean match = false;
+
             if(descriptors[i + 2] >= 0) // Circle stones
             {
-                Point p1 = new Point(descriptors[i], descriptors[i + 1]);
                 int height = descriptors[i + 2];
                 Log.d(LOG_TAG, "retro height : "+height);
 
-                boolean match = false;
                 for (Point p2 : stackPoints.keySet()) {
                     if (areClose(p1, p2, 70)) {
                         canvas.drawCircle(p2.x, p2.y, 51, GamePaint.eraser);
@@ -122,23 +123,21 @@ public class GameStacking extends Game {
                         break;
                     }
                 }
-                // TODO kaldır for debug to long stones
+            }
+            else{ // Long Stones
+                int angle = descriptors[i + 2];
                 for(Rect r : longStonePoints){
-                    if(r.contains(p1.x,p1.y)){
+                    if(r.contains(p1.x,p1.y) && angle > -20){
                         canvas.drawRect(r, GamePaint.green);
                         match = true;
-                        foo++;
+                        longCount++;
                         break;
                     }
                 }
-                // end debug
-                if(!match)
-                {
-                    canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
-                }
             }
-            else{ // Long Stones
-                //TODO
+            if(!match)
+            {
+                canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
             }
         }
         if(state == GameState.OBJECT_PLACEMENT){
@@ -155,8 +154,7 @@ public class GameStacking extends Game {
             }
         }
         else if(state == GameState.LEFT_PLACED){
-            //TODO
-            if(foo == longStonePoints.size()){
+            if(longCount == longStonePoints.size()){
                 state = GameState.ALL_PLACED;
                 return true;
             }

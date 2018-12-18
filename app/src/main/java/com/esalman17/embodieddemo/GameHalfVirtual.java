@@ -259,7 +259,7 @@ public class GameHalfVirtual extends Game{
     public int processGestureDescriptors(int[] descriptors){
         for (int i = 0; i <= descriptors.length - 3; i += 3)
         {
-            if (descriptors[i + 2] == 1){
+            if (descriptors[i + 2] == -1){  //  -1 is an edge-connected(gesture) blob
                 if(getCorrectSide().contains(descriptors[i],descriptors[i + 1])){
                     state = GameState.ASSESMENT_FINISHED; // level finshed
                     assestmentTime = (System.currentTimeMillis() -startTime);
