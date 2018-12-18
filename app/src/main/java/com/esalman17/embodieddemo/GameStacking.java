@@ -25,7 +25,7 @@ public class GameStacking extends Game {
 
     public GameStacking(Context context, int level){
         this.level = level;
-        drawable = context.getResources().getDrawable(R.drawable.red);
+        drawable = context.getResources().getDrawable(R.drawable.green);
         cross = context.getResources().getDrawable(R.drawable.cross);
 
         initialize(level);
@@ -41,7 +41,7 @@ public class GameStacking extends Game {
         switch (level){
             case 3:
                 // left
-                stackPoints.put(new Point(300, 450), -5);
+                stackPoints.put(new Point(300, 450), -10);
                 wantedStackHeight = 3;
 
                 // right // TODO adjust for long stones
@@ -102,7 +102,7 @@ public class GameStacking extends Game {
             if(descriptors[i + 2] >= 0) // Circle stones
             {
                 int height = descriptors[i + 2];
-                Log.d(LOG_TAG, "retro height : "+height);
+                //Log.d(LOG_TAG, "retro height : "+height);
 
                 for (Point p2 : stackPoints.keySet()) {
                     if (areClose(p1, p2, 70)) {
@@ -126,11 +126,16 @@ public class GameStacking extends Game {
             }
             else{ // Long Stones
                 int angle = descriptors[i + 2];
-                for(Rect r : longStonePoints){
+                for(int j=0; j<longStonePoints.size(); j++){
+                    Rect r = longStonePoints.get(j);
                     if(r.contains(p1.x,p1.y) && angle > -20){
                         canvas.drawRect(r, GamePaint.green);
                         match = true;
                         longCount++;
+                        if( !soundPlayedPoints[j]){
+                            soundPlayedPoints[j] = true;
+                            MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
+                        }
                         break;
                     }
                 }
