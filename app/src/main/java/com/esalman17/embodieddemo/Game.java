@@ -14,8 +14,8 @@ import java.util.ArrayList;
  */
 
 abstract public class Game {
-    protected Rect left, right;
-    protected Rect gesture_left, gesture_right;
+    protected Rect left, right, middle;
+    protected Rect gesture_left, gesture_right, gesture_middle;
     protected Side correctSide;
 
     protected ArrayList<Point> basePoints = new ArrayList<Point>(12){
@@ -88,6 +88,13 @@ abstract public class Game {
 
         Log.d("Game", "Question is not specified");
         return -1;
+    }
+
+    public void drawRects(){
+        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
+        canvas.drawRect(left, GamePaint.red);
+        canvas.drawRect(right, GamePaint.red);
+        if(gesture_middle != null) canvas.drawRect(middle, GamePaint.red);
     }
 
 }

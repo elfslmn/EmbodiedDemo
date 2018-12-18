@@ -665,10 +665,7 @@ public class MainActivity extends Activity {
                                             @Override
                                             public void onAnimationEnd(Animation animation) {
                                                 momoView.pauseAnimation();
-                                                Canvas canvas = new Canvas(MainActivity.bmpOverlay);
-                                                canvas.drawRect(game.left, GamePaint.red);
-                                                canvas.drawRect(game.right, GamePaint.red);
-                                                canvas.drawRect(((GameBothReal)game).middle, GamePaint.red);
+                                                game.drawRects();
                                                 runOnUiThread(new Runnable() {
                                                     @Override
                                                     public void run() {
@@ -692,27 +689,7 @@ public class MainActivity extends Activity {
             }
             else if(game.state == GameState.ASSESMENT_RUNNING) {
                 final int correctAnswer = game.processGestureDescriptors(descriptors);
-                if (correctAnswer == 1) {
-                    float secs = (float) game.assestmentTime / 1000;
-                    String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
-                    results[game.level] = time;
-                }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (correctAnswer == 1) {
-                            if(!touch_mode) StopCaptureNative();
-                            //soundPool.stop(sBackPlayId);
-                            playSound(sApplause, sCong);
-                            confettiView.setAnimation("trophy.json");
-                            confettiView.playAnimation();
-                            overlayImView.setImageDrawable(null);
-                            tvDebug.setText(results[game.level]);
-                        } else if (correctAnswer == -1) {
-                            playSound(sWrong);
-                        }
-                    }
-                });
+                processAnswer(correctAnswer);
             }
         }
 
@@ -768,6 +745,7 @@ public class MainActivity extends Activity {
                                     @Override
                                     public void onAnimationEnd(Animation animation) {
                                         momoView.pauseAnimation();
+                                        game.drawRects();
                                     }
                                     @Override
                                     public void onAnimationRepeat(Animation animation) {}
@@ -777,6 +755,10 @@ public class MainActivity extends Activity {
                         }
                     }
                 });
+            }
+            else if(game.state == GameState.ASSESMENT_RUNNING) {
+                final int correctAnswer = game.processGestureDescriptors(descriptors);
+                processAnswer(correctAnswer);
             }
         }
 
@@ -908,6 +890,30 @@ public class MainActivity extends Activity {
         }
 
         return true;
+    }
+
+    private void processAnswer(final int correctAnswer){
+        if (correctAnswer == 1) {
+            float secs = (float) game.assestmentTime / 1000;
+            String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
+            results[game.level] = time;
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (correctAnswer == 1) {
+                    if(!touch_mode) StopCaptureNative();
+                    //soundPool.stop(sBackPlayId);
+                    playSound(sApplause, sCong);
+                    confettiView.setAnimation("trophy.json");
+                    confettiView.playAnimation();
+                    overlayImView.setImageDrawable(null);
+                    tvDebug.setText(results[game.level]);
+                } else if (correctAnswer == -1) {
+                    playSound(sWrong);
+                }
+            }
+        });
     }
 
 

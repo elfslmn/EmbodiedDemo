@@ -20,7 +20,6 @@ public class GameBothReal extends Game{
     private ArrayList<Point> otherPoints;
     private boolean[] soundPlayedPoints;
     Drawable drawable, finger, cross;
-    Rect middle, gesture_middle;
 
     public GameBothReal(Context context, int level) {
         this.level = level;

@@ -41,7 +41,7 @@ public class GameStacking extends Game {
         switch (level){
             case 3:
                 // left
-                stackPoints.put(new Point(300, 450), -10);
+                stackPoints.put(new Point(300, 450), -13); // -13, ilk taşın yuksekliğine bakmadan click sound için
                 wantedStackHeight = 3;
 
                 // right // TODO adjust for long stones
@@ -51,10 +51,11 @@ public class GameStacking extends Game {
                 longStonePoints.add(new Rect(1070, 480, 1190, 560));
 
                 correctSide = Side.RIGHT;
-                question = Question.LESS;
+                question = Question.MORE;
 
-                left = new Rect(130, 320, 570, 600);
-                right = new Rect(750, 320, 1080, 600);
+                left = new Rect(100, 350, 500, 650);
+                right = new Rect(650, 350, 1220, 650);
+                break;
 
         }
 
@@ -168,7 +169,23 @@ public class GameStacking extends Game {
     }
 
     @Override
-    int processGestureDescriptors(int[] descriptors) {
+    int processGestureDescriptors(int[] descriptors)
+    {
+        for (int i = 0; i <= descriptors.length - 3; i += 3)
+        {
+            if (descriptors[i + 2] == -1){  //  -1 is an edge-connected(gesture) blob
+                if(getCorrectSide().contains(descriptors[i],descriptors[i + 1])){
+                    state = GameState.ASSESMENT_FINISHED; // level finshed
+                    assestmentTime = (System.currentTimeMillis() -startTime);
+                    Log.i(LOG_TAG, "Gesture: Correct side is chosen");
+                    return 1;
+                }
+                else if(getWrongSide().contains(descriptors[i],descriptors[i + 1])){
+                    Log.i(LOG_TAG, "Gesture: Wrong side is chosen");
+                    return -1;
+                }
+            }
+        }
         return 0;
     }
 }
