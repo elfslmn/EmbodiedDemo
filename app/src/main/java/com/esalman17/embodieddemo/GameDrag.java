@@ -180,6 +180,21 @@ public class GameDrag extends Game {
 
     @Override
     int processGestureDescriptors(int[] descriptors) {
+        for (int i = 0; i <= descriptors.length - 3; i += 3)
+        {
+            if (descriptors[i + 2] == -1){  //  -1 is an edge-connected(gesture) blob
+                if(getCorrectSide().contains(descriptors[i],descriptors[i + 1])){
+                    state = GameState.ASSESMENT_FINISHED; // level finshed
+                    assestmentTime = (System.currentTimeMillis() -startTime);
+                    Log.i(LOG_TAG, "Gesture: Correct side is chosen");
+                    return 1;
+                }
+                else if(getWrongSide().contains(descriptors[i],descriptors[i + 1])){
+                    Log.i(LOG_TAG, "Gesture: Wrong side is chosen");
+                    return -1;
+                }
+            }
+        }
         return 0;
     }
 
