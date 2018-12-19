@@ -545,23 +545,25 @@ public class MainActivity extends Activity {
             game = new GameBothReal(this, test);
             game.setBackground(mainImView, R.drawable.task_a1);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
-            momoView.setAnimation("rightanswer.json");
-            momoView.setRepeatCount(-1);
-            momoView.setSpeed(2.0f);
-            showLevelInfo("LEVEL " + test);
         }
         else if(test == 3){
             game = new GameStacking(this, test);
             game.setBackground(mainImView, R.drawable.task_b3);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
-            momoView.setAnimation("rightanswer.json");
-            momoView.setRepeatCount(-1);
-            momoView.setSpeed(2.0f);
-            /*RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) momoView.getLayoutParams();
-            params.setMargins(-30,100,0,0);
-            momoView.setLayoutParams(params); */
-            showLevelInfo("LEVEL " + test);
         }
+        else if(test == 5){
+            game = new GameDrag(this, test);
+            game.setBackground(mainImView, R.drawable.task_c1);
+            overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) momoView.getLayoutParams();
+            params.setMargins(-30,20,0,0); // TODO diğer bolumlerde tekrar değiştirmen gerek
+            momoView.setLayoutParams(params);
+        }
+
+        momoView.setAnimation("rightanswer.json");
+        momoView.setRepeatCount(-1);
+        momoView.setSpeed(2.0f);
+        showLevelInfo("LEVEL " + test);
     }
     private void endTestMode(){
         mainImView.setImageBitmap(bmpCam);
@@ -760,6 +762,19 @@ public class MainActivity extends Activity {
                 final int correctAnswer = game.processGestureDescriptors(descriptors);
                 processAnswer(correctAnswer);
             }
+        }
+        else if(game.level == 5) { //------------------------ LEVEL 5 -----------------------------------------------------------
+            if(game.state == GameState.OBJECT_PLACEMENT ) {
+                final boolean objectsPlaced = game.processBlobDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        overlayImView.setImageBitmap(bmpOverlay);
+                    }
+                });
+
+            }
+
         }
 
     }
