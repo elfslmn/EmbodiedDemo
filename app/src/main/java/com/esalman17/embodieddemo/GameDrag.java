@@ -61,8 +61,8 @@ public class GameDrag extends Game {
                 correctSide = Side.LEFT;
                 question = Question.LESS;
 
-                left = new Rect(50, 200, 550, 700);
-                right = new Rect(700, 200, 1150, 700);
+                left = new Rect(200, 300, 600, 700);
+                right = new Rect(700, 300, 1150, 700);
                 break;
         }
 
@@ -140,11 +140,6 @@ public class GameDrag extends Game {
             }
             if(match) continue;
 
-            /*if(!left.contains(p1.x,p1.y) && !right.contains(p1.x,p1.y)){ // Stone outside of water
-                canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
-                continue;
-            }*/
-
             if(pathRect != null){
                 if(pathRect.contains(p1.x,p1.y)){
                     canvas.drawCircle(pathRect.left+20, pathRect.top+50, 50, GamePaint.eraser);
@@ -173,7 +168,6 @@ public class GameDrag extends Game {
                 drawable.draw(canvas);
 
                 MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
-                continue;
             }
             else{
                 canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
@@ -196,5 +190,12 @@ public class GameDrag extends Game {
             drawable.draw(canvas);
         }
         MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
+    }
+
+    public void removeObjects(){
+        Canvas canvas = new Canvas(MainActivity.bmpOverlay);
+        canvas.drawPaint(GamePaint.eraser);
+        canvas.drawRect(left, GamePaint.red);
+        canvas.drawRect(right, GamePaint.red);
     }
 }

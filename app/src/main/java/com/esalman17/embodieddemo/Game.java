@@ -97,4 +97,9 @@ abstract public class Game {
         if(gesture_middle != null) canvas.drawRect(middle, GamePaint.red);
     }
 
+    final public void setState(GameState state){
+        this.state = state;
+        Log.d("Game", "State = "+state);
+    }
+
 }

@@ -729,11 +729,6 @@ public class MainActivity extends Activity {
                                 if (touch_mode) StopCaptureNative(); // if place with camera but mock gesture
                                 touch_descriptors.clear();
                                 Log.d( "Level-3", "Both side objects are placed");
-                                // TODO Ask question and start assesment after audio finished
-                                // For debug directly start the assesmnet
-                                game.state = GameState.ASSESMENT_RUNNING;
-                                game.startTime = System.currentTimeMillis();
-                                Log.d(LOG_TAG, "Assesment has started");
 
                                 Animation walking = new TranslateAnimation(500, 1150,-50, -50);
                                 walking.setDuration(3000);
@@ -748,10 +743,18 @@ public class MainActivity extends Activity {
                                     public void onAnimationEnd(Animation animation) {
                                         momoView.pauseAnimation();
                                         game.drawRects();
+
+                                        // TODO Ask question and start assesment after audio finished
+                                        // For debug directly start the assesmnet
+                                        game.state = GameState.ASSESMENT_RUNNING;
+                                        game.startTime = System.currentTimeMillis();
+                                        Log.d(LOG_TAG, "Assesment has started");
                                     }
                                     @Override
                                     public void onAnimationRepeat(Animation animation) {}
                                 });
+
+
 
                             }
                         }
@@ -770,9 +773,43 @@ public class MainActivity extends Activity {
                     @Override
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
+                        if(objectsPlaced) {
+                            Log.d( "Level-5", "All left objects are placed");
+                            final Animation walking = new TranslateAnimation(0, 500,0, 0);
+                            walking.setDuration(2000);
+                            walking.setFillAfter(true);
+                            momoView.playAnimation();
+                            momoView.startAnimation(walking);
+                            walking.setAnimationListener(new Animation.AnimationListener() {
+                                @Override
+                                public void onAnimationStart(Animation animation) {}
+                                @Override
+                                public void onAnimationEnd(Animation animation) {
+                                    momoView.pauseAnimation();
+                                    // TODO sound: dikkatlice bak ( taskc-9)
+                                    ((GameDrag)game).drawVirtualObjects();
+                                    game.drawRects();
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {overlayImView.setImageBitmap(bmpOverlay);}
+                                    });
+                                    // TODO bekle, tasları sondur, sonra soruyu sor
+                                    game.state = GameState.ASSESMENT_RUNNING;
+                                    game.startTime = System.currentTimeMillis();
+                                    Log.d(LOG_TAG, "Assesment has started");
+
+                                }
+                                @Override
+                                public void onAnimationRepeat(Animation animation) {}
+                            });
+                        }
                     }
                 });
 
+            }
+            else if(game.state == GameState.ASSESMENT_RUNNING){
+                final int correctAnswer = game.processGestureDescriptors(descriptors);
+                processAnswer(correctAnswer);
             }
 
         }
