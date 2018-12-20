@@ -106,6 +106,8 @@ public class GameDrag extends Game {
         // start processing
         for (int i = 0; i <= descriptors.length - 3; i += 3) {
             if (descriptors[i + 2] < 0) continue; // -1: gesture blob, -2,-90: long stones
+            if (descriptors[i + 2] > 15) continue;  // retro higher than 20 mm
+            //Log.d(LOG_TAG, "Retro: "+ descriptors[i+2]);
             Point p1 = new Point(descriptors[i], descriptors[i + 1]);
 
             // Check if it is arrived
