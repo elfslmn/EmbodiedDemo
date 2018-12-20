@@ -543,7 +543,7 @@ public class MainActivity extends Activity {
         }
         else if(test == 1){
             game = new GameBothReal(this, test);
-            game.setBackground(mainImView, R.drawable.task_a1);
+            game.setBackground(mainImView, R.drawable.task_a2);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
         }
         else if(test == 3){
@@ -553,7 +553,7 @@ public class MainActivity extends Activity {
         }
         else if(test == 5){
             game = new GameDrag(this, test);
-            game.setBackground(mainImView, R.drawable.task_c1);
+            game.setBackground(mainImView, R.drawable.task_c2);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) momoView.getLayoutParams();
             params.setMargins(-30,20,0,0); // TODO diğer bolumlerde tekrar değiştirmen gerek
