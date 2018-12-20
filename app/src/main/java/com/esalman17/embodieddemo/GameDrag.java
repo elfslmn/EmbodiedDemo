@@ -18,16 +18,17 @@ public class GameDrag extends Game {
     public ArrayList<Point> dragPoints;
     public ArrayList<Point> finalPoints;
     public ArrayList<Point> virtualPoints;
-    Drawable drawable, cross, path;
+    Drawable object_drag, object_virtual, cross, path;
     int lastArrived = -1;
     Rect pathRect = null;
 
     public GameDrag(Context context, int level) {
         this.level = level;
 
-        drawable = context.getResources().getDrawable(R.drawable.fish3);
+        object_drag = context.getResources().getDrawable(R.drawable.abs1);
+        object_virtual = context.getResources().getDrawable(R.drawable.abs2);
         cross = context.getResources().getDrawable(R.drawable.cross);
-        path = context.getResources().getDrawable(R.drawable.path);
+        path = context.getResources().getDrawable(R.drawable.path2);
 
         initialize(level);
 
@@ -48,21 +49,21 @@ public class GameDrag extends Game {
                 dragPoints.add(new Point(100, 650));
 
                 for(Point p: dragPoints){
-                    finalPoints.add(new Point(p.x+400, p.y));
+                    finalPoints.add(new Point(p.x+900, p.y));
                 }
 
-                virtualPoints.add(new Point(800, 450));
-                virtualPoints.add(new Point(800, 600));
-                virtualPoints.add(new Point(1000, 350));
-                virtualPoints.add(new Point(980, 550));
-                virtualPoints.add(new Point(920, 450));
-                virtualPoints.add(new Point(1070, 640));
+                virtualPoints.add(new Point(300, 450));
+                virtualPoints.add(new Point(300, 600));
+                virtualPoints.add(new Point(500, 350));
+                virtualPoints.add(new Point(480, 550));
+                virtualPoints.add(new Point(420, 450));
+                virtualPoints.add(new Point(570, 640));
 
-                correctSide = Side.LEFT;
+                correctSide = Side.RIGHT;
                 question = Question.LESS;
 
-                left = new Rect(200, 300, 600, 700);
-                right = new Rect(700, 300, 1150, 700);
+                left = new Rect(200, 300, 650, 700);
+                right = new Rect(750, 300, 1150, 700);
                 break;
         }
 
@@ -92,8 +93,8 @@ public class GameDrag extends Game {
         for(int i=0; i <= lastArrived; i++ ){
             Point p1 = finalPoints.get(i);
             //canvas.drawCircle(p1.x, p1.y, 45, GamePaint.red);
-            drawable.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-            drawable.draw(canvas);
+            object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+            object_drag.draw(canvas);
         }
 
         return canvas;
@@ -121,8 +122,8 @@ public class GameDrag extends Game {
                     if(pathRect != null && j == lastArrived+1){ // fish arrived
                         MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
                         canvas.drawCircle(pathRect.left+20, pathRect.top+50, 50, GamePaint.eraser);
-                        drawable.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-                        drawable.draw(canvas);
+                        object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                        object_drag.draw(canvas);
 
                         pathRect = null;
                         lastArrived++;
@@ -134,8 +135,8 @@ public class GameDrag extends Game {
                     }
                     /*if(j <= lastArrived){
                         canvas.drawCircle(p2.x, p2.y, 50, GamePaint.eraser);
-                        drawable.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-                        drawable.draw(canvas);
+                        object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                        object_drag.draw(canvas);
                     }*/
                     break;
                 }
@@ -144,11 +145,11 @@ public class GameDrag extends Game {
 
             if(pathRect != null){
                 if(pathRect.contains(p1.x,p1.y)){
-                    canvas.drawCircle(pathRect.left+20, pathRect.top+50, 50, GamePaint.eraser);
+                    canvas.drawCircle(pathRect.left+50, pathRect.top+50, 50, GamePaint.eraser);
                     path.setBounds(pathRect);
                     path.draw(canvas);
-                    drawable.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-                    drawable.draw(canvas);
+                    object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                    object_drag.draw(canvas);
                 }
                 else {
                     canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
@@ -161,13 +162,13 @@ public class GameDrag extends Game {
             Point p2 = dragPoints.get(lastArrived+1);
             if (areClose(p1, p2, 45))
             {
-                pathRect = new Rect(p2.x-20, p2.y-50, p2.x+450, p2.y+50);
+                pathRect = new Rect(p2.x-50, p2.y-50, p2.x+950, p2.y+50);
 
                 canvas.drawCircle(p2.x, p2.y, 50, GamePaint.eraser);
                 path.setBounds(pathRect);
                 path.draw(canvas);
-                drawable.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-                drawable.draw(canvas);
+                object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                object_drag.draw(canvas);
 
                 MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
             }
@@ -203,8 +204,8 @@ public class GameDrag extends Game {
     public void drawVirtualObjects(){
         Canvas canvas = new Canvas(MainActivity.bmpOverlay);
         for(Point p1: virtualPoints){
-            drawable.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-            drawable.draw(canvas);
+            object_virtual.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+            object_virtual.draw(canvas);
         }
         MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
     }

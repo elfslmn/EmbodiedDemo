@@ -556,7 +556,7 @@ public class MainActivity extends Activity {
             game.setBackground(mainImView, R.drawable.task_c2);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) momoView.getLayoutParams();
-            params.setMargins(-30,20,0,0); // TODO diğer bolumlerde tekrar değiştirmen gerek
+            params.setMargins(-30,40,0,0); // TODO diğer bolumlerde tekrar değiştirmen gerek
             momoView.setLayoutParams(params);
         }
 
@@ -743,6 +743,12 @@ public class MainActivity extends Activity {
                                     public void onAnimationEnd(Animation animation) {
                                         momoView.pauseAnimation();
                                         game.drawRects();
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                overlayImView.setImageBitmap(bmpOverlay);
+                                                mainImView.setImageDrawable(null);
+                                            }});
 
                                         // TODO Ask question and start assesment after audio finished
                                         // For debug directly start the assesmnet
@@ -775,7 +781,7 @@ public class MainActivity extends Activity {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if(objectsPlaced) {
                             Log.d( "Level-5", "All left objects are placed");
-                            final Animation walking = new TranslateAnimation(0, 500,0, 0);
+                            final Animation walking = new TranslateAnimation(0, 1000,0, 0);
                             walking.setDuration(2000);
                             walking.setFillAfter(true);
                             momoView.playAnimation();
@@ -791,7 +797,10 @@ public class MainActivity extends Activity {
                                     game.drawRects();
                                     runOnUiThread(new Runnable() {
                                         @Override
-                                        public void run() {overlayImView.setImageBitmap(bmpOverlay);}
+                                        public void run() {
+                                            overlayImView.setImageBitmap(bmpOverlay);
+                                            mainImView.setImageDrawable(null);
+                                        }
                                     });
                                     // TODO bekle, tasları sondur, sonra soruyu sor
                                     game.state = GameState.ASSESMENT_RUNNING;
