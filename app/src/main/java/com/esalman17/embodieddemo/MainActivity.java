@@ -584,7 +584,7 @@ public class MainActivity extends Activity {
             timer.cancel();
         }
     }
-
+    boolean pause = false;
     public void shapeDetectedCallback(final int[] descriptors){
         //Log.d(LOG_TAG, "shapeDetectedCallback" );
         if (!touch_mode && !m_opened)
@@ -597,12 +597,16 @@ public class MainActivity extends Activity {
             Log.i(LOG_TAG, "Game is null");
             return;
         }
+        if(pause){
+            Log.i(LOG_TAG, "Game is paused");
+            return;
+        }
 
         if(game.level == 0){ // ------------------ PILOT ------------------------------------------------
 
         }
         else if(game.level == 1){  //------------------------ LEVEL 1 -----------------------------------------------------------
-            if(game.state == GameState.OBJECT_PLACEMENT || game.state == GameState.LEFT_PLACED) {
+            if(game.state == GameState.OBJECT_PLACEMENT || game.state == GameState.LEFT_PLACED || game.state == GameState.RIGHT_PLACED) {
                 final boolean objectsPlaced =game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
                     @Override
@@ -610,6 +614,7 @@ public class MainActivity extends Activity {
                         overlayImView.setImageBitmap(bmpOverlay);
                         if(objectsPlaced) {
                             if(game.state == GameState.LEFT_PLACED){
+                                pause = true;
                                 Log.d( "Level-1", "All left objects are placed");
 
                                 Animation walking = new TranslateAnimation(0, 600,-100, -100);
@@ -629,6 +634,44 @@ public class MainActivity extends Activity {
                                         down.setDuration(500);
                                         down.setFillAfter(true);
                                         momoView.startAnimation(down);
+                                        pause = false;
+                                    }
+                                    @Override
+                                    public void onAnimationRepeat(Animation animation) {}
+                                });
+                            }
+                            else if(game.state == GameState.RIGHT_PLACED){
+                                pause = true;
+                                Log.d( "Level-1", "Right objects are placed");
+                                Animation up = new TranslateAnimation(600, 900,0, -450);
+                                up.setDuration(3000);
+                                up.setStartOffset(200);
+                                up.setFillAfter(true);
+                                momoView.playAnimation();
+                                momoView.startAnimation(up);
+                                up.setAnimationListener(new Animation.AnimationListener() {
+                                    @Override
+                                    public void onAnimationStart(Animation animation) {}
+                                    @Override
+                                    public void onAnimationEnd(Animation animation) {
+                                        momoView.pauseAnimation();
+                                        Animation down = new TranslateAnimation(900, 600,-450, 0);
+                                        down.setDuration(2000);
+                                        down.setStartOffset(200);
+                                        down.setFillAfter(true);
+                                        momoView.startAnimation(down);
+                                        down.setAnimationListener(new Animation.AnimationListener() {
+                                            @Override
+                                            public void onAnimationStart(Animation animation) {}
+                                            @Override
+                                            public void onAnimationEnd(Animation animation) {
+                                                // TODO sound: geçemiyorum
+                                                ((GameBothReal)game).changePoints();
+                                                pause = false;
+                                            }
+                                            @Override
+                                            public void onAnimationRepeat(Animation animation) {}
+                                        });
                                     }
                                     @Override
                                     public void onAnimationRepeat(Animation animation) {}
@@ -637,7 +680,7 @@ public class MainActivity extends Activity {
                             else if(game.state == GameState.ALL_PLACED){
                                 if(touch_mode) StopCaptureNative(); // if place with camera but mock gesture
                                 touch_descriptors.clear();
-                                Log.d( "Level-1", "Both side objects are placed");
+                                Log.d( "Level-1", "All objects are placed");
                                 // TODO Ask question and start assesment after audio finished
                                 // For debug directly start the assesmnet
                                 game.state = GameState.ASSESMENT_RUNNING;

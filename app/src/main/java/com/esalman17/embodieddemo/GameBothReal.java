@@ -15,7 +15,7 @@ import java.util.ArrayList;
 
 public class GameBothReal extends Game{
     private static final String LOG_TAG = "GameBothReal";
-    private ArrayList<Point> leftPoints;
+    private ArrayList<Point> allPoints;
     private ArrayList<Point> rightPoints;
     private boolean[] soundPlayedPoints;
     Drawable drawable, finger, cross;
@@ -35,32 +35,32 @@ public class GameBothReal extends Game{
     public void initialize(int level){
         state = GameState.OBJECT_PLACEMENT;
 
-        leftPoints = new ArrayList<>(10);
+        allPoints = new ArrayList<>(10);
         rightPoints = new ArrayList<>(10);
 
         switch (level){
             case 0:
-                leftPoints.add(new Point(280, 450));
-                leftPoints.add(new Point(400, 400));
-                leftPoints.add(new Point(500, 500));
+                allPoints.add(new Point(280, 450));
+                allPoints.add(new Point(400, 400));
+                allPoints.add(new Point(500, 500));
 
-                leftPoints.add(new Point(800, 450));
-                leftPoints.add(new Point(950, 450));
+                allPoints.add(new Point(800, 450));
+                allPoints.add(new Point(950, 450));
 
                 left = new Rect(200, 250, 580, 600);
                 right = new Rect(700, 250, 1080, 600);
                 correctSide = Side.LEFT;
                 break;
             case 1:
-                leftPoints.add(new Point(190, 500));
-                leftPoints.add(new Point(300, 495));
-                leftPoints.add(new Point(410, 490));
-                leftPoints.add(new Point(510, 500));
+                allPoints.add(new Point(190, 500));
+                allPoints.add(new Point(300, 495));
+                allPoints.add(new Point(410, 490));
+                allPoints.add(new Point(510, 500));
 
                 rightPoints.add(new Point(810, 500));
                 rightPoints.add(new Point(870, 400));
-                rightPoints.add(new Point(980, 390));
-                rightPoints.add(new Point(1020, 500));
+                rightPoints.add(new Point(930, 300));
+                rightPoints.add(new Point(990, 200));
 
                 correctSide = Side.MIDDLE; // TODO değiştir eşit, wizard of oz
                 question = Question.MORE;
@@ -71,7 +71,7 @@ public class GameBothReal extends Game{
                 break;
         }
 
-        soundPlayedPoints = new boolean[leftPoints.size() + rightPoints.size()];
+        soundPlayedPoints = new boolean[allPoints.size() + rightPoints.size()];
         initializeCanvas();
 
         gesture_left = new Rect(left);
@@ -89,7 +89,7 @@ public class GameBothReal extends Game{
         Canvas canvas = new Canvas(MainActivity.bmpOverlay);
         canvas.drawPaint(GamePaint.eraser);
 
-        for(Point p : leftPoints){
+        for(Point p : allPoints){
             cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
             cross.draw(canvas);
         }
@@ -108,9 +108,9 @@ public class GameBothReal extends Game{
 
             Point p1 = new Point(descriptors[i], descriptors[i + 1]);
             boolean match = false;
-            for (int j = 0; j< leftPoints.size(); j++)
+            for (int j = 0; j< allPoints.size(); j++)
             {
-                Point p2 = leftPoints.get(j);
+                Point p2 = allPoints.get(j);
                 if (areClose(p1, p2, 50))
                 {
                     canvas.drawCircle(p2.x, p2.y, 51, GamePaint.eraser);
@@ -132,15 +132,14 @@ public class GameBothReal extends Game{
                 canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
             }
         }
-        if(count == leftPoints.size())
+        if(count == allPoints.size())
         {
             if(state == GameState.OBJECT_PLACEMENT){
                 state = GameState.LEFT_PLACED;
-                for(Point p : rightPoints){
-                    cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
-                    cross.draw(canvas);
-                }
-                leftPoints.addAll(rightPoints);
+                allPoints.addAll(rightPoints);
+            }
+            else if(state == GameState.LEFT_PLACED){
+                state = GameState.RIGHT_PLACED;
             }
             else{
                 state = GameState.ALL_PLACED;
@@ -197,6 +196,18 @@ public class GameBothReal extends Game{
             }
         }
         return 0;
+    }
+
+    public void changePoints(){
+        switch (level){
+            case 1:
+                int n = allPoints.size();
+                allPoints.set(n-1, new Point(1020, 500) );
+                allPoints.set(n-2, new Point(980, 390) );
+                soundPlayedPoints[n-1] = false;
+                soundPlayedPoints[n-2] = false;
+                break;
+        }
     }
 
 }
