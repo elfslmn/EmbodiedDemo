@@ -100,10 +100,10 @@ public class GameStacking extends Game {
             Point p1 = new Point(descriptors[i], descriptors[i + 1]);
             boolean match = false;
 
-            if(descriptors[i + 2] >= 0) // Circle stones
+            if( descriptors[i + 2] >= 0) // Circle stones
             {
                 int height = descriptors[i + 2];
-                //Log.d(LOG_TAG, "retro height : "+height);
+                Log.d(LOG_TAG, "retro height : "+height);
 
                 for (Point p2 : stackPoints.keySet()) {
                     if (areClose(p1, p2, 70)) {
@@ -125,7 +125,7 @@ public class GameStacking extends Game {
                     }
                 }
             }
-            else{ // Long Stones
+            else if(state == GameState.LEFT_PLACED && descriptors[i + 2] <= -2){ // Long Stones
                 int angle = descriptors[i + 2];
                 for(int j=0; j<longStonePoints.size(); j++){
                     Rect r = longStonePoints.get(j);
