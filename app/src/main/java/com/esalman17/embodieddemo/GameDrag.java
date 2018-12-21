@@ -65,6 +65,29 @@ public class GameDrag extends Game {
                 left = new Rect(200, 300, 650, 700);
                 right = new Rect(750, 300, 1150, 700);
                 break;
+
+            case 6:
+                dragPoints.add(new Point(100, 350));
+                dragPoints.add(new Point(100, 450));
+                dragPoints.add(new Point(100, 550));
+                dragPoints.add(new Point(100, 650));
+
+                for(Point p: dragPoints){
+                    finalPoints.add(new Point(p.x+900, p.y));
+                }
+
+                virtualPoints.add(new Point(300, 450));
+                virtualPoints.add(new Point(300, 600));
+                virtualPoints.add(new Point(500, 350));
+                virtualPoints.add(new Point(480, 550));
+                virtualPoints.add(new Point(400, 450));
+
+                correctSide = Side.RIGHT;
+                question = Question.MORE;
+
+                left = new Rect(200, 300, 650, 700);
+                right = new Rect(750, 300, 1150, 700);
+                break;
         }
 
         initializeCanvas();

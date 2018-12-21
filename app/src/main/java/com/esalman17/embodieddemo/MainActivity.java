@@ -554,7 +554,7 @@ public class MainActivity extends Activity {
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             setInitialPosition(momoView, -30,400,0,0);
         }
-        else if(test == 5){
+        else if(test == 5 || test == 6){
             game = new GameDrag(this, test);
             game.setBackground(mainImView, R.drawable.task_c2);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
@@ -843,7 +843,7 @@ public class MainActivity extends Activity {
                 processAnswer(correctAnswer);
             }
         }
-        else if(game.level == 5) { //------------------------ LEVEL 5 -----------------------------------------------------------
+        else if(game.level == 5 || game.level == 6) { //------------------------ LEVEL 5-6 ---------------------------------------
             if(game.state == GameState.OBJECT_PLACEMENT ) {
                 final boolean objectsPlaced = game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
