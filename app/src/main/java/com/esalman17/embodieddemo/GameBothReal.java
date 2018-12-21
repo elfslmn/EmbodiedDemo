@@ -25,7 +25,8 @@ public class GameBothReal extends Game{
         if(level == 0){
             finger = context.getResources().getDrawable(R.drawable.finger);
         }
-        drawable = context.getResources().getDrawable(R.drawable.red);
+        if(level == 1) drawable = context.getResources().getDrawable(R.drawable.red);
+        else if(level == 2) drawable = context.getResources().getDrawable(R.drawable.purple);
         cross = context.getResources().getDrawable(R.drawable.cross);
 
         initialize(level);
@@ -39,19 +40,26 @@ public class GameBothReal extends Game{
         rightPoints = new ArrayList<>(10);
 
         switch (level){
-            case 0:
-                allPoints.add(new Point(280, 450));
-                allPoints.add(new Point(400, 400));
-                allPoints.add(new Point(500, 500));
-
-                allPoints.add(new Point(800, 450));
-                allPoints.add(new Point(950, 450));
-
-                left = new Rect(200, 250, 580, 600);
-                right = new Rect(700, 250, 1080, 600);
-                correctSide = Side.LEFT;
-                break;
             case 1:
+                allPoints.add(new Point(230, 560));
+                allPoints.add(new Point(330, 560));
+                allPoints.add(new Point(230, 660));
+                allPoints.add(new Point(330, 660));
+
+                rightPoints.add(new Point(680, 560));
+                rightPoints.add(new Point(780, 560));
+                rightPoints.add(new Point(680, 660));
+                rightPoints.add(new Point(780, 660));
+
+                correctSide = Side.MIDDLE;
+                question = Question.MORE; // TODO or equal
+
+                left = new Rect(130, 350, 400, 715);
+                right = new Rect(600, 350, 1050, 715);
+                middle = new Rect(left.right, left.top, right.left, left.bottom );
+
+                break;
+            case 2:
                 allPoints.add(new Point(190, 500));
                 allPoints.add(new Point(300, 495));
                 allPoints.add(new Point(410, 490));
@@ -62,8 +70,8 @@ public class GameBothReal extends Game{
                 rightPoints.add(new Point(930, 300));
                 rightPoints.add(new Point(990, 200));
 
-                correctSide = Side.MIDDLE; // TODO değiştir eşit, wizard of oz
-                question = Question.MORE;
+                correctSide = Side.MIDDLE;
+                question = Question.MORE; // TODO or equal
 
                 left = new Rect(130, 320, 570, 600);
                 right = new Rect(750, 320, 1080, 600);
@@ -199,9 +207,15 @@ public class GameBothReal extends Game{
     }
 
     public void changePoints(){
+        int n = allPoints.size();
         switch (level){
             case 1:
-                int n = allPoints.size();
+                allPoints.set(n-1, new Point(880, 560) );
+                allPoints.set(n-2, new Point(980, 560) );
+                soundPlayedPoints[n-1] = false;
+                soundPlayedPoints[n-2] = false;
+                break;
+            case 2:
                 allPoints.set(n-1, new Point(1020, 500) );
                 allPoints.set(n-2, new Point(980, 390) );
                 soundPlayedPoints[n-1] = false;
