@@ -554,6 +554,12 @@ public class MainActivity extends Activity {
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             setInitialPosition(momoView, -30,400,0,0);
         }
+        else if(test == 4){
+            game = new GameStacking(this, test);
+            game.setBackground(mainImView, R.drawable.task_b4);
+            overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
+            setInitialPosition(momoView, -50,400,0,0);
+        }
         else if(test == 5 || test == 6){
             game = new GameDrag(this, test);
             game.setBackground(mainImView, R.drawable.task_c2);
@@ -766,7 +772,7 @@ public class MainActivity extends Activity {
             }
         }
 
-        else if(game.level == 3){ //------------------------ LEVEL 3 -----------------------------------------------------------
+        else if(game.level == 3 || game.level == 4){ //------------- LEVEL 3-4 -------------------------------------------
             if(game.state == GameState.OBJECT_PLACEMENT || game.state == GameState.LEFT_PLACED) {
                 final boolean objectsPlaced = game.processBlobDescriptors(descriptors);
                 runOnUiThread(new Runnable() {
@@ -801,7 +807,9 @@ public class MainActivity extends Activity {
                                 touch_descriptors.clear();
                                 Log.d( "Level-3", "Both side objects are placed");
 
-                                Animation walking = new TranslateAnimation(500, 1150,-50, -50);
+                                Animation walking = null ;
+                                if(game.level == 3) walking = new TranslateAnimation(500, 1150,-50, -70);
+                                else walking = new TranslateAnimation(500, 1150,-120, -120);
                                 walking.setDuration(3000);
                                 walking.setStartOffset(200);
                                 walking.setFillAfter(true);

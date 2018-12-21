@@ -18,6 +18,7 @@ public class GameStacking extends Game {
     private static final String LOG_TAG = "GameStacking";
     private HashMap<Point, Integer> stackPoints;
     int wantedStackHeight = 0;
+    final static int stone_height = 11;
 
     private ArrayList<Rect> longStonePoints;
     private boolean[] soundPlayedPoints;
@@ -40,11 +41,9 @@ public class GameStacking extends Game {
 
         switch (level){
             case 3:
-                // left
                 stackPoints.put(new Point(300, 450), -13); // -13, ilk taşın yuksekliğine bakmadan click sound için
                 wantedStackHeight = 3;
 
-                // right // TODO adjust for long stones
                 longStonePoints.add(new Rect(680, 480, 800, 560));
                 longStonePoints.add(new Rect(810, 480, 930, 560));
                 longStonePoints.add(new Rect(940, 480, 1060, 560));
@@ -55,6 +54,23 @@ public class GameStacking extends Game {
 
                 left = new Rect(100, 350, 500, 650);
                 right = new Rect(650, 350, 1220, 650);
+                break;
+
+            case 4:
+                stackPoints.put(new Point(200, 500), -13);
+                stackPoints.put(new Point(370, 500), -13);
+                wantedStackHeight = 2;
+
+                longStonePoints.add(new Rect(700, 400, 820, 480));
+                longStonePoints.add(new Rect(830, 400, 950, 480));
+                longStonePoints.add(new Rect(960, 400, 1080, 480));
+
+                correctSide = Side.LEFT;
+                question = Question.MORE;
+
+                left = new Rect(100, 350, 500, 650);
+                right = new Rect(600, 350, 1150, 650);
+
                 break;
 
         }
@@ -75,11 +91,13 @@ public class GameStacking extends Game {
         Canvas canvas = new Canvas(MainActivity.bmpOverlay);
         canvas.drawPaint(GamePaint.eraser);
 
-        for(Point p : stackPoints.keySet()){
-            cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
-            cross.draw(canvas);
+        if(state == GameState.OBJECT_PLACEMENT) {
+            for (Point p : stackPoints.keySet()) {
+                cross.setBounds(p.x - 50, p.y - 50, p.x + 50, p.y + 50);
+                cross.draw(canvas);
+            }
         }
-        if(state == GameState.LEFT_PLACED){
+       else if(state == GameState.LEFT_PLACED){
             for(Rect r : longStonePoints){
                 canvas.drawRect(r, GamePaint.red);
             }
@@ -107,8 +125,14 @@ public class GameStacking extends Game {
 
                 for (Point p2 : stackPoints.keySet()) {
                     if (areClose(p1, p2, 70)) {
+                        if(state == GameState.LEFT_PLACED){ // geçtikten sonra taşın sönmesini engellemek için
+                            drawable.setBounds(p1.x - 50, p1.y - 50, p1.x + 60, p1.y + 60);
+                            drawable.draw(canvas);
+                            match = true;
+                            break;
+                        }
                         canvas.drawCircle(p2.x, p2.y, 51, GamePaint.eraser);
-                        if(height > 11*wantedStackHeight){
+                        if(height >= stone_height*wantedStackHeight){
                             drawable.setBounds(p1.x - 50, p1.y - 50, p1.x + 60, p1.y + 60);
                             drawable.draw(canvas);
                         }
@@ -117,7 +141,7 @@ public class GameStacking extends Game {
                             cross.draw(canvas);
                         }
                         match = true;
-                        if (height - stackPoints.get(p2) > 12) {
+                        if (height - stackPoints.get(p2) >= stone_height) {
                             MainActivity.soundPool.play(MainActivity.sOkay, 1f, 1f, 1, 0, 1f);
                         }
                         stackPoints.put(p2, height);
@@ -150,9 +174,9 @@ public class GameStacking extends Game {
             int count = 0;
             for (Point p2: stackPoints.keySet())
             {
-                if(stackPoints.get(p2)> 11*wantedStackHeight) count++;
+                if(stackPoints.get(p2)>= stone_height*wantedStackHeight) count++;
             }
-            if(count == stackPoints.size())
+            if(count == stackPoints.size()) // todo karşıya geçmeyi trigger etmek için bir kaç frame bekle
             {
                 state = GameState.LEFT_PLACED;
                 Log.d(LOG_TAG, "Stacking done: state = LEFT_PLACED");
