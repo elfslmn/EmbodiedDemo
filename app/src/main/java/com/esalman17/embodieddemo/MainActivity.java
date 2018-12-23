@@ -1,5 +1,6 @@
 package com.esalman17.embodieddemo;
 
+import android.animation.Animator;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -7,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
-import android.graphics.Canvas;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -45,7 +45,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -359,6 +358,94 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.buttonCorrect).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(game == null) {
+                    Log.i(LOG_TAG, "Game is null");
+                    return;
+                }
+                game.state = GameState.ASSESMENT_FINISHED;
+                momoView.clearAnimation();
+                momoView.setVisibility(View.GONE);
+                playSound(sApplause, sCong);
+                overlayImView.setImageDrawable(null);
+                confettiView.setAnimation("trophy.json");
+                confettiView.playAnimation();
+                playMedia(R.raw.taslari_al,3000); // Delay for confetti complete
+
+                float secs = (float) game.assestmentTime / 1000;
+                String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
+                results[game.level] = time;
+                tvDebug.setText(results[game.level]);
+            }
+        });
+
+        findViewById(R.id.buttonWrong).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(game == null) {
+                    Log.i(LOG_TAG, "Game is null");
+                    return;
+                }
+                game.state = GameState.ASSESMENT_FINISHED;
+                float secs = (float) game.assestmentTime / 1000;
+                String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
+                results[game.level] = time;
+                tvDebug.setText(results[game.level]);
+                overlayImView.setImageDrawable(null);
+
+                playMedia(R.raw.taslari_al);
+                game.state = GameState.STONES_CLEARED;
+            }
+        });
+
+        findViewById(R.id.buttonContinue).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // TODO make continue to introduction
+                if(game == null) {
+                    Log.i(LOG_TAG, "Game is null");
+                    return;
+                }
+                switch (game.state){
+                    case ASSESMENT_FINISHED:
+                        game.state = GameState.STONES_CLEARED;
+                        confettiView.setAnimation("cak_bakalim.json");
+                        confettiView.playAnimation();
+                        playMedia(R.raw.cak_bakalim);
+                        break;
+                    case STONES_CLEARED:
+                        game.state = GameState.HIGH_FIVED;
+                        final int id = getButtonId(game.level +1);
+                        if(id != -1){
+                            confettiView.setAnimation("L2.json"); // TODO arrange for other levels
+                            confettiView.setSpeed(0.5f);
+                            confettiView.playAnimation();
+                            confettiView.addAnimatorListener(new Animator.AnimatorListener() {
+                                @Override
+                                public void onAnimationStart(Animator animator) {
+                                    playMedia(R.raw.next_game);
+                                }
+                                @Override
+                                public void onAnimationEnd(Animator animator) {
+                                    confettiView.removeAllAnimatorListeners();
+                                    confettiView.setSpeed(1f);
+                                    findViewById(id).performClick();
+                                }
+                                @Override
+                                public void onAnimationCancel(Animator animator) {}
+                                @Override
+                                public void onAnimationRepeat(Animator animator) {}
+                            });
+                        }
+
+                        break;
+
+                }
+            }
+        });
+
         soundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
         soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             @Override
@@ -660,7 +747,7 @@ public class MainActivity extends Activity {
                             walking.setAnimationListener(new Animation.AnimationListener() {
                                 @Override
                                 public void onAnimationStart(Animation animation) {
-                                    playMedia(R.raw.hop_gectim,1000);
+                                    playMedia(R.raw.hop_gectim,700);
                                 }
                                 @Override
                                 public void onAnimationEnd(Animation animation) {
@@ -993,11 +1080,14 @@ public class MainActivity extends Activity {
 
     private void playSound(int id, int id2){
         if(!isPlaying && soundsLoaded){
+            if(id == sWrong){
+                wrong++;
+                if(wrong == 5) return;
+            }
             isPlaying = true;
             soundPool.play(id, 1f, 1f, 1, 0, 1f);
-            if(id2 != 0) soundPool.play(id2, 1f, 1f, 1, 0, 1f);
 
-            if(id == sWrong) wrong++;
+            if(id2 != 0) soundPool.play(id2, 1f, 1f, 1, 0, 1f);
 
             new Thread(new Runnable() {
                 @Override
@@ -1069,7 +1159,7 @@ public class MainActivity extends Activity {
         int id = -1;
         switch (level){
             case 0:
-                id = R.id.buttonIntro;
+                id = R.id.buttonPilot;
                 break;
             case 1:
                 id = R.id.button1;
@@ -1121,19 +1211,23 @@ public class MainActivity extends Activity {
             String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
             results[game.level] = time;
         }
+        else if(wrong == 5){
+            float secs = (float) game.assestmentTime / 1000;
+            String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
+            results[game.level] = time;
+        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (answer == 1) {
+                if (answer == 1 || wrong == 5) {
                     if(!touch_mode) StopCaptureNative();
-                    playSound(sApplause, sCong);
+                   /* playSound(sApplause, sCong);
                     confettiView.setAnimation("trophy.json");
                     confettiView.playAnimation();
-                    overlayImView.setImageDrawable(null);
-                    //playMedia(R.raw.neden_sence);
-                    // TODO button koy cevabı kabul edip confetti göstermek için
-                    tvDebug.setText(results[game.level]);
-                } else if (answer == -1) {
+                    overlayImView.setImageDrawable(null); */
+                    playMedia(R.raw.neden_sence);
+                }
+                else if (answer == -1) {
                     playSound(sWrong);
                 }
             }
