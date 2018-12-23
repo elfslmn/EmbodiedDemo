@@ -42,7 +42,7 @@ public class GameEqualize extends Game {
         gesture_right.top = 0;
 
         correctCounter = 0;
-        state = GameState.ASSESMENT_RUNNING; // TODO It assumes there is already objects in the field
+        state = GameState.ASSESMENT_RUNNING; // It assumes there is already objects in the field ??
 
         Log.i(LOG_TAG, "New game object (level=" + level + ") is initialized");
     }

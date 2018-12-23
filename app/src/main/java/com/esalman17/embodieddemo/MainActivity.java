@@ -54,7 +54,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends Activity {
-    public static int REMOVAL_DELAY = 2500; //TODO for 3 year
+    public static int REMOVAL_DELAY = 2500;
     public static String CHILD_NAME = "Elif";
     public static int CHILD_AGE = 3;
     SimpleDateFormat parser = new SimpleDateFormat("d_MMM_HH_mm");
@@ -133,9 +133,12 @@ public class MainActivity extends Activity {
     View.OnClickListener levelListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            clearPreviousMode();
+            clearPreviousMode(); // TODO kaldır ??
             switch (view.getId()){
                 case R.id.buttonIntro:
+                    initializeTestMode(-1);
+                    break;
+                case R.id.buttonPilot:
                     initializeTestMode(0);
                     break;
                 case R.id.button1:
@@ -355,7 +358,6 @@ public class MainActivity extends Activity {
                 DetectBackgroundNative();
             }
         });
-        findViewById(R.id.buttonIntro).setOnClickListener(levelListener);
 
         soundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
         soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
@@ -538,8 +540,45 @@ public class MainActivity extends Activity {
         timer = new Timer(false);
         wrong = 0;
 
-        if(test == 0){ // PILOT LEVEL
+        momoView.setAnimation("rightanswer.json");
+        momoView.setRepeatCount(-1);
+        momoView.setSpeed(2.0f);
 
+        if(test == 0){ // PILOT LEVEL
+            pause = true;
+            game = new GameHalfVirtual(this, test);
+            game.setBackground(mainImView, R.drawable.task_a0);
+            overlayImView.setImageBitmap(bmpOverlay);
+            setInitialPosition(momoView, -30,400,0,0);
+
+            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.karsiya_yol_var);
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                    mediaPlayer.release();
+                    Animation walking = new TranslateAnimation(0, 600,-50, -20);
+                    walking.setDuration(2500);
+                    walking.setFillAfter(true);
+                    momoView.startAnimation(walking);
+                    momoView.playAnimation();
+                    walking.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+                            playMedia(R.raw.hop_gectim,1000);
+                        }
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            momoView.pauseAnimation();
+                            game.setState(GameState.LEFT_PLACED);
+                            pause = false;
+                            playMedia(R.raw.tas_koy);
+                        }
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {}
+                    });
+                }
+            });
+            mediaPlayer.start();
         }
         else if(test == 1 || test == 2){
             game = new GameBothReal(this, test);
@@ -566,11 +605,7 @@ public class MainActivity extends Activity {
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             setInitialPosition(momoView, -30,40,0,0);
         }
-
-        momoView.setAnimation("rightanswer.json");
-        momoView.setRepeatCount(-1);
-        momoView.setSpeed(2.0f);
-        showLevelInfo("LEVEL " + test);
+        if(game != null && game.level != 0) showLevelInfo("LEVEL " + test);
     }
     private void endTestMode(){
         mainImView.setImageBitmap(bmpCam);
@@ -610,7 +645,55 @@ public class MainActivity extends Activity {
         }
 
         if(game.level == 0){ // ------------------ PILOT ------------------------------------------------
-
+            if(game.state == GameState.OBJECT_PLACEMENT || game.state == GameState.LEFT_PLACED){
+                final boolean objectsPlaced =game.processBlobDescriptors(descriptors);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        overlayImView.setImageBitmap(bmpOverlay);
+                        if(objectsPlaced) {
+                            Animation walking = new TranslateAnimation(600, 1100,-50, -20);
+                            walking.setDuration(2500);
+                            walking.setFillAfter(true);
+                            momoView.playAnimation();
+                            momoView.startAnimation(walking);
+                            walking.setAnimationListener(new Animation.AnimationListener() {
+                                @Override
+                                public void onAnimationStart(Animation animation) {
+                                    playMedia(R.raw.hop_gectim,1000);
+                                }
+                                @Override
+                                public void onAnimationEnd(Animation animation) {
+                                    momoView.pauseAnimation();
+                                    game.drawRects();
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            overlayImView.setImageBitmap(bmpOverlay);
+                                            mainImView.setImageDrawable(null);
+                                        }});
+                                    mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.soru_cok_pilot);
+                                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                        @Override
+                                        public void onCompletion(MediaPlayer mediaPlayer) {
+                                            game.state = GameState.ASSESMENT_RUNNING;
+                                            game.startTime = System.currentTimeMillis();
+                                            Log.d(LOG_TAG, "Assesment has started");
+                                        }
+                                    });
+                                    mediaPlayer.start();
+                                }
+                                @Override
+                                public void onAnimationRepeat(Animation animation) {}
+                            });
+                        }
+                    }
+                });
+            }
+            else if(game.state == GameState.ASSESMENT_RUNNING) {
+                final int answer = game.processGestureDescriptors(descriptors);
+                processAnswer(answer);
+            }
         }
         else if(game.level == 1 || game.level == 2){  //--------------- LEVEL 1-2 -----------------------------------------------------------
             if(game.state == GameState.OBJECT_PLACEMENT || game.state == GameState.LEFT_PLACED || game.state == GameState.RIGHT_PLACED) {
@@ -1032,8 +1115,8 @@ public class MainActivity extends Activity {
         return true;
     }
 
-    private void processAnswer(final int correctAnswer){
-        if (correctAnswer == 1) {
+    private void processAnswer(final int answer){
+        if (answer == 1) {
             float secs = (float) game.assestmentTime / 1000;
             String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
             results[game.level] = time;
@@ -1041,15 +1124,16 @@ public class MainActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (correctAnswer == 1) {
+                if (answer == 1) {
                     if(!touch_mode) StopCaptureNative();
-                    //soundPool.stop(sBackPlayId);
                     playSound(sApplause, sCong);
                     confettiView.setAnimation("trophy.json");
                     confettiView.playAnimation();
                     overlayImView.setImageDrawable(null);
+                    //playMedia(R.raw.neden_sence);
+                    // TODO button koy cevabı kabul edip confetti göstermek için
                     tvDebug.setText(results[game.level]);
-                } else if (correctAnswer == -1) {
+                } else if (answer == -1) {
                     playSound(sWrong);
                 }
             }

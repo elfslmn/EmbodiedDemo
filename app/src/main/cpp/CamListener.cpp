@@ -343,7 +343,7 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
             int angle = rr.angle;
             if(rr.size.width < rr.size.height)
             {
-                angle += 90; // TODO ???
+                angle += 90;
             }
             if(angle > 0) angle *= -1;
             if(angle > -2) angle = -2;

@@ -28,8 +28,6 @@ public class GameHalfVirtual extends Game{
             finger = context.getResources().getDrawable(R.drawable.finger);
         }
         cross = context.getResources().getDrawable(R.drawable.cross);
-        initialize(level);
-
         switch (level) {
             case 0:
                 drawable = context.getResources().getDrawable(R.drawable.pilot);
@@ -53,6 +51,7 @@ public class GameHalfVirtual extends Game{
                 drawable = context.getResources().getDrawable(R.drawable.blue);
                 break;
         }
+        initialize(level);
 
     }
 
@@ -70,19 +69,20 @@ public class GameHalfVirtual extends Game{
 
         switch (level){
             case 0: // demo level
-                wantedPoints.add(new Point(400, 400));
-                wantedPoints.add(new Point(280, 450));
+                virtualPoints.add(new Point(220, 560));
+                virtualPoints.add(new Point(320, 560));
+                virtualPoints.add(new Point(420, 560));
+                virtualPoints.add(new Point(520, 560));
 
-                virtualPoints.add(new Point(870, 390));
-                virtualPoints.add(new Point(990, 410));
-                virtualPoints.add(new Point(960, 490));
-                virtualPoints.add(new Point(840, 510));
+                wantedPoints.add(new Point(850, 560));
+                wantedPoints.add(new Point(950, 560));
 
-                left = new Rect(200, 250, 580, 600);
-                right = new Rect(700, 250, 1080, 600);
-                correctSide = Side.RIGHT;
+                left = new Rect(130, 350, 600, 700);
+                right = new Rect(700, 350, 1050, 700);
 
+                correctSide = Side.LEFT;
                 question = Question.MORE;
+
                 soundPlayedPoints = new boolean[wantedPoints.size()];
 
                 break;
@@ -182,12 +182,21 @@ public class GameHalfVirtual extends Game{
         Canvas canvas = new Canvas(MainActivity.bmpOverlay);
         canvas.drawPaint(GamePaint.eraser);
 
-        for(Point p : wantedPoints){
-            cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
-            cross.draw(canvas);
-            if(level == 0 && state == GameState.OBJECT_PLACEMENT){
-                finger.setBounds(p.x-60, p.y+60, p.x+60, p.y+200);
-                finger.draw(canvas);
+        if(level == 0){
+            drawVirtualObjects();
+            if(state ==GameState.LEFT_PLACED){
+                for(Point p : wantedPoints){
+                    cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
+                    cross.draw(canvas);
+                    finger.setBounds(p.x-60, p.y+60, p.x+60, p.y+200);
+                    finger.draw(canvas);
+                }
+            }
+        }
+        else{
+            for(Point p : wantedPoints){
+                cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
+                cross.draw(canvas);
             }
         }
         return canvas;
@@ -247,13 +256,10 @@ public class GameHalfVirtual extends Game{
     public void drawVirtualObjects(){
         Canvas canvas = new Canvas(MainActivity.bmpOverlay);
         for(Point p1: virtualPoints){
-            drawable.setBounds(p1.x-55, p1.y-55, p1.x+55, p1.y+55);
+            drawable.setBounds(p1.x-50, p1.y-50, p1.x+50, p1.y+50);
             drawable.draw(canvas);
         }
-        MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
-
-        canvas.drawRect(left, GamePaint.red);
-        canvas.drawRect(right, GamePaint.red);
+        //MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
     }
 
     public int processGestureDescriptors(int[] descriptors){
