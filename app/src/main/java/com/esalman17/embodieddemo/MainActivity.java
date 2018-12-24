@@ -657,7 +657,7 @@ public class MainActivity extends Activity {
                             momoView.pauseAnimation();
                             game.setState(GameState.LEFT_PLACED);
                             pause = false;
-                            playMedia(R.raw.tas_koy);
+                            playMedia(R.raw.tas_koy_pilot);
                         }
                         @Override
                         public void onAnimationRepeat(Animation animation) {}
@@ -672,6 +672,7 @@ public class MainActivity extends Activity {
             else game.setBackground(mainImView, R.drawable.task_a2);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             setInitialPosition(momoView, -30,400,0,0);
+            playMedia(R.raw.tas_koy_task_a, 2000);
         }
         else if(test == 3){
             game = new GameStacking(this, test);
@@ -758,7 +759,7 @@ public class MainActivity extends Activity {
                                             overlayImView.setImageBitmap(bmpOverlay);
                                             mainImView.setImageDrawable(null);
                                         }});
-                                    mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.soru_cok_pilot);
+                                    mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.soru_cok);
                                     mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                         @Override
                                         public void onCompletion(MediaPlayer mediaPlayer) {
@@ -796,6 +797,7 @@ public class MainActivity extends Activity {
                                 Animation walking = null;
                                 if(game.level == 1) walking = new TranslateAnimation(0, 400,-50, -20);
                                 else if(game.level == 2) walking = new TranslateAnimation(0, 600,-100, -100);
+                                playMedia(R.raw.hop_gectim,1000);
                                 walking.setDuration(2500);
                                 walking.setStartOffset(200);
                                 walking.setFillAfter(true);
@@ -813,7 +815,10 @@ public class MainActivity extends Activity {
                                             down.setDuration(500);
                                             down.setFillAfter(true);
                                             momoView.startAnimation(down);
+                                            sleep(500);
                                         }
+                                        playMedia(R.raw.diger_koy);
+                                        sleep(1000);
                                         pause = false;
                                     }
                                     @Override
@@ -838,7 +843,7 @@ public class MainActivity extends Activity {
                                     public void onAnimationEnd(Animation animation) {
                                         momoView.pauseAnimation();
                                         Animation back = null;
-                                        if(game.level == 1) back = new TranslateAnimation(700, 350,-50, -50);
+                                        if(game.level == 1) back = new TranslateAnimation(700, 400,-50, -50);
                                         else if(game.level == 2) back = new TranslateAnimation(900, 600,-450, 0);
                                         back.setDuration(2000);
                                         back.setStartOffset(200);
@@ -849,8 +854,9 @@ public class MainActivity extends Activity {
                                             public void onAnimationStart(Animation animation) {}
                                             @Override
                                             public void onAnimationEnd(Animation animation) {
-                                                // TODO sound: geçemiyorum
+                                                playMedia(R.raw.gecemem);
                                                 ((GameBothReal)game).changePoints();
+                                                sleep(4000); // to wait media end
                                                 pause = false;
                                             }
                                             @Override
@@ -864,12 +870,8 @@ public class MainActivity extends Activity {
                             else if(game.state == GameState.ALL_PLACED){
                                 if(touch_mode) StopCaptureNative(); // if place with camera but mock gesture
                                 touch_descriptors.clear();
+                                pause = true;
                                 Log.d( "Level-"+game.level, "All objects are placed");
-                                // TODO Ask question and start assesment after audio finished
-                                // For debug directly start the assesmnet
-                                game.state = GameState.ASSESMENT_RUNNING;
-                                game.startTime = System.currentTimeMillis();
-                                Log.d(LOG_TAG, "Assesment has started");
 
                                 Animation walking = null;
                                 if(game.level == 1){
@@ -882,6 +884,7 @@ public class MainActivity extends Activity {
                                 }
                                 walking.setStartOffset(200);
                                 walking.setFillAfter(true);
+                                playMedia(R.raw.hop_gectim,1500);
                                 momoView.playAnimation();
                                 momoView.startAnimation(walking);
                                 walking.setAnimationListener(new Animation.AnimationListener() {
@@ -892,13 +895,7 @@ public class MainActivity extends Activity {
                                     public void onAnimationEnd(Animation animation) {
                                         if(game.level == 1){
                                             momoView.pauseAnimation();
-                                            game.drawRects();
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    overlayImView.setImageBitmap(bmpOverlay);
-                                                    mainImView.setImageDrawable(null);
-                                                }});
+                                            askQuestion();
                                         }
                                         else if(game.level == 2){
                                             Animation down = new TranslateAnimation(850, 1100,-280, 0);
@@ -908,19 +905,11 @@ public class MainActivity extends Activity {
                                             down.setAnimationListener(new Animation.AnimationListener() {
                                                 @Override
                                                 public void onAnimationStart(Animation animation) {}
-
                                                 @Override
                                                 public void onAnimationEnd(Animation animation) {
                                                     momoView.pauseAnimation();
-                                                    game.drawRects();
-                                                    runOnUiThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            overlayImView.setImageBitmap(bmpOverlay);
-                                                            mainImView.setImageDrawable(null);
-                                                        }});
+                                                    askQuestion();
                                                 }
-
                                                 @Override
                                                 public void onAnimationRepeat(Animation animation) {}
                                             });
@@ -1128,7 +1117,7 @@ public class MainActivity extends Activity {
         tvLevel.setText(info);
         TransitionManager.beginDelayedTransition(mainLayout,slide);
         tvLevel.setVisibility(View.VISIBLE);
-        delayedUICommand(3000, new Runnable() {
+        delayedUICommand(2000, new Runnable() {
             @Override
             public void run() {
                 TransitionManager.beginDelayedTransition(mainLayout,slide);
@@ -1270,6 +1259,27 @@ public class MainActivity extends Activity {
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) view.getLayoutParams();
         params.setMargins(left,top,right,bottom);
         view.setLayoutParams(params);
+    }
+
+    private void askQuestion(){
+        game.drawRects();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                overlayImView.setImageBitmap(bmpOverlay);
+                mainImView.setImageDrawable(null);
+            }});
+        mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                pause = false;
+                game.state = GameState.ASSESMENT_RUNNING;
+                game.startTime = System.currentTimeMillis();
+                Log.d(LOG_TAG, "Assesment has started");
+            }
+        });
+        mediaPlayer.start();
     }
 
 
