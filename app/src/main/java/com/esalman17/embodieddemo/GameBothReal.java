@@ -52,7 +52,7 @@ public class GameBothReal extends Game{
                 rightPoints.add(new Point(780, 660));
 
                 correctSide = Side.MIDDLE;
-                question = Question.MORE; // TODO or equal
+                question = Question.EQUAL;
 
                 left = new Rect(130, 350, 400, 715);
                 right = new Rect(600, 350, 1050, 715);
@@ -71,7 +71,7 @@ public class GameBothReal extends Game{
                 rightPoints.add(new Point(990, 200));
 
                 correctSide = Side.MIDDLE;
-                question = Question.MORE; // TODO or equal
+                question = Question.EQUAL;
 
                 left = new Rect(130, 320, 570, 600);
                 right = new Rect(750, 320, 1080, 600);

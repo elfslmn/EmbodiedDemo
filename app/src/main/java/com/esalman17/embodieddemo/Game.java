@@ -53,7 +53,8 @@ abstract public class Game {
 
     public enum Question{
         MORE,
-        LESS
+        LESS,
+        EQUAL
     }
 
     abstract void initialize(int level);
@@ -83,8 +84,9 @@ abstract public class Game {
     }
 
     final public int getQuestion(){
-        if(question == Question.MORE) return R.raw.soru_fazla;
+        if(question == Question.MORE) return R.raw.soru_cok;
         if(question == Question.LESS) return R.raw.soru_az;
+        if(question == Question.EQUAL) return R.raw.soru_esit;
 
         Log.d("Game", "Question is not specified");
         return -1;
