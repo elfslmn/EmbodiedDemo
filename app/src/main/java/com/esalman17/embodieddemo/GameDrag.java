@@ -193,7 +193,7 @@ public class GameDrag extends Game {
                 object_drag.draw(canvas);
 
                 MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
-                if(level == 5 && pState == PlacementState.NO_OBJECT){
+                if(pState == PlacementState.NO_OBJECT){
                     pState = PlacementState.FIRST_PLACED;
                 }
             }

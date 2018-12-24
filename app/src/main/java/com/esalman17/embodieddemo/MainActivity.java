@@ -418,7 +418,7 @@ public class MainActivity extends Activity {
                     case STONES_CLEARED:
                         game.state = GameState.HIGH_FIVED;
                         int next_level = game.level +1;
-                        final int id = getButtonId(next_level);
+                        final int id = getButtonId(next_level); // TODO Bitiş bolumune geçmiyor 6 dan next olmadıgı için
                         if(id != -1){
                             setLevelMapAnimation(next_level);
                             confettiView.playAnimation();
@@ -694,6 +694,9 @@ public class MainActivity extends Activity {
             setInitialPosition(momoView, -30,40,0,0);
             if(test == 5){
                 playMedia(R.raw.task_c_giris,2000);
+            }
+            else if(test == 6){
+                playMedia(R.raw.tas_koy_task_a,2000);
             }
         }
         if(game != null && game.level != 0) showLevelInfo("LEVEL " + test);
@@ -1075,14 +1078,14 @@ public class MainActivity extends Activity {
                     }
                 });
 
-                if(!objectsPlaced && game.level == 5){
+                if(!objectsPlaced){
                     pause = true;
                     if(game.pState == PlacementState.FIRST_PLACED) {
                         playMedia(R.raw.karsiya_yuzdur);
                         sleep(2000);
                         game.pState = PlacementState.FIRST_PROCESSED;
                     }
-                    else if(game.pState == PlacementState.FIRST_ARRIVED){
+                    else if(game.pState == PlacementState.FIRST_ARRIVED && game.level == 5){
                         playMedia(R.raw.diger_yuzdur);
                         game.pState = PlacementState.FIRST_PROCESSED;
                     }
