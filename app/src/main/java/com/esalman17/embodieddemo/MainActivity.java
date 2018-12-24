@@ -412,8 +412,8 @@ public class MainActivity extends Activity {
                     case ASSESMENT_FINISHED:
                         game.state = GameState.STONES_CLEARED;
                         confettiView.setAnimation("cak_bakalim.json");
-                        confettiView.playAnimation();
                         playMedia(R.raw.cak_bakalim);
+                        confettiView.playAnimation();
                         break;
                     case STONES_CLEARED:
                         game.state = GameState.HIGH_FIVED;
@@ -625,6 +625,7 @@ public class MainActivity extends Activity {
 
         timer = new Timer(false);
         wrong = 0;
+        pause = false;
 
         momoView.setAnimation("rightanswer.json");
         momoView.setRepeatCount(-1);
@@ -752,23 +753,7 @@ public class MainActivity extends Activity {
                                 @Override
                                 public void onAnimationEnd(Animation animation) {
                                     momoView.pauseAnimation();
-                                    game.drawRects();
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            overlayImView.setImageBitmap(bmpOverlay);
-                                            mainImView.setImageDrawable(null);
-                                        }});
-                                    mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.soru_cok);
-                                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                        @Override
-                                        public void onCompletion(MediaPlayer mediaPlayer) {
-                                            game.state = GameState.ASSESMENT_RUNNING;
-                                            game.startTime = System.currentTimeMillis();
-                                            Log.d(LOG_TAG, "Assesment has started");
-                                        }
-                                    });
-                                    mediaPlayer.start();
+                                    askQuestion();
                                 }
                                 @Override
                                 public void onAnimationRepeat(Animation animation) {}
@@ -776,6 +761,10 @@ public class MainActivity extends Activity {
                         }
                     }
                 });
+            }
+            else if(game.state == GameState.ALL_PLACED){
+                game.processBlobDescriptors(descriptors);
+                pause = true;
             }
             else if(game.state == GameState.ASSESMENT_RUNNING) {
                 final int answer = game.processGestureDescriptors(descriptors);
@@ -1180,19 +1169,22 @@ public class MainActivity extends Activity {
             case 1:
                 confettiView.setAnimation("L2.json");
                 break;
-            case 3:
+            case 2:
                 confettiView.setAnimation("L3.json");
                 confettiView.setMaxProgress(0.9f);
                 break;
-            case 4:
+            case 3:
                 confettiView.setAnimation("L4.json");
                 break;
-            case 5:
+            case 4:
                 confettiView.setAnimation("L5.json");
                 break;
-            case 6:
+            case 5:
                 confettiView.setAnimation("L6.json");
                 confettiView.setMaxProgress(0.9f);
+                break;
+            case 6:
+                confettiView.setAnimation("L5.json");
                 break;
             case 7:
                 confettiView.setAnimation("Bitis.json");
