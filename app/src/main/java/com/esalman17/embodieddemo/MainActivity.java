@@ -693,7 +693,7 @@ public class MainActivity extends Activity {
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             setInitialPosition(momoView, -30,40,0,0);
             if(test == 5){
-                playMedia(R.raw.task_c_giris);
+                playMedia(R.raw.task_c_giris,2000);
             }
         }
         if(game != null && game.level != 0) showLevelInfo("LEVEL " + test);
@@ -807,10 +807,8 @@ public class MainActivity extends Activity {
                                             down.setDuration(500);
                                             down.setFillAfter(true);
                                             momoView.startAnimation(down);
-                                            sleep(500);
                                         }
-                                        playMedia(R.raw.diger_koy);
-                                        sleep(1000);
+                                        playMedia(R.raw.diger_koy,500);
                                         pause = false;
                                     }
                                     @Override
@@ -847,9 +845,10 @@ public class MainActivity extends Activity {
                                             @Override
                                             public void onAnimationEnd(Animation animation) {
                                                 playMedia(R.raw.gecemem);
+                                                timer.schedule(new TimerTask() {
+                                                    @Override
+                                                    public void run() {pause = false;}}, 4000);
                                                 ((GameBothReal)game).changePoints();
-                                                sleep(4000); // to wait media end
-                                                pause = false;
                                             }
                                             @Override
                                             public void onAnimationRepeat(Animation animation) {}
@@ -1115,13 +1114,9 @@ public class MainActivity extends Activity {
 
             if(id2 != 0) soundPool.play(id2, 1f, 1f, 1, 0, 1f);
 
-            new Thread(new Runnable() {
+            timer.schedule(new TimerTask() {
                 @Override
-                public void run() {
-                    sleep(2000);
-                    isPlaying = false;
-                }
-            }).start();
+                public void run() {isPlaying = false;}}, 2000);
         }
     }
 
