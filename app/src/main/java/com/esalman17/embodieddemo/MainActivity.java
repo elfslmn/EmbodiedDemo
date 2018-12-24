@@ -417,10 +417,10 @@ public class MainActivity extends Activity {
                         break;
                     case STONES_CLEARED:
                         game.state = GameState.HIGH_FIVED;
-                        final int id = getButtonId(game.level +1);
+                        int next_level = game.level +1;
+                        final int id = getButtonId(next_level);
                         if(id != -1){
-                            confettiView.setAnimation("L2.json"); // TODO arrange for other levels
-                            confettiView.setSpeed(0.5f);
+                            setLevelMapAnimation(next_level);
                             confettiView.playAnimation();
                             confettiView.addAnimatorListener(new Animator.AnimatorListener() {
                                 @Override
@@ -430,7 +430,6 @@ public class MainActivity extends Activity {
                                 @Override
                                 public void onAnimationEnd(Animator animator) {
                                     confettiView.removeAllAnimatorListeners();
-                                    confettiView.setSpeed(1f);
                                     findViewById(id).performClick();
                                 }
                                 @Override
@@ -1181,6 +1180,39 @@ public class MainActivity extends Activity {
                 break;
         }
         return id;
+    }
+
+    private void setLevelMapAnimation(int nextlevel){
+        switch (nextlevel){
+            case 0:
+                confettiView.setAnimation("L1.json");
+                confettiView.setMaxProgress(0.9f);
+                break;
+            case 1:
+                confettiView.setAnimation("L2.json");
+                break;
+            case 3:
+                confettiView.setAnimation("L3.json");
+                confettiView.setMaxProgress(0.9f);
+                break;
+            case 4:
+                confettiView.setAnimation("L4.json");
+                break;
+            case 5:
+                confettiView.setAnimation("L5.json");
+                break;
+            case 6:
+                confettiView.setAnimation("L6.json");
+                confettiView.setMaxProgress(0.9f);
+                break;
+            case 7:
+                confettiView.setAnimation("Bitis.json");
+                break;
+            default:
+                return;
+
+        }
+        confettiView.setSpeed(0.5f);
     }
 
 
