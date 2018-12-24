@@ -40,6 +40,7 @@ abstract public class Game {
 
     public long startTime, assestmentTime; // both in msec
     public GameState state;
+    public PlacementState pState = PlacementState.NO_OBJECT;
     public int level;
     public Question question;
 

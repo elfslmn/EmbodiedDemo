@@ -19,8 +19,8 @@ public class GameDrag extends Game {
     public ArrayList<Point> finalPoints;
     public ArrayList<Point> virtualPoints;
     Drawable object_drag, object_virtual, cross, path;
-    int lastArrived = -1;
-    Rect pathRect = null;
+    public int lastArrived = -1;
+    public Rect pathRect = null;
 
     public GameDrag(Context context, int level) {
         this.level = level;
@@ -36,6 +36,7 @@ public class GameDrag extends Game {
     @Override
     void initialize(int level) {
         state = GameState.OBJECT_PLACEMENT;
+        pState = PlacementState.NO_OBJECT;
 
         dragPoints = new ArrayList<>(10);
         finalPoints = new ArrayList<>(10);
@@ -82,7 +83,7 @@ public class GameDrag extends Game {
                 virtualPoints.add(new Point(480, 550));
                 virtualPoints.add(new Point(400, 450));
 
-                correctSide = Side.RIGHT;
+                correctSide = Side.LEFT;
                 question = Question.MORE;
 
                 left = new Rect(200, 300, 650, 700);
@@ -144,7 +145,7 @@ public class GameDrag extends Game {
                     match = true;
                     if(pathRect != null && j == lastArrived+1){ // fish arrived
                         MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
-                        canvas.drawCircle(pathRect.left+20, pathRect.top+50, 50, GamePaint.eraser);
+                        canvas.drawCircle(pathRect.left+50, pathRect.top+50, 50, GamePaint.eraser);
                         object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
                         object_drag.draw(canvas);
 
@@ -155,12 +156,10 @@ public class GameDrag extends Game {
                             Log.d(LOG_TAG, "Draging done: state = LEFT_PLACED");
                             return true;
                         }
+                        else if(lastArrived == 0 && level == 5){
+                            pState = PlacementState.FIRST_ARRIVED;
+                        }
                     }
-                    /*if(j <= lastArrived){
-                        canvas.drawCircle(p2.x, p2.y, 50, GamePaint.eraser);
-                        object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
-                        object_drag.draw(canvas);
-                    }*/
                     break;
                 }
             }
@@ -194,6 +193,9 @@ public class GameDrag extends Game {
                 object_drag.draw(canvas);
 
                 MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
+                if(level == 5 && pState == PlacementState.NO_OBJECT){
+                    pState = PlacementState.FIRST_PLACED;
+                }
             }
             else{
                 canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
@@ -230,7 +232,7 @@ public class GameDrag extends Game {
             object_virtual.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
             object_virtual.draw(canvas);
         }
-        MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
+        //MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
     }
 
     public void removeObjects(){

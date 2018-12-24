@@ -692,6 +692,9 @@ public class MainActivity extends Activity {
             game.setBackground(mainImView, R.drawable.task_c2);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             setInitialPosition(momoView, -30,40,0,0);
+            if(test == 5){
+                playMedia(R.raw.task_c_giris);
+            }
         }
         if(game != null && game.level != 0) showLevelInfo("LEVEL " + test);
     }
@@ -1005,41 +1008,87 @@ public class MainActivity extends Activity {
                     @Override
                     public void run() {
                         overlayImView.setImageBitmap(bmpOverlay);
-                        if(objectsPlaced) {
+                        if(objectsPlaced) { // Butun balıklar karşıya geçti
                             Log.d( "Level-5", "All left objects are placed");
-                            final Animation walking = new TranslateAnimation(0, 1000,0, 0);
-                            walking.setDuration(2000);
-                            walking.setFillAfter(true);
-                            momoView.playAnimation();
-                            momoView.startAnimation(walking);
-                            walking.setAnimationListener(new Animation.AnimationListener() {
+                            pause = true;
+                            mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.hepsi_yuzdu);
+                            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
-                                public void onAnimationStart(Animation animation) {}
-                                @Override
-                                public void onAnimationEnd(Animation animation) {
-                                    momoView.pauseAnimation();
-                                    // TODO sound: dikkatlice bak ( taskc-9)
-                                    ((GameDrag)game).drawVirtualObjects();
-                                    game.drawRects();
-                                    runOnUiThread(new Runnable() {
+                                public void onCompletion(final MediaPlayer mediaPlayer) {
+                                    final Animation walking = new TranslateAnimation(0, 1000,0, 0);
+                                    walking.setDuration(2000);
+                                    walking.setFillAfter(true);
+                                    playMedia(R.raw.hop_gectim,500);
+                                    momoView.playAnimation();
+                                    momoView.startAnimation(walking);
+                                    walking.setAnimationListener(new Animation.AnimationListener() {
                                         @Override
-                                        public void run() {
-                                            overlayImView.setImageBitmap(bmpOverlay);
-                                            mainImView.setImageDrawable(null);
-                                        }
-                                    });
-                                    // TODO bekle, tasları sondur, sonra soruyu sor
-                                    game.state = GameState.ASSESMENT_RUNNING;
-                                    game.startTime = System.currentTimeMillis();
-                                    Log.d(LOG_TAG, "Assesment has started");
+                                        public void onAnimationStart(Animation animation) {}
+                                        @Override
+                                        public void onAnimationEnd(Animation animation) {
+                                            momoView.pauseAnimation();
+                                            ((GameDrag)game).drawVirtualObjects();
+                                            overlayImView.setImageBitmap(bmpOverlay); // to draw virtuals
 
+                                            MediaPlayer mediaPlayer2= MediaPlayer.create(MainActivity.this, R.raw.dikkatli_bak);
+                                            mediaPlayer2.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                                @Override
+                                                public void onCompletion(MediaPlayer mediaPlayer) {
+                                                    game.drawRects();
+                                                    runOnUiThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            mainImView.setImageDrawable(null);
+                                                            overlayImView.setImageBitmap(bmpOverlay);
+                                                        }});
+                                                    mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
+                                                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                                        @Override
+                                                        public void onCompletion(MediaPlayer mediaPlayer) {
+                                                            pause = false;
+                                                            game.state = GameState.ASSESMENT_RUNNING;
+                                                            game.startTime = System.currentTimeMillis();
+                                                            Log.d(LOG_TAG, "Assesment has started");
+                                                            delayedUICommand(REMOVAL_DELAY, new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    if(game.state == GameState.ASSESMENT_RUNNING) {
+                                                                        ((GameDrag) game).removeObjects();
+                                                                        overlayImView.setImageBitmap(bmpOverlay);
+                                                                        Log.d(LOG_TAG, "Objects are removed");
+                                                                    }
+                                                                }
+                                                            });
+                                                        }
+                                                    });
+                                                    mediaPlayer.start();
+                                                }
+                                            });
+                                            mediaPlayer2.start();
+                                        }
+                                        @Override
+                                        public void onAnimationRepeat(Animation animation) {}
+                                    });
                                 }
-                                @Override
-                                public void onAnimationRepeat(Animation animation) {}
                             });
+                            mediaPlayer.start();
                         }
                     }
                 });
+
+                if(!objectsPlaced && game.level == 5){
+                    pause = true;
+                    if(game.pState == PlacementState.FIRST_PLACED) {
+                        playMedia(R.raw.karsiya_yuzdur);
+                        sleep(2000);
+                        game.pState = PlacementState.FIRST_PROCESSED;
+                    }
+                    else if(game.pState == PlacementState.FIRST_ARRIVED){
+                        playMedia(R.raw.diger_yuzdur);
+                        game.pState = PlacementState.FIRST_PROCESSED;
+                    }
+                    pause = false;
+                }
 
             }
             else if(game.state == GameState.ASSESMENT_RUNNING){
@@ -1184,7 +1233,7 @@ public class MainActivity extends Activity {
                 confettiView.setMaxProgress(0.9f);
                 break;
             case 6:
-                confettiView.setAnimation("L5.json");
+                confettiView.setAnimation("L7.json");
                 break;
             case 7:
                 confettiView.setAnimation("Bitis.json");
@@ -1258,8 +1307,8 @@ public class MainActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                overlayImView.setImageBitmap(bmpOverlay);
                 mainImView.setImageDrawable(null);
+                overlayImView.setImageBitmap(bmpOverlay);
             }});
         mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
