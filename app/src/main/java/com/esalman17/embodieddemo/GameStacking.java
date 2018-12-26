@@ -121,7 +121,7 @@ public class GameStacking extends Game {
             if( descriptors[i + 2] >= 0) // Circle stones
             {
                 int height = descriptors[i + 2];
-                Log.d(LOG_TAG, "retro height : "+height);
+                //Log.d(LOG_TAG, "retro height : "+height);
 
                 for (Point p2 : stackPoints.keySet()) {
                     if (areClose(p1, p2, 70)) {

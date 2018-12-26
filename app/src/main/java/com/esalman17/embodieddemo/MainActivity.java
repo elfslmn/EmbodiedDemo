@@ -365,19 +365,21 @@ public class MainActivity extends Activity {
                     Log.i(LOG_TAG, "Game is null");
                     return;
                 }
-                game.state = GameState.ASSESMENT_FINISHED;
-                momoView.clearAnimation();
-                momoView.setVisibility(View.GONE);
-                playSound(sApplause, sCong);
-                overlayImView.setImageDrawable(null);
-                confettiView.setAnimation("trophy.json");
-                confettiView.playAnimation();
-                playMedia(R.raw.taslari_al,3000); // Delay for confetti complete
+                if(game.state == GameState.ASSESMENT_RUNNING || game.state == GameState.ASSESMENT_FINISHED) {
+                    game.state = GameState.ASSESMENT_FINISHED;
+                    momoView.clearAnimation();
+                    momoView.setVisibility(View.GONE);
+                    playSound(sApplause, sCong);
+                    overlayImView.setImageDrawable(null);
+                    confettiView.setAnimation("trophy.json");
+                    confettiView.playAnimation();
+                    playMedia(R.raw.taslari_al, 3000); // Delay for confetti complete
 
-                float secs = (float) game.assestmentTime / 1000;
-                String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
-                results[game.level] = time;
-                tvDebug.setText(results[game.level]);
+                    float secs = (float) game.assestmentTime / 1000;
+                    String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
+                    results[game.level] = time;
+                    tvDebug.setText(results[game.level]);
+                }
             }
         });
 
@@ -388,15 +390,17 @@ public class MainActivity extends Activity {
                     Log.i(LOG_TAG, "Game is null");
                     return;
                 }
-                game.state = GameState.ASSESMENT_FINISHED;
-                float secs = (float) game.assestmentTime / 1000;
-                String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
-                results[game.level] = time;
-                tvDebug.setText(results[game.level]);
-                overlayImView.setImageDrawable(null);
+                if(game.state == GameState.ASSESMENT_RUNNING || game.state == GameState.ASSESMENT_FINISHED) {
+                    game.state = GameState.ASSESMENT_FINISHED;
+                    float secs = (float) game.assestmentTime / 1000;
+                    String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
+                    results[game.level] = time;
+                    tvDebug.setText(results[game.level]);
+                    overlayImView.setImageDrawable(null);
 
-                playMedia(R.raw.taslari_al);
-                game.state = GameState.STONES_CLEARED;
+                    playMedia(R.raw.taslari_al);
+                    game.state = GameState.STONES_CLEARED;
+                }
             }
         });
 
@@ -409,6 +413,14 @@ public class MainActivity extends Activity {
                     return;
                 }
                 switch (game.state){
+                    case OBJECT_PLACEMENT:
+                        if(game.level == 3 || game.level == 4){
+                            playMedia(R.raw.hala_suyun_altinda);
+                        }
+                        else if(game.level == 5 || game.level == 6){
+                            playMedia(R.raw.sudan_cikartma);
+                        }
+                        break;
                     case ASSESMENT_FINISHED:
                         game.state = GameState.STONES_CLEARED;
                         confettiView.setAnimation("cak_bakalim.json");
@@ -416,6 +428,8 @@ public class MainActivity extends Activity {
                         confettiView.playAnimation();
                         break;
                     case STONES_CLEARED:
+                        momoView.clearAnimation();
+                        momoView.setVisibility(View.GONE);
                         game.state = GameState.HIGH_FIVED;
                         int next_level = game.level +1;
                         final int id = getButtonId(next_level); // TODO Bitiş bolumune geçmiyor 6 dan next olmadıgı için
@@ -680,12 +694,14 @@ public class MainActivity extends Activity {
             game.setBackground(mainImView, R.drawable.task_b3);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             setInitialPosition(momoView, -30,400,0,0);
+            playMedia(R.raw.su_derin, 2000);
         }
         else if(test == 4){
             game = new GameStacking(this, test);
             game.setBackground(mainImView, R.drawable.task_b4);
             overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             setInitialPosition(momoView, -50,400,0,0);
+            playMedia(R.raw.tas_koy_task_a, 2000);
         }
         else if(test == 5 || test == 6){
             game = new GameDrag(this, test);
@@ -939,6 +955,7 @@ public class MainActivity extends Activity {
                                 walking.setDuration(1000);
                                 walking.setFillAfter(true);
                                 momoView.startAnimation(walking);
+                                playMedia(R.raw.hop_gectim,1500);
                                 walking.setAnimationListener(new Animation.AnimationListener() {
                                     @Override
                                     public void onAnimationStart(Animation animation) {}
@@ -949,12 +966,14 @@ public class MainActivity extends Activity {
                                         walking2.setDuration(1000);
                                         walking2.setFillAfter(true);
                                         momoView.startAnimation(walking2);
+                                        playMedia(R.raw.diger_koy, 2500);
                                     }
                                     @Override
                                     public void onAnimationRepeat(Animation animation) {}
                                 });
                             }
                             else if(game.state == GameState.ALL_PLACED) {
+                                pause = true;
                                 if (touch_mode) StopCaptureNative(); // if place with camera but mock gesture
                                 touch_descriptors.clear();
                                 Log.d( "Level-3", "Both side objects are placed");
@@ -965,6 +984,7 @@ public class MainActivity extends Activity {
                                 walking.setDuration(3000);
                                 walking.setStartOffset(200);
                                 walking.setFillAfter(true);
+                                playMedia(R.raw.hop_gectim,1500);
                                 momoView.playAnimation();
                                 momoView.startAnimation(walking);
                                 walking.setAnimationListener(new Animation.AnimationListener() {
@@ -973,19 +993,7 @@ public class MainActivity extends Activity {
                                     @Override
                                     public void onAnimationEnd(Animation animation) {
                                         momoView.pauseAnimation();
-                                        game.drawRects();
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                overlayImView.setImageBitmap(bmpOverlay);
-                                                mainImView.setImageDrawable(null);
-                                            }});
-
-                                        // TODO Ask question and start assesment after audio finished
-                                        // For debug directly start the assesmnet
-                                        game.state = GameState.ASSESMENT_RUNNING;
-                                        game.startTime = System.currentTimeMillis();
-                                        Log.d(LOG_TAG, "Assesment has started");
+                                        askQuestion();
                                     }
                                     @Override
                                     public void onAnimationRepeat(Animation animation) {}
@@ -1300,14 +1308,11 @@ public class MainActivity extends Activity {
         view.setLayoutParams(params);
     }
 
+    // It is have to be called in UI thread
     private void askQuestion(){
         game.drawRects();
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mainImView.setImageDrawable(null);
-                overlayImView.setImageBitmap(bmpOverlay);
-            }});
+        mainImView.setImageDrawable(null);
+        overlayImView.setImageBitmap(bmpOverlay);
         mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
