@@ -273,7 +273,7 @@ public class MainActivity extends Activity {
             }
         }
         infoLayout = findViewById(R.id.layout_info);
-        infoLayout.setVisibility(View.GONE); // TODO for debug
+        //infoLayout.setVisibility(View.GONE);
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
@@ -414,7 +414,12 @@ public class MainActivity extends Activity {
                     Log.i(LOG_TAG, "Game is null");
                     return;
                 }
-                if(game.state == GameState.ASSESMENT_FINISHED) {
+                if(game.state == GameState.OBJECT_PLACEMENT) {
+                    if (game.level == 5 || game.level == 6) {
+                        playMedia(R.raw.sudan_cikartma);
+                    }
+                }
+                else if(game.state == GameState.ASSESMENT_FINISHED) {
                     float secs = (float) game.assestmentTime / 1000;
                     String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
                     results[game.level] = time;
@@ -490,9 +495,6 @@ public class MainActivity extends Activity {
                     case OBJECT_PLACEMENT:
                         if(game.level == 3 || game.level == 4){
                             playMedia(R.raw.hala_suyun_altinda);
-                        }
-                        else if(game.level == 5 || game.level == 6){
-                            playMedia(R.raw.sudan_cikartma);
                         }
                         break;
                     case ASSESMENT_FINISHED:
@@ -829,15 +831,43 @@ public class MainActivity extends Activity {
             playMedia(R.raw.tas_koy_task_a, 2000);
         }
         else if(test == 5 || test == 6){
+            pause = true;
             game = new GameDrag(this, test);
             game.setBackground(mainImView, R.drawable.task_c2);
-            overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
             setInitialPosition(momoView, -30,40,0,0);
             if(test == 5){
-                playMedia(R.raw.task_c_giris,2000);
+                mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.task_c_giris);
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
+                        pause = false;
+                        mediaPlayer.release();
+                    }
+                });
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        mediaPlayer.start();
+                    }
+                }, 2000);
             }
             else if(test == 6){
-                playMedia(R.raw.tas_koy_task_a,2000);
+                mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.tas_koy_task_a);
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        overlayImView.setImageBitmap(bmpOverlay); // bmpOverlay is initalized in game constructor */
+                        pause = false;
+                        mediaPlayer.release();
+                    }
+                });
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        mediaPlayer.start();
+                    }
+                }, 2000);
             }
         }
         if(game != null && game.level != 0) showLevelInfo("LEVEL " + test);

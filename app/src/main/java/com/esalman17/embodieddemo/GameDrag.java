@@ -98,6 +98,8 @@ public class GameDrag extends Game {
         gesture_right = new Rect(right);
         gesture_right.top = 0;
 
+        Log.i(LOG_TAG, "New game object (level=" + level + ") is initialized");
+
     }
 
     @Override
