@@ -22,6 +22,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
+import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CompoundButton;
@@ -56,6 +57,7 @@ public class MainActivity extends Activity {
     public static int REMOVAL_DELAY = 2500;
     public static String CHILD_NAME = "Elif";
     public static int CHILD_AGE = 3;
+    boolean result_saved = false;
     SimpleDateFormat parser = new SimpleDateFormat("d_MMM_HH_mm");
 
     static {
@@ -432,7 +434,7 @@ public class MainActivity extends Activity {
                         momoView.setVisibility(View.GONE);
                         game.state = GameState.HIGH_FIVED;
                         int next_level = game.level +1;
-                        final int id = getButtonId(next_level); // TODO Bitiş bolumune geçmiyor 6 dan next olmadıgı için
+                        final int id = getButtonId(next_level);
                         if(id != -1){
                             setLevelMapAnimation(next_level);
                             confettiView.playAnimation();
@@ -452,9 +454,45 @@ public class MainActivity extends Activity {
                                 public void onAnimationRepeat(Animator animator) {}
                             });
                         }
+                        else if(next_level == 7){
+                            Log.d(LOG_TAG, "ALL LEVELS ARE FINISHED");
+                            setLevelMapAnimation(7);
+                            confettiView.playAnimation();
+                            confettiView.addAnimatorListener(new Animator.AnimatorListener() {
+                                @Override
+                                public void onAnimationStart(Animator animator) {
+                                    playMedia(R.raw.bitis);
+                                    playSound(sApplause);
+                                }
+                                @Override
+                                public void onAnimationEnd(Animator animator) {
+                                    Animation zoom = new ScaleAnimation(1f,3f,1f,3f,
+                                            Animation.RELATIVE_TO_SELF, 1f,
+                                            Animation.RELATIVE_TO_SELF, 0f);
+                                    zoom.setFillAfter(true);
+                                    zoom.setDuration(2000);
+                                    confettiView.startAnimation(zoom);
+                                }
+                                @Override
+                                public void onAnimationCancel(Animator animator) {}
+                                @Override
+                                public void onAnimationRepeat(Animator animator) {}
+                            });
 
+                            result_saved = saveResults(CHILD_NAME, getResults());
+
+                        }
                         break;
-
+                    case HIGH_FIVED:
+                        if(game.level == 6){
+                            if(!result_saved){
+                                result_saved = saveResults(CHILD_NAME, getResults());
+                            }
+                            tvResult.setText(getResults());
+                            TransitionManager.beginDelayedTransition(mainLayout,slide);
+                            tvResult.setVisibility(View.VISIBLE);
+                        }
+                        break;
                 }
             }
         });
@@ -1044,12 +1082,8 @@ public class MainActivity extends Activity {
                                                 @Override
                                                 public void onCompletion(MediaPlayer mediaPlayer) {
                                                     game.drawRects();
-                                                    runOnUiThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            mainImView.setImageDrawable(null);
-                                                            overlayImView.setImageBitmap(bmpOverlay);
-                                                        }});
+                                                    mainImView.setImageDrawable(null);
+                                                    overlayImView.setImageBitmap(bmpOverlay);
                                                     mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
                                                     mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                                         @Override
@@ -1058,6 +1092,7 @@ public class MainActivity extends Activity {
                                                             game.state = GameState.ASSESMENT_RUNNING;
                                                             game.startTime = System.currentTimeMillis();
                                                             Log.d(LOG_TAG, "Assesment has started");
+                                                            tvDebug.setText("Assesment started: Question="+game.question.toString()+" Correct="+game.correctSide.toString());
                                                             delayedUICommand(REMOVAL_DELAY, new Runnable() {
                                                                 @Override
                                                                 public void run() {
@@ -1250,9 +1285,26 @@ public class MainActivity extends Activity {
         confettiView.setSpeed(0.5f);
     }
 
+    private String getResults(){
+        final StringBuilder sb = new StringBuilder();
+        sb.append("Name: "+CHILD_NAME+"\n");
+        sb.append("Age: "+ CHILD_AGE+"\n");
+        sb.append("Results: \n");
+
+        for(int i=0; i <results.length; i++){
+            sb.append("Level "+ i +": ");
+            if(results[i] == null){
+                sb.append("Did not attempted \n");
+            }
+            else{
+                sb.append(results[i]+"\n");
+            }
+        }
+        return sb.toString();
+    }
 
     private boolean saveResults(String childName, String result){
-        File path = new File(Environment.getExternalStorageDirectory(), "Embodied/Study1");
+        File path = new File(Environment.getExternalStorageDirectory(), "Embodied/Study2");
         if(!path.exists() || !path.isDirectory()){
             path.mkdirs();
         }
@@ -1265,10 +1317,11 @@ public class MainActivity extends Activity {
             Log.d(LOG_TAG, "Results are saved into "+ file.getName());
         }
         catch (Exception e) {
+            Toast.makeText(MainActivity.this, "Results cannot saved", Toast.LENGTH_LONG).show();
             e.printStackTrace();
             return false;
         }
-
+        Toast.makeText(MainActivity.this, "Results are saved", Toast.LENGTH_LONG).show();
         return true;
     }
 
@@ -1319,7 +1372,8 @@ public class MainActivity extends Activity {
                 pause = false;
                 game.state = GameState.ASSESMENT_RUNNING;
                 game.startTime = System.currentTimeMillis();
-                Log.d(LOG_TAG, "Assesment has started");
+                Log.d(LOG_TAG, "Assessment has started");
+                tvDebug.setText("Assesment started: Question="+game.question.toString()+" Correct="+game.correctSide.toString());
             }
         });
         mediaPlayer.start();
