@@ -53,11 +53,19 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+enum IntroState{
+    MERHABA,
+    EVDEN_UZAK,
+    CAK_BAKALIM
+}
+
 public class MainActivity extends Activity {
     public static int REMOVAL_DELAY = 2500;
     public static String CHILD_NAME = "Elif";
     public static int CHILD_AGE = 3;
     boolean result_saved = false;
+    boolean intro_level = false;
+    IntroState introState;
     SimpleDateFormat parser = new SimpleDateFormat("d_MMM_HH_mm");
 
     static {
@@ -77,7 +85,7 @@ public class MainActivity extends Activity {
     TableLayout levelLayout;
     LinearLayout infoLayout;
     ImageView mainImView, overlayImView;
-    LottieAnimationView momoView, confettiView;
+    LottieAnimationView momoView, lottieView;
     TextView tvDebug, tvLevel, tvResult, tvInfo;
     EditText etName, etAge;
     Switch touch_switch;
@@ -134,7 +142,8 @@ public class MainActivity extends Activity {
     View.OnClickListener levelListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            clearPreviousMode(); // TODO kaldır ??
+            if(view.getId() ==  R.id.buttonIntro ) endTestMode();
+            else clearPreviousMode(); // TODO kaldır ??
             switch (view.getId()){
                 case R.id.buttonIntro:
                     initializeTestMode(-1);
@@ -269,7 +278,7 @@ public class MainActivity extends Activity {
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
         momoView = findViewById(R.id.momoView);
-        confettiView = findViewById(R.id.confettiView);
+        lottieView = findViewById(R.id.confettiView);
         tvDebug = findViewById(R.id.textViewDebug);
         tvLevel = findViewById(R.id.textViewLevel);
         tvResult = findViewById(R.id.textViewResults);
@@ -373,8 +382,8 @@ public class MainActivity extends Activity {
                     momoView.setVisibility(View.GONE);
                     playSound(sApplause, sCong);
                     overlayImView.setImageDrawable(null);
-                    confettiView.setAnimation("trophy.json");
-                    confettiView.playAnimation();
+                    lottieView.setAnimation("trophy.json");
+                    lottieView.playAnimation();
                     playMedia(R.raw.taslari_al, 3000); // Delay for confetti complete
 
                     float secs = (float) game.assestmentTime / 1000;
@@ -388,6 +397,20 @@ public class MainActivity extends Activity {
         findViewById(R.id.buttonWrong).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(intro_level){
+                    switch (introState){
+                        case MERHABA:
+                            playMedia(R.raw.merhaba);
+                            break;
+                        case EVDEN_UZAK:
+                            playMedia(R.raw.yardim);
+                            break;
+                        case CAK_BAKALIM:
+                            playMedia(R.raw.cak_bakalim);
+                            break;
+                    }
+                    return;
+                }
                 if(game == null) {
                     Log.i(LOG_TAG, "Game is null");
                     return;
@@ -409,7 +432,49 @@ public class MainActivity extends Activity {
         findViewById(R.id.buttonContinue).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO make continue to introduction
+                if(intro_level){
+                    switch (introState){
+                        case MERHABA:
+                            //lottieView.setAnimation("pespese2_evdenuzak.json");
+                            lottieView.setMinAndMaxProgress(0.2f,0.6f);
+                            playMedia(R.raw.isim_evdenuzak);
+                            introState = IntroState.EVDEN_UZAK;
+                            delayedUICommand(1500, new Runnable() {
+                                @Override
+                                public void run() {
+                                    lottieView.playAnimation();
+                                }
+                            });
+                            break;
+                        case EVDEN_UZAK:
+                            playMedia(R.raw.yola_cikalim);
+                            //lottieView.setAnimation("pespese3_supersincak.json");
+                            lottieView.setMinAndMaxProgress(0.6f,0.9f);
+                            lottieView.playAnimation();
+                            introState = IntroState.CAK_BAKALIM;
+                            break;
+                        case CAK_BAKALIM:
+                            setLevelMapAnimation(0);
+                            lottieView.playAnimation();
+                            lottieView.addAnimatorListener(new Animator.AnimatorListener() {
+                                @Override
+                                public void onAnimationStart(Animator animator) {}
+                                @Override
+                                public void onAnimationEnd(Animator animator) {
+                                    lottieView.removeAllAnimatorListeners();
+                                    findViewById(R.id.buttonPilot).performClick();
+                                }
+                                @Override
+                                public void onAnimationCancel(Animator animator) {}
+                                @Override
+                                public void onAnimationRepeat(Animator animator) {}
+                            });
+                            intro_level = false;
+                            break;
+
+                    }
+                    return;
+                }
                 if(game == null) {
                     Log.i(LOG_TAG, "Game is null");
                     return;
@@ -425,9 +490,9 @@ public class MainActivity extends Activity {
                         break;
                     case ASSESMENT_FINISHED:
                         game.state = GameState.STONES_CLEARED;
-                        confettiView.setAnimation("cak_bakalim.json");
+                        lottieView.setAnimation("cak_bakalim.json");
                         playMedia(R.raw.cak_bakalim);
-                        confettiView.playAnimation();
+                        lottieView.playAnimation();
                         break;
                     case STONES_CLEARED:
                         momoView.clearAnimation();
@@ -437,15 +502,15 @@ public class MainActivity extends Activity {
                         final int id = getButtonId(next_level);
                         if(id != -1){
                             setLevelMapAnimation(next_level);
-                            confettiView.playAnimation();
-                            confettiView.addAnimatorListener(new Animator.AnimatorListener() {
+                            lottieView.playAnimation();
+                            lottieView.addAnimatorListener(new Animator.AnimatorListener() {
                                 @Override
                                 public void onAnimationStart(Animator animator) {
                                     playMedia(R.raw.next_game);
                                 }
                                 @Override
                                 public void onAnimationEnd(Animator animator) {
-                                    confettiView.removeAllAnimatorListeners();
+                                    lottieView.removeAllAnimatorListeners();
                                     findViewById(id).performClick();
                                 }
                                 @Override
@@ -457,8 +522,8 @@ public class MainActivity extends Activity {
                         else if(next_level == 7){
                             Log.d(LOG_TAG, "ALL LEVELS ARE FINISHED");
                             setLevelMapAnimation(7);
-                            confettiView.playAnimation();
-                            confettiView.addAnimatorListener(new Animator.AnimatorListener() {
+                            lottieView.playAnimation();
+                            lottieView.addAnimatorListener(new Animator.AnimatorListener() {
                                 @Override
                                 public void onAnimationStart(Animator animator) {
                                     playMedia(R.raw.bitis);
@@ -471,7 +536,7 @@ public class MainActivity extends Activity {
                                             Animation.RELATIVE_TO_SELF, 0f);
                                     zoom.setFillAfter(true);
                                     zoom.setDuration(2000);
-                                    confettiView.startAnimation(zoom);
+                                    lottieView.startAnimation(zoom);
                                 }
                                 @Override
                                 public void onAnimationCancel(Animator animator) {}
@@ -665,19 +730,35 @@ public class MainActivity extends Activity {
     int wrong = 0;
 
     private void initializeTestMode(int test){
+
+        if(test == -1){ // Tanısma bolumu
+            if(m_opened) StopCaptureNative();
+            mainImView.setImageDrawable(null);
+            timer = new Timer(false);
+            intro_level = true;
+            introState = IntroState.MERHABA;
+            lottieView.setVisibility(View.VISIBLE);
+            lottieView.setAnimation("tumgiris.json");
+            lottieView.setMaxProgress(0.2f);
+            lottieView.playAnimation();
+            playMedia(R.raw.merhaba);
+            return;
+        }
+        intro_level = false;
+
         if (bmpOverlay == null) {
             bmpOverlay = Bitmap.createBitmap(displaySize.x, displaySize.y, Bitmap.Config.ARGB_8888);
         }
         touch_descriptors.clear();
         overlayImView.setVisibility(View.VISIBLE);
-        momoView.setVisibility(View.VISIBLE);
-        confettiView.setVisibility(View.VISIBLE);
+        lottieView.setVisibility(View.VISIBLE);
         tvInfo.setText("Level "+test);
 
         timer = new Timer(false);
         wrong = 0;
         pause = false;
 
+        momoView.setVisibility(View.VISIBLE);
         momoView.setAnimation("rightanswer.json");
         momoView.setRepeatCount(-1);
         momoView.setSpeed(2.0f);
@@ -761,8 +842,8 @@ public class MainActivity extends Activity {
         momoView.setImageDrawable(null);
         momoView.clearAnimation();
         momoView.setVisibility(View.GONE);
-        confettiView.setImageDrawable(null);
-        confettiView.setVisibility(View.GONE);
+        lottieView.setImageDrawable(null);
+        lottieView.setVisibility(View.GONE);
         tvResult.setVisibility(View.GONE);
         tvInfo.setText(null);
         soundPool.stop(sBackPlayId);
@@ -1252,37 +1333,37 @@ public class MainActivity extends Activity {
     private void setLevelMapAnimation(int nextlevel){
         switch (nextlevel){
             case 0:
-                confettiView.setAnimation("L1.json");
-                confettiView.setMaxProgress(0.9f);
+                lottieView.setAnimation("L1.json");
+                lottieView.setMaxProgress(0.9f);
                 break;
             case 1:
-                confettiView.setAnimation("L2.json");
+                lottieView.setAnimation("L2.json");
                 break;
             case 2:
-                confettiView.setAnimation("L3.json");
-                confettiView.setMaxProgress(0.9f);
+                lottieView.setAnimation("L3.json");
+                lottieView.setMaxProgress(0.9f);
                 break;
             case 3:
-                confettiView.setAnimation("L4.json");
+                lottieView.setAnimation("L4.json");
                 break;
             case 4:
-                confettiView.setAnimation("L5.json");
+                lottieView.setAnimation("L5.json");
                 break;
             case 5:
-                confettiView.setAnimation("L6.json");
-                confettiView.setMaxProgress(0.9f);
+                lottieView.setAnimation("L6.json");
+                lottieView.setMaxProgress(0.9f);
                 break;
             case 6:
-                confettiView.setAnimation("L7.json");
+                lottieView.setAnimation("L7.json");
                 break;
             case 7:
-                confettiView.setAnimation("Bitis.json");
+                lottieView.setAnimation("Bitis.json");
                 break;
             default:
                 return;
 
         }
-        confettiView.setSpeed(0.5f);
+        lottieView.setSpeed(0.5f);
     }
 
     private String getResults(){
@@ -1341,10 +1422,6 @@ public class MainActivity extends Activity {
             public void run() {
                 if (answer == 1 || wrong == 5) {
                     if(!touch_mode) StopCaptureNative();
-                   /* playSound(sApplause, sCong);
-                    confettiView.setAnimation("trophy.json");
-                    confettiView.playAnimation();
-                    overlayImView.setImageDrawable(null); */
                     playMedia(R.raw.neden_sence);
                 }
                 else if (answer == -1) {
