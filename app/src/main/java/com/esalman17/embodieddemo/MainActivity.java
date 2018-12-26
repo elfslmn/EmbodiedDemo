@@ -466,7 +466,6 @@ public class MainActivity extends Activity {
                 soundsLoaded = true;
             }
         });
-        sBack = soundPool.load(this, R.raw.back_music, 10);
         sOkay = soundPool.load(this, R.raw.correct, 1);
         sApplause = soundPool.load(this, R.raw.applause, 1);
         sWrong = soundPool.load(this, R.raw.bir_daha_dusun, 1);
