@@ -376,8 +376,7 @@ public class MainActivity extends Activity {
                     Log.i(LOG_TAG, "Game is null");
                     return;
                 }
-                if(game.state == GameState.ASSESMENT_RUNNING || game.state == GameState.ASSESMENT_FINISHED) {
-                    game.state = GameState.ASSESMENT_FINISHED;
+                if(game.state == GameState.ASSESMENT_FINISHED) {
                     momoView.clearAnimation();
                     momoView.setVisibility(View.GONE);
                     playSound(sApplause, sCong);
@@ -415,8 +414,7 @@ public class MainActivity extends Activity {
                     Log.i(LOG_TAG, "Game is null");
                     return;
                 }
-                if(game.state == GameState.ASSESMENT_RUNNING || game.state == GameState.ASSESMENT_FINISHED) {
-                    game.state = GameState.ASSESMENT_FINISHED;
+                if(game.state == GameState.ASSESMENT_FINISHED) {
                     float secs = (float) game.assestmentTime / 1000;
                     String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
                     results[game.level] = time;
@@ -425,6 +423,15 @@ public class MainActivity extends Activity {
 
                     playMedia(R.raw.taslari_al);
                     game.state = GameState.STONES_CLEARED;
+                }
+                else if(game.state == GameState.ASSESMENT_RUNNING){
+                    game.assestmentTime = (System.currentTimeMillis() - game.startTime);
+                    float secs = (float) game.assestmentTime / 1000;
+                    String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
+                    results[game.level] = time;
+                    game.state = GameState.ASSESMENT_FINISHED;
+                    if(!touch_mode) StopCaptureNative();
+                    playMedia(R.raw.neden_sence);
                 }
             }
         });
@@ -730,9 +737,9 @@ public class MainActivity extends Activity {
     int wrong = 0;
 
     private void initializeTestMode(int test){
-
         if(test == -1){ // Tanısma bolumu
             if(m_opened) StopCaptureNative();
+            game = null;
             mainImView.setImageDrawable(null);
             timer = new Timer(false);
             intro_level = true;
@@ -1242,7 +1249,7 @@ public class MainActivity extends Activity {
 
             timer.schedule(new TimerTask() {
                 @Override
-                public void run() {isPlaying = false;}}, 2000);
+                public void run() {isPlaying = false;}}, 2500);
         }
     }
 
@@ -1408,27 +1415,38 @@ public class MainActivity extends Activity {
 
     private void processAnswer(final int answer){
         if (answer == 1) {
+            if(!touch_mode) StopCaptureNative();
+            playMedia(R.raw.neden_sence);
             float secs = (float) game.assestmentTime / 1000;
             String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
             results[game.level] = time;
+            game.state = GameState.ASSESMENT_FINISHED;
         }
-        else if(wrong == 5){
-            float secs = (float) game.assestmentTime / 1000;
-            String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
-            results[game.level] = time;
-        }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (answer == 1 || wrong == 5) {
-                    if(!touch_mode) StopCaptureNative();
-                    playMedia(R.raw.neden_sence);
-                }
-                else if (answer == -1) {
-                    playSound(sWrong);
-                }
+        else if (answer == -1) {
+            pause = true;
+            wrong ++;
+            if(wrong == 5){
+                game.assestmentTime = (System.currentTimeMillis() - game.startTime);
+                float secs = (float) game.assestmentTime / 1000;
+                String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
+                results[game.level] = time;
+                if(!touch_mode) StopCaptureNative();
+                playMedia(R.raw.neden_sence);
+                game.state = GameState.ASSESMENT_FINISHED;
+                return;
             }
-        });
+            mediaPlayer = null;
+            if(game.question == Game.Question.MORE) mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.wrong_cok);
+            else if(game.question == Game.Question.LESS)  mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.wrong_az);
+            else mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                    pause = false;
+                }
+            });
+            mediaPlayer.start();
+        }
     }
 
     private void setInitialPosition(View view, int left, int top, int right, int bottom){
