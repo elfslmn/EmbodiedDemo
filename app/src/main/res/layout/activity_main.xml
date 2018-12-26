@@ -42,7 +42,7 @@
         android:layout_height="wrap_content"
         android:alpha="0.5"
         android:text="Back"
-        android:layout_alignParentBottom="true"
+        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"/>
 
@@ -50,17 +50,25 @@
         android:id="@+id/buttonCamera"
         android:layout_width="60dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:layout_toStartOf="@+id/buttonBackGr"
         android:alpha="0.5"
         android:text="Cam" />
+
+    <Button
+        android:id="@+id/buttonNew"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/buttonCamera"
+        android:alpha="0.5"
+        android:text="New" />
 
     <TableLayout
         android:id="@+id/layout_control"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonBackGr"
-        android:layout_alignParentEnd="true">
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true">
 
         <TableRow>
             <Button
@@ -172,7 +180,7 @@
         android:id="@+id/textViewDebug"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:textColor="@color/colorAccent"
         android:text="Debug info:" />

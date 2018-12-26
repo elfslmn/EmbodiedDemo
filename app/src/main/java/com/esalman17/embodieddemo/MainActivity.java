@@ -369,6 +369,20 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.buttonNew).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                tvResult.setVisibility(View.GONE);
+                endTestMode();
+                mainImView.setImageDrawable(null);
+                results = new String[7];
+                game = null;
+                mainLayout.setClickable(true);
+                mainLayout.setFocusableInTouchMode(true);
+                infoLayout.setVisibility(View.VISIBLE);
+            }
+        });
+
         findViewById(R.id.buttonCorrect).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
