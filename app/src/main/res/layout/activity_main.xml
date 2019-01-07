@@ -54,13 +54,6 @@
         android:alpha="0.5"
         android:text="Cam" />
 
-    <Button
-        android:id="@+id/buttonNew"
-        android:layout_width="60dp"
-        android:layout_height="wrap_content"
-        android:layout_toStartOf="@+id/buttonCamera"
-        android:alpha="0.5"
-        android:text="New" />
 
     <TableLayout
         android:id="@+id/layout_control"

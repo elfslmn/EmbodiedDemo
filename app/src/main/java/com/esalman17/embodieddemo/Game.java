@@ -85,8 +85,13 @@ abstract public class Game {
     }
 
     final public int getQuestion(){
-        if(question == Question.MORE) return R.raw.soru_cok;
-        if(question == Question.LESS) return R.raw.soru_az;
+        if(question == Question.MORE) {
+            return R.raw.soru_cok;
+        }
+        if(question == Question.LESS){
+            if(level == 5 || level == 6) return R.raw.az_arkadas;
+            return R.raw.soru_az;
+        }
         if(question == Question.EQUAL) return R.raw.soru_esit;
 
         Log.d("Game", "Question is not specified");

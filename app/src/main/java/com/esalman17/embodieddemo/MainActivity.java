@@ -369,7 +369,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        findViewById(R.id.buttonNew).setOnClickListener(new View.OnClickListener() {
+        /*findViewById(R.id.buttonNew).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 tvResult.setVisibility(View.GONE);
@@ -381,7 +381,7 @@ public class MainActivity extends Activity {
                 mainLayout.setFocusableInTouchMode(true);
                 infoLayout.setVisibility(View.VISIBLE);
             }
-        });
+        }); */
 
         findViewById(R.id.buttonCorrect).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -403,6 +403,12 @@ public class MainActivity extends Activity {
                     String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
                     results[game.level] = time;
                     tvDebug.setText(results[game.level]);
+                }
+                else if(game.state == GameState.ASSESMENT_RUNNING){
+                    game.state = GameState.ASSESMENT_FINISHED;
+                    game.assestmentTime = (System.currentTimeMillis() - game.startTime);
+                    if(!touch_mode) StopCaptureNative();
+                    playMedia(R.raw.neden_sence);
                 }
             }
         });
@@ -444,11 +450,8 @@ public class MainActivity extends Activity {
                     game.state = GameState.STONES_CLEARED;
                 }
                 else if(game.state == GameState.ASSESMENT_RUNNING){
-                    game.assestmentTime = (System.currentTimeMillis() - game.startTime);
-                    float secs = (float) game.assestmentTime / 1000;
-                    String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
-                    results[game.level] = time;
                     game.state = GameState.ASSESMENT_FINISHED;
+                    game.assestmentTime = (System.currentTimeMillis() - game.startTime);
                     if(!touch_mode) StopCaptureNative();
                     playMedia(R.raw.neden_sence);
                 }
@@ -504,6 +507,9 @@ public class MainActivity extends Activity {
                 if(game == null) {
                     Log.i(LOG_TAG, "Game is null");
                     return;
+                }
+                if(game.state == GameState.ASSESMENT_RUNNING && (game.level == 1|| game.level == 2)){
+                    processAnswer(-1);
                 }
                 switch (game.state){
                     case OBJECT_PLACEMENT:
@@ -754,8 +760,8 @@ public class MainActivity extends Activity {
 
     private void initializeTestMode(int test){
         if(test == -1){ // Tanısma bolumu
-            if(m_opened) StopCaptureNative();
             game = null;
+            if(m_opened) StopCaptureNative();
             mainImView.setImageDrawable(null);
             timer = new Timer(false);
             intro_level = true;
@@ -1104,8 +1110,8 @@ public class MainActivity extends Activity {
                 });
             }
             else if(game.state == GameState.ASSESMENT_RUNNING) {
-                final int correctAnswer = game.processGestureDescriptors(descriptors);
-                processAnswer(correctAnswer);
+                //final int correctAnswer = game.processGestureDescriptors(descriptors);
+                //processAnswer(correctAnswer);
             }
         }
 
@@ -1268,8 +1274,8 @@ public class MainActivity extends Activity {
 
             }
             else if(game.state == GameState.ASSESMENT_RUNNING){
-                final int correctAnswer = game.processGestureDescriptors(descriptors);
-                processAnswer(correctAnswer);
+                //final int correctAnswer = game.processGestureDescriptors(descriptors);
+                //processAnswer(correctAnswer);
             }
 
         }
@@ -1481,7 +1487,9 @@ public class MainActivity extends Activity {
             }
             mediaPlayer = null;
             if(game.question == Game.Question.MORE) mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.wrong_cok);
-            else if(game.question == Game.Question.LESS)  mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.wrong_az);
+            else if(game.question == Game.Question.LESS)  {
+                if(!(game.level == 5 || game.level == 6)) mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.wrong_az);
+            }
             else mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override

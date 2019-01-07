@@ -83,8 +83,8 @@ public class GameDrag extends Game {
                 virtualPoints.add(new Point(480, 550));
                 virtualPoints.add(new Point(400, 450));
 
-                correctSide = Side.LEFT;
-                question = Question.MORE;
+                correctSide = Side.RIGHT;
+                question = Question.LESS;
 
                 left = new Rect(200, 300, 650, 700);
                 right = new Rect(750, 300, 1150, 700);
