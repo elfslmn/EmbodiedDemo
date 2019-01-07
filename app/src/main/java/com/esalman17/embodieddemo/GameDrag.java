@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * Created by esalman17 on 19.12.2018.
@@ -28,7 +29,7 @@ public class GameDrag extends Game {
         object_drag = context.getResources().getDrawable(R.drawable.abs1);
         object_virtual = context.getResources().getDrawable(R.drawable.abs2);
         cross = context.getResources().getDrawable(R.drawable.cross);
-        path = context.getResources().getDrawable(R.drawable.path2);
+        path = context.getResources().getDrawable(R.drawable.path3);
 
         initialize(level);
 
@@ -50,7 +51,7 @@ public class GameDrag extends Game {
                 dragPoints.add(new Point(100, 650));
 
                 for(Point p: dragPoints){
-                    finalPoints.add(new Point(p.x+900, p.y));
+                    finalPoints.add(new Point(1050, p.y));
                 }
 
                 virtualPoints.add(new Point(300, 450));
@@ -74,7 +75,7 @@ public class GameDrag extends Game {
                 dragPoints.add(new Point(100, 650));
 
                 for(Point p: dragPoints){
-                    finalPoints.add(new Point(p.x+900, p.y));
+                    finalPoints.add(new Point(1050, p.y));
                 }
 
                 virtualPoints.add(new Point(300, 450));
@@ -112,19 +113,82 @@ public class GameDrag extends Game {
             return canvas;
         }
 
-        Point p = dragPoints.get(lastArrived+1);
-        cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
-        cross.draw(canvas);
+        if(pathRect == null){
+            Log.d(LOG_TAG, "Path rect null");
+            Point p = dragPoints.get(lastArrived+1);
+            cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
+            cross.draw(canvas);
+        }
+        else{
+            Log.d(LOG_TAG, "Path rect not null, swimmer "+ (lastArrived + 1));
+            path.setBounds(pathRect);
+            path.draw(canvas);
+        }
 
         for(int i=0; i <= lastArrived; i++ ){
             Point p1 = finalPoints.get(i);
-            //canvas.drawCircle(p1.x, p1.y, 45, GamePaint.red);
             object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
             object_drag.draw(canvas);
         }
+        /*if(swimmer == -1){
+            Point p = dragPoints.get(lastArrived+1);
+            cross.setBounds(p.x-50, p.y-50, p.x+50, p.y+50);
+            cross.draw(canvas);
+        } */
+
 
         return canvas;
     }
+   /* int swimmer = -1;
+    @Override
+    boolean processBlobDescriptors(int[] descriptors) {
+        Canvas canvas = initializeCanvas();
+        // start processing
+        HashSet<Point> atstart = new HashSet<>();
+        HashSet<Point> arrived = new HashSet<>();
+        HashSet<Point> swimming = new HashSet<>();
+
+        for (int i = 0; i <= descriptors.length - 3; i += 3) {
+            if (descriptors[i + 2] < 0) continue; // -1: gesture blob, -2,-90: long stones
+            Point p1 = new Point(descriptors[i], descriptors[i + 1]);
+            if(p1.x < 200){
+                atstart.add(p1);
+            }
+            else if(p1.x > 1000){
+                arrived.add(p1);
+            }
+            else{
+                swimming.add(p1);
+            }
+        }
+        swimmer = -1;
+        //If it is a new swimmer, light up
+        Point p2 = dragPoints.get(lastArrived+1);
+        for(Point p1 : atstart ){
+            if (areClose(p1, p2, 45))
+            {
+                swimmer = lastArrived +1;
+                pathRect = new Rect(p2.x-50, p2.y-50, p2.x+950, p2.y+50);
+
+                canvas.drawCircle(p2.x, p2.y, 50, GamePaint.eraser);
+                path.setBounds(pathRect);
+                path.draw(canvas);
+                object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                object_drag.draw(canvas);
+
+                MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
+                if(pState == PlacementState.NO_OBJECT){
+                    pState = PlacementState.FIRST_PLACED;
+                }
+            }
+            else{
+                canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
+            }
+        }
+
+
+        return false;
+    } */
 
     @Override
     boolean processBlobDescriptors(int[] descriptors) {
@@ -133,12 +197,35 @@ public class GameDrag extends Game {
         // start processing
         for (int i = 0; i <= descriptors.length - 3; i += 3) {
             if (descriptors[i + 2] < 0) continue; // -1: gesture blob, -2,-90: long stones
-            if (descriptors[i + 2] > 15) continue;  // retro higher than 20 mm
+            //if (descriptors[i + 2] > 15) continue;  // retro higher than 20 mm
             //Log.d(LOG_TAG, "Retro: "+ descriptors[i+2]);
             Point p1 = new Point(descriptors[i], descriptors[i + 1]);
 
             // Check if it is arrived
-            boolean match = false;
+            if(pathRect != null && p1.x > 1000 && p1.y > pathRect.top && p1.y < pathRect.bottom){
+                Log.d(LOG_TAG, "Arrived: "+p1);
+                MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
+                //canvas.drawCircle(pathRect.left+50, pathRect.top+50, 50, GamePaint.eraser);
+                object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                object_drag.draw(canvas);
+
+                lastArrived++;
+                if(lastArrived == dragPoints.size()-1){
+                    state = GameState.LEFT_PLACED;
+                    Log.d(LOG_TAG, "Draging done: state = LEFT_PLACED");
+                    canvas.drawRect(pathRect,GamePaint.eraser);
+                    object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
+                    object_drag.draw(canvas);
+                    pathRect = null;
+                    return true;
+                }
+                else if(lastArrived == 0 && level == 5){
+                    pState = PlacementState.FIRST_ARRIVED;
+                }
+                pathRect = null;
+                continue;
+            }
+            /*boolean match = false;
             for (int j=0; j<finalPoints.size(); j++)
             {
                 Point p2 = finalPoints.get(j);
@@ -165,21 +252,28 @@ public class GameDrag extends Game {
                     break;
                 }
             }
-            if(match) continue;
+            if(match) continue; */
 
             if(pathRect != null){
                 if(pathRect.contains(p1.x,p1.y)){
-                    canvas.drawCircle(pathRect.left+50, pathRect.top+50, 50, GamePaint.eraser);
-                    path.setBounds(pathRect);
-                    path.draw(canvas);
+                    //canvas.drawCircle(pathRect.left+50, pathRect.top+50, 50, GamePaint.eraser);
+                    //path.setBounds(pathRect);
+                    //path.draw(canvas);
                     object_drag.setBounds(p1.x-45, p1.y-45, p1.x+45, p1.y+45);
                     object_drag.draw(canvas);
                 }
+                else if(p1.x > 1000){
+                    continue; // ignore already arrived stones
+                }
                 else {
                     canvas.drawCircle(p1.x, p1.y, 10, GamePaint.blue);
-                    pathRect = null;
+                    //pathRect = null;
                 }
                 continue;
+            }
+
+            else if(p1.x > 1000){
+                continue; // ignore already arrived stones
             }
 
             //If it is a new swimmer, light up
@@ -195,6 +289,7 @@ public class GameDrag extends Game {
                 object_drag.draw(canvas);
 
                 MainActivity.soundPool.play(MainActivity.sOkay,1f,1f,1,0,1f);
+                Log.d(LOG_TAG, "New swimmer: "+p1);
                 if(pState == PlacementState.NO_OBJECT){
                     pState = PlacementState.FIRST_PLACED;
                 }

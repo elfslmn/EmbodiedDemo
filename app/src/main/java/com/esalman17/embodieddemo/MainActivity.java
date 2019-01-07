@@ -273,7 +273,9 @@ public class MainActivity extends Activity {
             }
         }
         infoLayout = findViewById(R.id.layout_info);
-        //infoLayout.setVisibility(View.GONE);
+        infoLayout.setVisibility(View.GONE); // TODO debug
+        mainLayout.setClickable(false);
+        mainLayout.setFocusableInTouchMode(false); // end debug
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
@@ -853,7 +855,7 @@ public class MainActivity extends Activity {
         else if(test == 5 || test == 6){
             pause = true;
             game = new GameDrag(this, test);
-            game.setBackground(mainImView, R.drawable.task_c2);
+            game.setBackground(mainImView, R.drawable.task_c3);
             setInitialPosition(momoView, -30,40,0,0);
             if(test == 5){
                 mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.task_c_giris);
