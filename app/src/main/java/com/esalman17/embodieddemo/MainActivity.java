@@ -273,9 +273,9 @@ public class MainActivity extends Activity {
             }
         }
         infoLayout = findViewById(R.id.layout_info);
-        infoLayout.setVisibility(View.GONE); // TODO debug
+        /*infoLayout.setVisibility(View.GONE); // TODO debug
         mainLayout.setClickable(false);
-        mainLayout.setFocusableInTouchMode(false); // end debug
+        mainLayout.setFocusableInTouchMode(false); // end debug*/
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
@@ -407,10 +407,7 @@ public class MainActivity extends Activity {
                     tvDebug.setText(results[game.level]);
                 }
                 else if(game.state == GameState.ASSESMENT_RUNNING){
-                    game.state = GameState.ASSESMENT_FINISHED;
-                    game.assestmentTime = (System.currentTimeMillis() - game.startTime);
-                    if(!touch_mode) StopCaptureNative();
-                    playMedia(R.raw.neden_sence);
+                    processAnswer(1);
                 }
             }
         });
@@ -452,10 +449,7 @@ public class MainActivity extends Activity {
                     game.state = GameState.STONES_CLEARED;
                 }
                 else if(game.state == GameState.ASSESMENT_RUNNING){
-                    game.state = GameState.ASSESMENT_FINISHED;
-                    game.assestmentTime = (System.currentTimeMillis() - game.startTime);
-                    if(!touch_mode) StopCaptureNative();
-                    playMedia(R.raw.neden_sence);
+                    processAnswer(-1);
                 }
             }
         });
@@ -510,8 +504,12 @@ public class MainActivity extends Activity {
                     Log.i(LOG_TAG, "Game is null");
                     return;
                 }
-                if(game.state == GameState.ASSESMENT_RUNNING && (game.level == 1|| game.level == 2)){
-                    processAnswer(-1);
+                if(game.state == GameState.ASSESMENT_RUNNING){
+                    game.state = GameState.ASSESMENT_FINISHED;
+                    game.assestmentTime = (System.currentTimeMillis() - game.startTime);
+                    //if(!touch_mode) StopCaptureNative(); comment out because already stoped for mock gesture
+                    playMedia(R.raw.neden_sence);
+                    return;
                 }
                 switch (game.state){
                     case OBJECT_PLACEMENT:
@@ -966,8 +964,9 @@ public class MainActivity extends Activity {
                 pause = true;
             }
             else if(game.state == GameState.ASSESMENT_RUNNING) {
-                final int answer = game.processGestureDescriptors(descriptors);
-                processAnswer(answer);
+                StopCaptureNative();
+               // final int answer = game.processGestureDescriptors(descriptors);
+                //processAnswer(answer);
             }
         }
         else if(game.level == 1 || game.level == 2){  //--------------- LEVEL 1-2 -----------------------------------------------------------
@@ -1112,6 +1111,7 @@ public class MainActivity extends Activity {
                 });
             }
             else if(game.state == GameState.ASSESMENT_RUNNING) {
+                StopCaptureNative();
                 //final int correctAnswer = game.processGestureDescriptors(descriptors);
                 //processAnswer(correctAnswer);
             }
@@ -1184,8 +1184,9 @@ public class MainActivity extends Activity {
                 });
             }
             else if(game.state == GameState.ASSESMENT_RUNNING) {
-                final int correctAnswer = game.processGestureDescriptors(descriptors);
-                processAnswer(correctAnswer);
+                StopCaptureNative();
+                //final int correctAnswer = game.processGestureDescriptors(descriptors);
+                //processAnswer(correctAnswer);
             }
         }
         else if(game.level == 5 || game.level == 6) { //------------------------ LEVEL 5-6 ---------------------------------------
@@ -1276,6 +1277,7 @@ public class MainActivity extends Activity {
 
             }
             else if(game.state == GameState.ASSESMENT_RUNNING){
+                StopCaptureNative();
                 //final int correctAnswer = game.processGestureDescriptors(descriptors);
                 //processAnswer(correctAnswer);
             }
@@ -1467,8 +1469,9 @@ public class MainActivity extends Activity {
 
     private void processAnswer(final int answer){
         if (answer == 1) {
-            if(!touch_mode) StopCaptureNative();
+            //if(!touch_mode) StopCaptureNative(); comment out because already stoped for mock gesture
             playMedia(R.raw.neden_sence);
+            game.assestmentTime = (System.currentTimeMillis() - game.startTime);
             float secs = (float) game.assestmentTime / 1000;
             String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
             results[game.level] = time;
