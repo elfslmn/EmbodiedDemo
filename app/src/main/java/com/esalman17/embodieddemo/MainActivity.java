@@ -38,10 +38,16 @@ import android.widget.Toast;
 import com.transitionseverywhere.Slide;
 import com.transitionseverywhere.TransitionManager;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -93,6 +99,7 @@ public class MainActivity extends Activity {
 
     int[] resolution;
     Point displaySize, camRes;
+    double[] calibration = new double[4];
 
     public static SoundPool soundPool;
     public static boolean soundsLoaded = false, isPlaying = false;
@@ -107,6 +114,7 @@ public class MainActivity extends Activity {
     public native void RegisterDisplay(int width, int height);
     public native void DetectBackgroundNative();
     public native void ChangeModeNative(int mode);
+    public native void LoadCalibrationNative(double[] calibration);
 
     //broadcast receiver for user usb permission dialog
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
@@ -120,6 +128,7 @@ public class MainActivity extends Activity {
                 if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                     if (device != null) {
                         RegisterCallback();
+                        LoadCalibrationNative(calibration);
                         m_opened = performUsbPermissionCallback(device);
                         Log.d(LOG_TAG, "m_opened = " + m_opened);
                         createBitmap();
@@ -261,6 +270,11 @@ public class MainActivity extends Activity {
             }
         }
         infoLayout = findViewById(R.id.layout_info);
+        // TODO for debug
+        infoLayout.setVisibility(View.GONE);
+        mainLayout.setClickable(false);
+        mainLayout.setFocusableInTouchMode(false);
+        // end debug
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
@@ -370,6 +384,56 @@ public class MainActivity extends Activity {
         sWrong = soundPool.load(this, R.raw.bir_daha_dusun, 1);
         sCong = soundPool.load(this, R.raw.supersin, 1);
 
+        readCalibrationFile();
+    }
+
+    private void readCalibrationFile(){
+        File sdcard = Environment.getExternalStorageDirectory();
+        File dir = new File(sdcard.getAbsolutePath() + "/Calibrator/");
+        if(!dir.exists()){
+            Log.e(LOG_TAG, "No Calibrator folder is found!");
+            return;
+        }
+
+        if(dir.isDirectory()){
+            File[] files = dir.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String filename) {
+                    return filename.endsWith(".txt");
+                }
+            });
+            if(files.length == 0){
+                Log.e(LOG_TAG, "No calibration txt file is found!");
+                return;
+            }
+            long max_modified = 0;
+            int latest = -1;
+            for(int i=0; i<files.length; i++){
+                if(files[i].lastModified() > max_modified){
+                    max_modified = files[i].lastModified();
+                    latest = i;
+                }
+            }
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(files[latest]));
+                String line;
+                int i = 0;
+                while ((line = br.readLine()) != null) {
+                    calibration[i++] = Double.parseDouble(line);
+                    if(i == 4) break;
+                }
+                Log.d(LOG_TAG, "Calibration file loaded: " + files[latest].getName());
+                Log.d(LOG_TAG, "Calibration array = "+ Arrays.toString(calibration));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+        else{
+            Log.e(LOG_TAG, "Calibrator is not a directory");
+        }
     }
 
     private void clearPreviousMode(){
@@ -458,6 +522,7 @@ public class MainActivity extends Activity {
                 } else {
                     Log.d(LOG_TAG, "Manager has permission.");
                     RegisterCallback();
+                    LoadCalibrationNative(calibration);
                     m_opened = performUsbPermissionCallback(device);
                     Log.d(LOG_TAG, "m_opened = " + m_opened);
                     createBitmap();

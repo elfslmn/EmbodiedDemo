@@ -33,6 +33,7 @@ using namespace cv;
 static std::unique_ptr<ICameraDevice> cameraDevice;
 
 CamListener listener;
+double* calibration = nullptr;
 
 jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv *env, jobject thiz, jint fd, jint vid, jint pid)
 {
@@ -76,6 +77,9 @@ jintArray Java_com_esalman17_embodieddemo_MainActivity_OpenCameraNative (JNIEnv 
         LOGE ("Failed to get max sensor height, CODE %d", (int) ret);
     }
     listener.initialize(cam_width, cam_height);
+    if(calibration){
+        listener.setCalibration(calibration);
+    }
 
     royale::Vector<royale::String> opModes;
     royale::String cameraName;
@@ -237,6 +241,13 @@ void Java_com_esalman17_embodieddemo_MainActivity_RegisterDisplay (JNIEnv *env, 
 {
     LOGD("RegisterDisplay()");
     listener.setDisplaySize(w,h);
+}
+
+void Java_com_esalman17_embodieddemo_MainActivity_LoadCalibrationNative (JNIEnv *env, jobject thiz, jdoubleArray arr)
+{
+    LOGD("LoadCalibrationNative()");
+    calibration = env->GetDoubleArrayElements( arr,0);
+    listener.setCalibration(calibration);
 }
 
 #ifdef __cplusplus

@@ -34,6 +34,7 @@ public:
     void setMode(int i);
     void setDisplaySize(uint16_t width, uint16_t height);
     void setLensParameters (LensParameters lensParameters);
+    void setCalibration(double* arr);
 
     // Public variables
     CallbackManager callbackManager;
@@ -69,5 +70,14 @@ private:
     float averageNoise;
 
     vector<int> blobCenters;
+
+    //scale = sin(camFov/2) / sin(projFov/2)
+    float x_scale = 1.3074;
+    float y_scale = 1.8256;
+    double x_offset = (double)1280 * (x_scale -1) / 2 ; // TODO make generic
+    double y_offset = (double)720 * (y_scale -1) / 2;
+
+    Vec4d calibration_result;
+
 };
 

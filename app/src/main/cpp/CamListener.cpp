@@ -207,6 +207,12 @@ float CamListener::updateDepthGrayImage(const DepthData* data, Mat & depth, Mat 
     return sumNoise/noiseCounter;
 }
 
+void CamListener::setCalibration(double* arr){
+    lock_guard<mutex> lock (flagMutex);
+    calibration_result = Vec4d(arr[0], arr[1], arr[2], arr[3]);
+    LOGD("Calibration loaded = %f %f %f %f", calibration_result[0], calibration_result[1],calibration_result[2],calibration_result[3]);
+}
+
 pair<int, int> CamListener::convertCamPixel2ProPixel(float x, float y, float z){
     if( x<0 || y<0 || z<=0){
         return {-1,-1};
@@ -215,19 +221,19 @@ pair<int, int> CamListener::convertCamPixel2ProPixel(float x, float y, float z){
         return {-1,-1};
     }
 
-    //scale = sin(camFov/2) / sin(projFov/2)
-    float scale_x = 1.3074;
-    float scale_y = 1.8256;
-    float shifty = 486.69004 * exp(-0.048035356*z);
-    float px = x * disp_width* scale_x / cam_width - disp_width*(scale_x -1) /2 +10;  // shiftx nearly 0
-    float py = y * disp_height * scale_y / cam_height  - disp_height*(scale_y -1)/2 - shifty + 580;
+    z *= 100; // z should be given in cm
+    Vec4d & coef = calibration_result;
+    double shiftx = coef[0] * exp(coef[1]*z);
+    double shifty = coef[2] * exp(coef[3]*z);
+    int px = (double)x * disp_width* x_scale / cam_width - x_offset + shiftx; // + shift due to flip
+    int py = (double)y * disp_height* y_scale / cam_height - y_offset + shifty;
 
     if(px > disp_width || px < 0 || py>disp_height|| py < 0){
         //LOGD("Point is outside of the projector view");
         return {-1,-1};
     }
 
-    return  {(int)px,(int)py};
+    return  { px , py };
 }
 
 
