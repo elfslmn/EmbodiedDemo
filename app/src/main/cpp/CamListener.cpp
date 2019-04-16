@@ -225,8 +225,8 @@ pair<int, int> CamListener::convertCamPixel2ProPixel(float x, float y, float z){
     Vec4d & coef = calibration_result;
     double shiftx = coef[0] * exp(coef[1]*z);
     double shifty = coef[2] * exp(coef[3]*z);
-    int px = (double)x * disp_width* x_scale / cam_width - x_offset + shiftx; // + shift due to flip
-    int py = (double)y * disp_height* y_scale / cam_height - y_offset + shifty;
+    int px = (double)x * disp_width* x_scale / cam_width - x_offset - shiftx;
+    int py = (double)y * disp_height* y_scale / cam_height - y_offset - shifty;
 
     if(px > disp_width || px < 0 || py>disp_height|| py < 0){
         //LOGD("Point is outside of the projector view");
