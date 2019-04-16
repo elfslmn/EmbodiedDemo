@@ -273,9 +273,9 @@ public class MainActivity extends Activity {
             }
         }
         infoLayout = findViewById(R.id.layout_info);
-        /*infoLayout.setVisibility(View.GONE); // TODO debug
+        infoLayout.setVisibility(View.GONE); // TODO debug
         mainLayout.setClickable(false);
-        mainLayout.setFocusableInTouchMode(false); // end debug*/
+        mainLayout.setFocusableInTouchMode(false); // end debug
 
         mainImView =  findViewById(R.id.imageViewMain);
         overlayImView = findViewById(R.id.imageViewOverlay);
