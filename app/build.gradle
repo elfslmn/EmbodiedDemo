@@ -27,7 +27,14 @@ android {
             path "CMakeLists.txt"
         }
     }
+
+    flavorDimensions "default"
     productFlavors {
+        momo {
+            applicationIdSuffix ".momo"
+            versionCode 1
+            versionName "1.0"
+        }
     }
 }
 
