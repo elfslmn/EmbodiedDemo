@@ -49,6 +49,7 @@ private:
     void getBlobs(vector<int> & blobs, const vector<vector<Point> > & contours,
                   const vector<vector<Point> > & retro_contours = vector<vector<Point> >());
     float updateDepthGrayImage(const DepthData* data, Mat & depth, Mat & gray, bool background);
+    void undistortPoint(float & x, float & y);
 
 
     // Private variables

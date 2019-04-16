@@ -45,6 +45,8 @@ void CamListener::setLensParameters (LensParameters lensParameters)
     // (fx   0    cx)
     // (0    fy   cy)
     // (0    0    1 )
+    lensParameters.principalPoint.first = cam_width - lensParameters.principalPoint.first; // due to camera flip
+    lensParameters.principalPoint.second = cam_height - lensParameters.principalPoint.second;
     cameraMatrix = (Mat1d (3, 3) << lensParameters.focalLength.first, 0, lensParameters.principalPoint.first,
             0, lensParameters.focalLength.second, lensParameters.principalPoint.second,
             0, 0, 1);
@@ -221,13 +223,14 @@ pair<int, int> CamListener::convertCamPixel2ProPixel(float x, float y, float z){
     if(disp_width == 0 || cam_width == 0){
         return {-1,-1};
     }
+   //undistortPoint(x,y);
 
     z *= 100; // z should be given in cm
     Vec4d & coef = calibration_result;
     double shiftx = coef[0] * exp(coef[1]*z);
     double shifty = coef[2] * exp(coef[3]*z);
-    int px = (double)x * disp_width* x_scale / cam_width - x_offset + shiftx; // + shift due to flip
-    int py = (double)y * disp_height* y_scale / cam_height - y_offset + shifty;
+    int px = (double)x * disp_width* x_scale / cam_width - x_offset - shiftx; // + shift if calib is calculated without flip camera
+    int py = (double)y * disp_height* y_scale / cam_height - y_offset - shifty;
 
     if(px > disp_width || px < 0 || py>disp_height|| py < 0){
         //LOGD("Point is outside of the projector view");
@@ -294,6 +297,14 @@ void CamListener::visualizeBlobs(Mat & src, Mat & output, const vector<vector<Po
         }
     }
 
+}
+
+void CamListener::undistortPoint(float & x, float & y){
+    vector<Point2f> distorted, undistorted;
+    distorted.push_back(Point2i(x,y));
+    undistortPoints(distorted, undistorted, cameraMatrix, distortionCoefficients,cameraMatrix);
+    x = undistorted[0].x;
+    y = undistorted[0].y;
 }
 
 void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & contours,
@@ -368,6 +379,7 @@ void CamListener::getBlobs(vector<int> & blobs, const vector<vector<Point> > & c
 
             float z = zImage.at<float>(y,x);
             float d = diff.at<float>(y,x)*1000;
+
             auto center = convertCamPixel2ProPixel(x,y,z);
             if(center.first < 0) continue;
 
