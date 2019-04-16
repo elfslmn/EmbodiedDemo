@@ -132,6 +132,7 @@ public class MainActivity extends Activity {
                         m_opened = performUsbPermissionCallback(device);
                         Log.d(LOG_TAG, "m_opened = " + m_opened);
                         createBitmap();
+                        findViewById(R.id.buttonBackGr).performClick();
                     }
                 } else {
                     Log.i(LOG_TAG,"permission denied for device" + device);
@@ -385,6 +386,8 @@ public class MainActivity extends Activity {
         sCong = soundPool.load(this, R.raw.supersin, 1);
 
         readCalibrationFile();
+
+        findViewById(R.id.buttonCamera).performClick();
     }
 
     private void readCalibrationFile(){
@@ -526,6 +529,7 @@ public class MainActivity extends Activity {
                     m_opened = performUsbPermissionCallback(device);
                     Log.d(LOG_TAG, "m_opened = " + m_opened);
                     createBitmap();
+                    findViewById(R.id.buttonBackGr).performClick();
                 }
                 break;
             }
