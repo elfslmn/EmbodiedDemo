@@ -528,10 +528,10 @@ public class MainActivity extends Activity {
                         break;
                     case ASSESMENT_FINISHED:
                         game.state = GameState.STONES_CLEARED;
-                        lottieView.setAnimation("cak_bakalim.json");
-                        playMedia(R.raw.cak_bakalim);
-                        lottieView.playAnimation();
-                        break;
+                        //lottieView.setAnimation("cak_bakalim.json");
+                        //playMedia(R.raw.cak_bakalim);
+                        //lottieView.playAnimation();
+                        //break;
                     case STONES_CLEARED:
                         momoView.clearAnimation();
                         momoView.setVisibility(View.GONE);
@@ -1024,9 +1024,9 @@ public class MainActivity extends Activity {
                 pause = true;
             }
             else if(game.state == GameState.ASSESMENT_RUNNING) {
-                StopCaptureNative();
-               // final int answer = game.processGestureDescriptors(descriptors);
-                //processAnswer(answer);
+                //StopCaptureNative();
+                final int answer = game.processGestureDescriptors(descriptors);
+                processAnswer(answer);
             }
         }
         else if(game.level == 1 || game.level == 2){  //--------------- LEVEL 1-2 -----------------------------------------------------------
@@ -1171,9 +1171,9 @@ public class MainActivity extends Activity {
                 });
             }
             else if(game.state == GameState.ASSESMENT_RUNNING) {
-                StopCaptureNative();
-                //final int correctAnswer = game.processGestureDescriptors(descriptors);
-                //processAnswer(correctAnswer);
+                //StopCaptureNative();
+                final int correctAnswer = game.processGestureDescriptors(descriptors);
+                processAnswer(correctAnswer);
             }
         }
 
@@ -1244,9 +1244,9 @@ public class MainActivity extends Activity {
                 });
             }
             else if(game.state == GameState.ASSESMENT_RUNNING) {
-                StopCaptureNative();
-                //final int correctAnswer = game.processGestureDescriptors(descriptors);
-                //processAnswer(correctAnswer);
+                //StopCaptureNative();
+                final int correctAnswer = game.processGestureDescriptors(descriptors);
+                processAnswer(correctAnswer);
             }
         }
         else if(game.level == 5 || game.level == 6) { //------------------------ LEVEL 5-6 ---------------------------------------
@@ -1337,9 +1337,9 @@ public class MainActivity extends Activity {
 
             }
             else if(game.state == GameState.ASSESMENT_RUNNING){
-                StopCaptureNative();
-                //final int correctAnswer = game.processGestureDescriptors(descriptors);
-                //processAnswer(correctAnswer);
+                //StopCaptureNative();
+                final int correctAnswer = game.processGestureDescriptors(descriptors);
+                processAnswer(correctAnswer);
             }
 
         }
@@ -1529,31 +1529,41 @@ public class MainActivity extends Activity {
 
     private void processAnswer(final int answer){
         if (answer == 1) {
-            //if(!touch_mode) StopCaptureNative(); comment out because already stoped for mock gesture
-            playMedia(R.raw.neden_sence);
+            if(!touch_mode) StopCaptureNative(); //comment out because already stoped for mock gesture
+            //playMedia(R.raw.neden_sence);
             game.assestmentTime = (System.currentTimeMillis() - game.startTime);
             float secs = (float) game.assestmentTime / 1000;
             String time = String.format("Solved in %.3f seconds with %d wrong", secs, wrong);
             results[game.level] = time;
             game.state = GameState.ASSESMENT_FINISHED;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {findViewById(R.id.buttonCorrect).performClick();
+                }
+            });
         }
         else if (answer == -1) {
             pause = true;
             wrong ++;
-            if(wrong == 5){
+            if(wrong == 3){
                 game.assestmentTime = (System.currentTimeMillis() - game.startTime);
                 float secs = (float) game.assestmentTime / 1000;
                 String time = String.format("Cannot solved in %.3f seconds with %d wrong", secs, wrong);
                 results[game.level] = time;
                 if(!touch_mode) StopCaptureNative();
-                playMedia(R.raw.neden_sence);
+               // playMedia(R.raw.neden_sence);
                 game.state = GameState.ASSESMENT_FINISHED;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {findViewById(R.id.buttonWrong).performClick();
+                    }
+                });
                 return;
             }
             mediaPlayer = null;
             if(game.question == Game.Question.MORE) mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.wrong_cok);
             else if(game.question == Game.Question.LESS)  {
-                if(!(game.level == 5 || game.level == 6)) mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.wrong_az);
+                mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.wrong_az);
             }
             else mediaPlayer = MediaPlayer.create(MainActivity.this, game.getQuestion());
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -1588,6 +1598,7 @@ public class MainActivity extends Activity {
                 tvDebug.setText("Assesment started: Question="+game.question.toString()+" Correct="+game.correctSide.toString());
             }
         });
+        pause = true;
         mediaPlayer.start();
     }
 
